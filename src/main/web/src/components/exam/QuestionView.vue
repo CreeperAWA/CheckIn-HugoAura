@@ -5,7 +5,6 @@ import QuestionGroupSubQuestionViewModule from "@/components/exam/QuestionGroupS
 import ImagesViewer from "@/components/viewer/ImagesViewer.vue";
 import UIMeta from "@/utils/UI_Meta.js";
 import {Picture} from "@element-plus/icons-vue";
-import sanitizeHtml from "sanitize-html";
 
 const props = defineProps({
     question: {
@@ -54,13 +53,6 @@ const model = defineModel({
     type: Object
 });
 
-const sanitize = (html) => {
-    if (props.question.unsafeXss) {
-        return html;
-    } else {
-        return sanitizeHtml(html);
-    }
-}
 </script>
 
 <template>
@@ -84,8 +76,7 @@ const sanitize = (html) => {
             </div>
         </el-scrollbar>
         <div class="content" style="flex:1;display: flex;flex-direction: column">
-            <md-preview preview-theme="vuepress" :theme="UIMeta.colorScheme.value" :show-toolbar-name="UIMeta.touch.value"
-                        :model-value="question.content" :sanitize="sanitize"
+            <md-preview preview-theme="vuepress" :theme="UIMeta.colorScheme.value" :show-toolbar-name="UIMeta.touch.value" :model-value="question.content"
                        class="preview-only" style="flex:1;overflow: visible;"/>
             <multiple-choices-view-module style="padding: 32px"
                                              v-if="question.type==='MultipleChoicesQuestion'"

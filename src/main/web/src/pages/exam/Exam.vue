@@ -138,6 +138,12 @@ const handleError = (data, actionDescription) => {
         }
     } else {
         regenerateMessageBox("需要重新生成试题", "未知错误")
+/*
+        ElMessage({
+            type: "error",
+            message: actionDescription
+        })
+*/
         console.error(actionDescription, data);
     }
 }

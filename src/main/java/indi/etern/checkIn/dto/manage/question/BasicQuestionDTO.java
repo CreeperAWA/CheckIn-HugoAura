@@ -23,7 +23,6 @@ public class BasicQuestionDTO {
     protected String content;
     protected String explanation;
     protected Boolean enabled;
-    protected Boolean unsafeXss;
     protected String type;
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
@@ -42,7 +41,6 @@ public class BasicQuestionDTO {
         content = question.getContent();
         explanation = question.getExplanation();
         enabled = question.isEnabled();
-        unsafeXss = question.isUnsafeXss();
         type = question.getType();
         lastModifiedTime = question.getLastModifiedTime();
         final QuestionLinkImpl<?> linkWrapper = question.getLinkWrapper();
@@ -57,9 +55,6 @@ public class BasicQuestionDTO {
     public void inheritFrom(Question question) {
         if (enabled == null) {
             enabled = question.isEnabled();
-        }
-        if (unsafeXss == null) {
-            unsafeXss = question.isUnsafeXss();
         }
         if (content == null) {
             content = question.getContent();

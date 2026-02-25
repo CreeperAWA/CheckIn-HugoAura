@@ -16,7 +16,6 @@ import {MdEditor} from "md-editor-v3";
 import PermissionInfo from "@/auth/PermissionInfo.js";
 import {uuidv7} from "uuidv7";
 import {Link, Picture} from "@element-plus/icons-vue";
-import sanitizeHtml from "sanitize-html";
 
 const imageDialogVisible = ref(false);
 const viewerIndex = ref(0);
@@ -198,14 +197,6 @@ const newImageLoadError = () => {
 const newImageLoaded = () => {
     newImageVerified.value = true;
 }
-const sanitize = (html) => {
-    const groupInfo = questionInfo.value.getGroup();
-    if (groupInfo.question.unsafeXss) {
-        return html;
-    } else {
-        return sanitizeHtml(html);
-    }
-}
 </script>
 
 <template>
@@ -309,7 +300,7 @@ const sanitize = (html) => {
                          :class="questionInfo.inputMeta['content-0']">
                         <md-editor no-upload-img placeholder="内容" v-model="questionInfo.question.content"
                                    :show-toolbar-name="UIMeta.touch.value" :footers="['scrollSwitch']"
-                                   :key="UIMeta.colorScheme" preview-theme="vuepress" :sanitize="sanitize"
+                                   :key="UIMeta.colorScheme" preview-theme="vuepress"
                                    :toolbars-exclude="['save','catalog','github']"
                                    :theme="UIMeta.colorScheme.value"/>
                     </div>

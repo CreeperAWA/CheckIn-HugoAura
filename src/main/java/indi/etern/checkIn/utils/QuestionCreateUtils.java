@@ -48,11 +48,6 @@ public class QuestionCreateUtils {
         if (enabled != null) {
             builder.setEnable(enabled);
         }
-
-        Boolean unsafeXss =  commonQuestionDTO.getUnsafeXss();
-        if (unsafeXss != null) {
-            builder.setUnsafeXss(unsafeXss);
-        }
         
         if (commonQuestionDTO instanceof MultipleChoicesQuestionDTO multipleChoicesQuestionDTO) {
             List<ChoiceDTO> choices = multipleChoicesQuestionDTO.getChoices();
@@ -107,7 +102,6 @@ public class QuestionCreateUtils {
     
     protected static MultipleChoicesQuestion createSubMultipleChoicesQuestion(MultipleChoicesQuestionDTO multipleChoicesQuestionDTO, QuestionGroup questionGroup) {
         return create(multipleChoicesQuestionDTO, (questionDataMap1, builder1, previousQuestion) -> builder1.useQuestionGroupLinks(linkWrapper -> {
-            builder1.setUnsafeXss(questionGroup.isUnsafeXss());
             linkWrapper.setTarget(questionGroup);
         }));
     }
@@ -150,12 +144,7 @@ public class QuestionCreateUtils {
         if (enabled != null) {
             builder.setEnabled(enabled);
         }
-
-        Boolean unsafeXss = questionGroupDTO.getUnsafeXss();
-        if (unsafeXss != null) {
-            builder.setUnsafeXss(unsafeXss);
-        }
-
+        
         List<CommonQuestionDTO> questions = questionGroupDTO.getQuestions();
         if (questions != null) {
             builder.getQuestions().clear();

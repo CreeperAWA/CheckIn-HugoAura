@@ -21,6 +21,7 @@ import {Check, RefreshLeft} from "@element-plus/icons-vue";
 import UserDataInterface from "@/data/UserDataInterface.js";
 import questionCache from "@/data/QuestionCache.js";
 import Collapse from "@/components/common/Collapse.vue";
+import {MdEditor} from "md-editor-v3";
 
 let questionInfo = ref({});
 
