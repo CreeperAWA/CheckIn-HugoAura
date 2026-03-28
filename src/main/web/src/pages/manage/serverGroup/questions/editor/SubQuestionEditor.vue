@@ -12,6 +12,7 @@ import MultipleChoicesEditorPlugin
 import QuestionCache from "@/data/QuestionCache.js";
 import ImageViewer from "@/components/viewer/ImagesViewer.vue";
 import UIMeta from "@/utils/UI_Meta.js";
+import sanitizeHtml from "@/utils/Sanitize.js";
 import {MdEditor} from "md-editor-v3";
 import PermissionInfo from "@/auth/PermissionInfo.js";
 import {uuidv7} from "uuidv7";
@@ -302,6 +303,8 @@ const newImageLoaded = () => {
                                    :show-toolbar-name="UIMeta.touch.value" :footers="['scrollSwitch']"
                                    :key="UIMeta.colorScheme" preview-theme="vuepress"
                                    :toolbars-exclude="['save','catalog','github']"
+                                   style="height: 50dvh;min-height: 450px;"
+                                   :sanitize="sanitizeHtml"
                                    :theme="UIMeta.colorScheme.value"/>
                     </div>
                 </div>

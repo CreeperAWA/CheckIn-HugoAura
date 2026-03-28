@@ -37,3 +37,9 @@ build/
 /data/
 /initialSQL/
 /src/main/web-manage/dev-dist/
+
+### npm ###
+/src/main/web/node_modules
+
+### Web ###
+/src/main/resources/static/view

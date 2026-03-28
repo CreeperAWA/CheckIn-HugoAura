@@ -1,6 +1,7 @@
 <script setup>
 import 'md-editor-v3/lib/style.css';
 import {MdEditor} from "md-editor-v3";
+import sanitizeHtml from "@/utils/Sanitize.js";
 import UIMeta from "@/utils/UI_Meta.js";
 import Collapse from "@/components/common/Collapse.vue";
 import UserDataInterface from "@/data/UserDataInterface.js";
@@ -87,6 +88,7 @@ onUnmounted(() => {
             </template>
             <template #content>
                 <md-editor no-upload-img placeholder="消息" v-model="model.message"
+                           :sanitize="sanitizeHtml"
                            :key="UIMeta.colorScheme" preview-theme="vuepress" :disabled="disabled"
                            :toolbars-exclude="['save','catalog','github']"
                            :theme="UIMeta.colorScheme.value" :show-toolbar-name="UIMeta.touch.value"

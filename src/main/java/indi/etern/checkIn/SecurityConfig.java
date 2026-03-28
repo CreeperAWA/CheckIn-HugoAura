@@ -24,6 +24,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.header.writers.ContentSecurityPolicyHeaderWriter;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -59,6 +60,9 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter(), BasicAuthenticationFilter.class)
+                .headers(headers -> headers
+                    .addHeaderWriter(new ContentSecurityPolicyHeaderWriter("default-src 'self'; script-src 'self' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https:; frame-src 'self' blob:;"))
+                )
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(authorization -> authorization
                                 .baseUri("/api/oauth2/authorization")
@@ -69,7 +73,6 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(userService)
                         )
-                        // 重要：配置认证成功和失败的处理器，返回JSON
                         .successHandler(oauth2AuthenticationSuccessHandler())
                         .failureHandler(oauth2AuthenticationFailureHandler())
                 )

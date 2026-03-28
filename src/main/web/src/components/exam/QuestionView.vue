@@ -1,5 +1,6 @@
 <script setup>
-import {MdPreview} from "md-editor-v3";
+import SecureMarkdownViewer from "@/components/common/SecureMarkdownViewer.vue";
+import sanitizeHtml from "@/utils/Sanitize.js";
 import MultipleChoicesViewModule from "@/components/exam/MultipleChoicesViewModule.vue";
 import QuestionGroupSubQuestionViewModule from "@/components/exam/QuestionGroupSubQuestionViewModule.vue";
 import ImagesViewer from "@/components/viewer/ImagesViewer.vue";
@@ -76,8 +77,8 @@ const model = defineModel({
             </div>
         </el-scrollbar>
         <div class="content" style="flex:1;display: flex;flex-direction: column">
-            <md-preview preview-theme="vuepress" :theme="UIMeta.colorScheme.value" :show-toolbar-name="UIMeta.touch.value" :model-value="question.content"
-                       class="preview-only" style="flex:1;overflow: visible;"/>
+            <secure-markdown-viewer preview-theme="vuepress" :theme="UIMeta.colorScheme.value" :model-value="question.content"
+                                   class="preview-only" style="flex:1;overflow: visible;"/>
             <multiple-choices-view-module style="padding: 32px"
                                              v-if="question.type==='MultipleChoicesQuestion'"
                                              :question="question" v-model="model"/>

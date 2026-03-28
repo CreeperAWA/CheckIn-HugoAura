@@ -1,5 +1,6 @@
 <script setup>
-import {MdPreview} from "md-editor-v3";
+import sanitizeHtml from "@/utils/Sanitize.js";
+import SecureMarkdownViewer from "@/components/common/SecureMarkdownViewer.vue";
 import 'md-editor-v3/lib/style.css';
 import UIMeta from "@/utils/UI_Meta.js";
 import router from "@/router/index.js";
@@ -126,12 +127,11 @@ const getSplitsFlexRate = (index) => {
             </div>
         </div>
         <div class="facade-content">
-            <md-preview no-upload-img placeholder="描述" v-model="facadeData.description"
+            <secure-markdown-viewer no-upload-img placeholder="描述" :model-value="facadeData.description"
                        class="preview-only auto-padding-center"
-                       preview-theme="vuepress" :toolbars-exclude="['save','catalog','github']"
+                       preview-theme="vuepress"
                        style="height: 100dvh;"
-                       :theme="UIMeta.colorScheme.value"
-                       :show-toolbar-name="UIMeta.touch.value"/>
+                       :theme="UIMeta.colorScheme.value"/>
             <div style="flex: 1;display: flex;flex-direction: column;align-items: center;justify-content: end">
                 <el-button type="primary" size="large" style="margin-top: 36px;align-self: center;min-width: 180px"
                            :disabled="!extraData.serviceAvailable" @click="routeGenerateExam">

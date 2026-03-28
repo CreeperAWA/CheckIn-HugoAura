@@ -1,7 +1,8 @@
 <script setup>
 import getAvatarUrlOf from "@/utils/Avatar.js";
 import UIMeta from "@/utils/UI_Meta.js";
-import {MdPreview} from "md-editor-v3";
+import sanitizeHtml from "@/utils/Sanitize.js";
+import SecureMarkdownViewer from "@/components/common/SecureMarkdownViewer.vue";
 import 'md-editor-v3/lib/style.css';
 import router from "@/router/index.js";
 
@@ -84,12 +85,11 @@ const routeToSignUpOrLogin = () => {
             </div>
         </div>
         <div style="flex:1;width: 100%;background: var(--html-bg) var(--lighting-effect-background-2);z-index: 1;margin-top: 64px;display: flex;flex-direction: column;align-items: center;padding-bottom: 200px">
-            <md-preview no-upload-img placeholder="结果" v-model="result.message"
+            <secure-markdown-viewer no-upload-img placeholder="结果" v-model="result.message"
                        class="preview-only"
-                       preview-theme="vuepress" :toolbars-exclude="['save','catalog','github']"
+                       preview-theme="vuepress"
                        style="height: 100dvh;max-width:calc(90dvw - 100px);"
-                       :theme="UIMeta.colorScheme.value"
-                       :show-toolbar-name="UIMeta.touch.value"/>
+                       :theme="UIMeta.colorScheme.value"/>
         </div>
         <div class="flex-blank-1"></div>
         <div style="display: flex;flex-direction: row;justify-content: center;flex-wrap: wrap">

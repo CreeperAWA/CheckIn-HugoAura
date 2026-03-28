@@ -8,6 +8,7 @@ import UserDataInterface from "@/data/UserDataInterface.js";
 import Collapse from "@/components/common/Collapse.vue";
 import ImageViewer from "@/components/viewer/ImagesViewer.vue";
 import {MdEditor} from "md-editor-v3";
+import sanitizeHtml from "@/utils/Sanitize.js";
 import UIMeta from "@/utils/UI_Meta.js";
 import 'md-editor-v3/lib/style.css';
 import PermissionInfo from "@/auth/PermissionInfo.js";
@@ -197,6 +198,7 @@ const newImageLoaded = () => {
                 <md-editor no-upload-img placeholder="内容" v-model="questionInfo.question.content"
                            preview-theme="vuepress" :toolbars-exclude="['save','catalog','github']"
                            style="height: 50dvh;min-height: 450px;"
+                           :sanitize="sanitizeHtml"
                            :theme="UIMeta.colorScheme.value" :show-toolbar-name="UIMeta.touch.value"
                            :preview="!UIMeta.mobile.value" :footers="['scrollSwitch']"/>
             </div>
