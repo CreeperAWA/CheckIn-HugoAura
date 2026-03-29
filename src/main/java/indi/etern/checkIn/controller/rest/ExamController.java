@@ -217,6 +217,7 @@ public class ExamController {
                     }
                     examData.sendUpdateExamRecord();
                     questionStatisticService.appendStatistic(examData);
+                    
                     return objectMapper.writeValueAsString(examResult);
                 } catch (ExamInvalidException e) {
                     logger.error("ExamController[{}] invalided", examData.getId());
@@ -267,82 +268,6 @@ public class ExamController {
         if (showRequiredPartitions)
             extraData.put("requiredPartitionIds", requiredPartitionIds);
         result.put("extraData", extraData);
-        return result;
-    }
-
-    @Transactional
-    @RequestMapping(method = RequestMethod.GET, path = "/api/post-exam-data")
-    public Map<String, Object> getPostExamData(HttpServletRequest request) {
-        Map<String, Object> result = new HashMap<>();
-        
-        Optional<Cookie> examTokenCookieOptional = Arrays.stream(request.getCookies())
-                .filter(c -> c.getName().equals("examToken"))
-                .findFirst();
-        
-        if (examTokenCookieOptional.isEmpty()) {
-            result.put("error", "Missing exam token");
-            result.put("passed", false);
-            return result;
-        }
-        
-        String examToken = examTokenCookieOptional.get().getValue();
-        try {
-            Jws<Claims> claimsJws = JwtTokenProvider.singletonInstance.parseToken(examToken);
-            Claims body = claimsJws.getBody();
-            String qqNumberStr = body.getSubject();
-            
-            if (qqNumberStr == null || qqNumberStr.isEmpty()) {
-                result.put("error", "Invalid token");
-                result.put("passed", false);
-                return result;
-            }
-            
-            long qqNumber = Long.parseLong(qqNumberStr);
-            
-            List<ExamData> userExamDataList = examDataService.findAllByQQ(qqNumber);
-            if (userExamDataList.isEmpty()) {
-                result.put("error", "No exam records found");
-                result.put("passed", false);
-                return result;
-            }
-            
-            Optional<ExamData> bestExamOpt = userExamDataList.stream()
-                    .filter(ed -> ed.getExamResult() != null)
-                    .filter(ed -> ed.getStatus() == ExamData.Status.SUBMITTED || ed.getStatus() == ExamData.Status.SIGN_UP_COMPLETED)
-                    .max(Comparator.comparing(ed -> ed.getExamResult().getScore()));
-            
-            if (bestExamOpt.isEmpty()) {
-                result.put("error", "No completed exam found");
-                result.put("passed", false);
-                return result;
-            }
-            
-            ExamData bestExam = bestExamOpt.get();
-            ExamResult examResult = bestExam.getExamResult();
-            
-            result.put("passed", true);
-            result.put("examDataId", bestExam.getId());
-            result.put("qq", examResult.getQq());
-            result.put("score", examResult.getScore());
-            result.put("correctCount", examResult.getCorrectCount());
-            result.put("halfCorrectCount", examResult.getHalfCorrectCount());
-            result.put("wrongCount", examResult.getWrongCount());
-            result.put("questionCount", examResult.getQuestionCount());
-            result.put("level", examResult.getLevel());
-            result.put("levelId", examResult.getLevelId());
-            result.put("colorHex", examResult.getColorHex());
-            result.put("message", examResult.getMessage());
-            result.put("signUpCompletingType", examResult.getSignUpCompletingType());
-            result.put("showCreatingAccountGuide", examResult.isShowCreatingAccountGuide());
-            
-            addPreExamDataToResult(result);
-            
-        } catch (Exception e) {
-            logger.error("Failed to parse exam token or get exam data", e);
-            result.put("error", "Invalid token or server error");
-            result.put("passed", false);
-        }
-        
         return result;
     }
     
