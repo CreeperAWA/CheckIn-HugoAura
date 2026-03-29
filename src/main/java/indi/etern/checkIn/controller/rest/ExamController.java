@@ -232,6 +232,12 @@ public class ExamController {
     @Transactional
     @RequestMapping(method = RequestMethod.GET, path = "/api/exam-data")
     public Map<String, Object> getData() {
+        return getPreExamData();
+    }
+
+    @Transactional
+    @RequestMapping(method = RequestMethod.GET, path = "/api/pre-exam-data")
+    public Map<String, Object> getPreExamData() {
         Map<String, Object> result = new HashMap<>();
         var facadeSettingContext = actionExecutor.execute(GetFacadeSetting.class);
         var gradingSettingContext = actionExecutor.execute(GetGradingSetting.class);
@@ -248,7 +254,7 @@ public class ExamController {
         final GetFacadeSetting.SuccessOutput output = facadeSettingContext.getOutput();
         result.put("facadeData", output.data());
 //        result.put("generatingData", generatingSettingMap);
-        result.put("gradingData", gradingSettingContext.getOutput().data());
+        result.put("gradingData", filterGradingDataForPreExam(gradingSettingContext.getOutput().data()));
 
         Map<String, Object> extraData = output.extraData();
         extraData.put("partitions", usedPartitionsNameMap);
@@ -262,6 +268,147 @@ public class ExamController {
             extraData.put("requiredPartitionIds", requiredPartitionIds);
         result.put("extraData", extraData);
         return result;
+    }
+
+    @Transactional
+    @RequestMapping(method = RequestMethod.GET, path = "/api/post-exam-data")
+    public Map<String, Object> getPostExamData(HttpServletRequest request) {
+        Map<String, Object> result = new HashMap<>();
+        
+        Optional<Cookie> examTokenCookieOptional = Arrays.stream(request.getCookies())
+                .filter(c -> c.getName().equals("examToken"))
+                .findFirst();
+        
+        if (examTokenCookieOptional.isEmpty()) {
+            result.put("error", "Missing exam token");
+            result.put("passed", false);
+            return result;
+        }
+        
+        String examToken = examTokenCookieOptional.get().getValue();
+        try {
+            Jws<Claims> claimsJws = JwtTokenProvider.singletonInstance.parseToken(examToken);
+            Claims body = claimsJws.getBody();
+            String qqNumberStr = body.getSubject();
+            
+            if (qqNumberStr == null || qqNumberStr.isEmpty()) {
+                result.put("error", "Invalid token");
+                result.put("passed", false);
+                return result;
+            }
+            
+            long qqNumber = Long.parseLong(qqNumberStr);
+            
+            List<ExamData> userExamDataList = examDataService.findAllByQQ(qqNumber);
+            if (userExamDataList.isEmpty()) {
+                result.put("error", "No exam records found");
+                result.put("passed", false);
+                return result;
+            }
+            
+            Optional<ExamData> bestExamOpt = userExamDataList.stream()
+                    .filter(ed -> ed.getExamResult() != null)
+                    .filter(ed -> ed.getStatus() == ExamData.Status.SUBMITTED || ed.getStatus() == ExamData.Status.SIGN_UP_COMPLETED)
+                    .max(Comparator.comparing(ed -> ed.getExamResult().getScore()));
+            
+            if (bestExamOpt.isEmpty()) {
+                result.put("error", "No completed exam found");
+                result.put("passed", false);
+                return result;
+            }
+            
+            ExamData bestExam = bestExamOpt.get();
+            ExamResult examResult = bestExam.getExamResult();
+            
+            result.put("passed", true);
+            result.put("examDataId", bestExam.getId());
+            result.put("qq", examResult.getQq());
+            result.put("score", examResult.getScore());
+            result.put("correctCount", examResult.getCorrectCount());
+            result.put("halfCorrectCount", examResult.getHalfCorrectCount());
+            result.put("wrongCount", examResult.getWrongCount());
+            result.put("questionCount", examResult.getQuestionCount());
+            result.put("level", examResult.getLevel());
+            result.put("levelId", examResult.getLevelId());
+            result.put("colorHex", examResult.getColorHex());
+            result.put("message", examResult.getMessage());
+            result.put("signUpCompletingType", examResult.getSignUpCompletingType());
+            result.put("showCreatingAccountGuide", examResult.isShowCreatingAccountGuide());
+            
+            addPreExamDataToResult(result);
+            
+        } catch (Exception e) {
+            logger.error("Failed to parse exam token or get exam data", e);
+            result.put("error", "Invalid token or server error");
+            result.put("passed", false);
+        }
+        
+        return result;
+    }
+    
+    private void addPreExamDataToResult(Map<String, Object> result) {
+        var facadeSettingContext = actionExecutor.execute(GetFacadeSetting.class);
+        var gradingSettingContext = actionExecutor.execute(GetGradingSetting.class);
+        
+        final Boolean showRequiredPartitions = settingService.getItem("generating", "showRequiredPartitions").getValue(Boolean.class);
+        final List<String> requiredPartitionIds = settingService.getItem("generating", "requiredPartitions").getValue(ArrayList.class);
+        Set<String> requiredPartitionIdSet = new HashSet<>(requiredPartitionIds);
+        List<String> selectablePartitionIds = new ArrayList<>();
+        
+        ResultContext<GetPartitionsAction.Output> context = actionExecutor.execute(GetPartitionsAction.class);
+        final Map<String, String> usedPartitionsNameMap = getPartitionsNameMap(context, requiredPartitionIdSet, selectablePartitionIds);
+        
+        final GetFacadeSetting.SuccessOutput output = facadeSettingContext.getOutput();
+        result.put("facadeData", output.data());
+        
+        Map<String, Object> gradingData = gradingSettingContext.getOutput().data();
+        result.put("gradingData", filterGradingDataForPreExam(gradingData));
+        
+        Map<String, Object> extraData = output.extraData();
+        extraData.put("partitions", usedPartitionsNameMap);
+        var resultContext = actionExecutor.execute(GetOAuth2ProvidersSimpleInfoAction.class);
+        var oAuth2ProviderInfos = resultContext.getOutput().providerInfos().stream()
+                .filter(o -> o.getExamLoginMode() != OAuth2ProviderInfo.ExamLoginMode.DISABLED)
+                .map(ProviderItem::from).toList();
+        extraData.put("oAuth2Providers", oAuth2ProviderInfos);
+        extraData.put("selectablePartitionIds", selectablePartitionIds);
+        if (showRequiredPartitions)
+            extraData.put("requiredPartitionIds", requiredPartitionIds);
+        result.put("extraData", extraData);
+        result.put("partitions", usedPartitionsNameMap);
+    }
+    
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> filterGradingDataForPreExam(Map<String, Object> gradingData) {
+        Map<String, Object> filteredData = new HashMap<>();
+        
+        for (Map.Entry<String, Object> entry : gradingData.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            
+            if ("levels".equals(key) && value instanceof List) {
+                List<GradingLevel> levels = (List<GradingLevel>) value;
+                List<Map<String, Object>> filteredLevels = new ArrayList<>();
+                
+                for (GradingLevel level : levels) {
+                    Map<String, Object> levelMap = new HashMap<>();
+                    levelMap.put("id", level.getId());
+                    levelMap.put("name", level.getName());
+                    levelMap.put("colorHex", level.getColorHex());
+                    levelMap.put("creatingUserStrategy", level.getCreatingUserStrategy());
+                    levelMap.put("levelIndex", level.getLevelIndex());
+                    levelMap.put("creatingUserRole", level.getCreatingUserRole());
+                    // 不添加 description 和 message
+                    filteredLevels.add(levelMap);
+                }
+                
+                filteredData.put(key, filteredLevels);
+            } else {
+                filteredData.put(key, value);
+            }
+        }
+        
+        return filteredData;
     }
 
     private Map<String, String> getPartitionsNameMap(ResultContext<GetPartitionsAction.Output> context, Set<String> requiredPartitionIdSet, List<String> selectablePartitionIds) {

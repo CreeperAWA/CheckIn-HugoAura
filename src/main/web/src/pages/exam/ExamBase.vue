@@ -13,16 +13,48 @@ const error = ref(false);
 const getData = () => {
     loading.value = true;
     error.value = false;
-    const phrase = proxy.$cookies.get("phase");
-    proxy.$http.get("exam-data").then((response) => {
+    
+    proxy.$http.get("post-exam-data").then((response) => {
+        if (response && response.passed === true) {
+            proxy.$cookies.set("phase", "result", "7d");
+            proxy.$cookies.set("result", JSON.stringify({
+                qq: response.qq,
+                score: response.score,
+                correctCount: response.correctCount,
+                halfCorrectCount: response.halfCorrectCount,
+                wrongCount: response.wrongCount,
+                questionCount: response.questionCount,
+                level: response.level,
+                levelId: response.levelId,
+                colorHex: response.colorHex,
+                message: response.message,
+                signUpCompletingType: response.signUpCompletingType,
+                showCreatingAccountGuide: response.showCreatingAccountGuide
+            }), "7d");
+            
+            facadeData.value = response.facadeData || {};
+            gradingData.value = response.gradingData || {};
+            
+            router.push({name: "result"}).then(() => {
+                loading.value = false;
+            });
+        } else {
+            loadPreExamData();
+        }
+    }).catch((e) => {
+        console.log("Post exam data check failed or no valid record, using pre-exam-data", e);
+        loadPreExamData();
+    });
+};
+
+const loadPreExamData = () => {
+    proxy.$http.get("pre-exam-data").then((response) => {
         facadeData.value = response.facadeData;
         gradingData.value = response.gradingData;
         extraData.value = response.extraData;
-        console.log(facadeData.value);
-        console.log(gradingData.value);
-        console.log(extraData.value);
         partitions.value = response.partitions;
-        console.log(phrase);
+        
+        const phrase = proxy.$cookies.get("phase");
         switch (phrase) {
             case "examine":
             case "generate":
@@ -43,8 +75,8 @@ const getData = () => {
         console.error(e);
         loading.value = false;
         error.value = true;
-    })
-}
+    });
+};
 
 onBeforeMount(() => {
     getData();
