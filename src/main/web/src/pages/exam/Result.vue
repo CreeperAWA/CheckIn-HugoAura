@@ -1,9 +1,7 @@
 <script setup>
 import getAvatarUrlOf from "@/utils/Avatar.js";
 import UIMeta from "@/utils/UI_Meta.js";
-import {sanitizeHtml} from "@/utils/SecureHtmlSanitizer.js";
-import SecureMarkdownViewer from "@/components/common/SecureMarkdownViewer.vue";
-import 'md-editor-v3/lib/style.css';
+import ToastMarkdownViewer from "@/components/common/ToastMarkdownViewer.vue";
 import router from "@/router/index.js";
 
 const {proxy} = getCurrentInstance();
@@ -85,9 +83,8 @@ const routeToSignUpOrLogin = () => {
             </div>
         </div>
         <div style="flex:1;width: 100%;background: var(--html-bg) var(--lighting-effect-background-2);z-index: 1;margin-top: 64px;display: flex;flex-direction: column;align-items: center;padding-bottom: 200px">
-            <secure-markdown-viewer no-upload-img placeholder="结果" v-model="result.message"
+            <toast-markdown-viewer placeholder="结果" :model-value="result.message"
                        class="preview-only"
-                       preview-theme="vuepress"
                        style="height: 100dvh;max-width:calc(90dvw - 100px);"
                        :theme="UIMeta.colorScheme.value"/>
         </div>

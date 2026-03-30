@@ -3,7 +3,7 @@ import MultipleChoicesPreviewModule
     from "@/pages/manage/serverGroup/questions/editor/module/MultipleChoicesPreviewModule.vue";
 import QuestionGroupSubQuestionPreviewModule
     from "@/pages/manage/serverGroup/questions/editor/module/QuestionGroupSubQuestionPreviewModule.vue";
-import SecureMarkdownViewer from "@/components/common/SecureMarkdownViewer.vue";
+import ToastMarkdownViewer from "@/components/common/ToastMarkdownViewer.vue";
 import {sanitizeHtml} from "@/utils/SecureHtmlSanitizer.js";
 import UIMeta from "@/utils/UI_Meta.js";
 import ImagesViewer from "@/components/viewer/ImagesViewer.vue";
@@ -95,7 +95,7 @@ const onPreview = (file) => {
                     </el-button>
                 </template>
             </div>
-            <secure-markdown-viewer preview-theme="vuepress" :theme="UIMeta.colorScheme.value"
+            <toast-markdown-viewer :theme="UIMeta.colorScheme.value"
                                    :model-value="questionInfo.question.content"
                                    class="preview-only" style="padding: 16px 32px"/>
             <multiple-choices-preview-module style="padding: 32px"

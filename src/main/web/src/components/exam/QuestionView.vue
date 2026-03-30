@@ -1,5 +1,5 @@
 <script setup>
-import SecureMarkdownViewer from "@/components/common/SecureMarkdownViewer.vue";
+import ToastMarkdownViewer from "@/components/common/ToastMarkdownViewer.vue";
 import {sanitizeHtml} from "@/utils/SecureHtmlSanitizer.js";
 import MultipleChoicesViewModule from "@/components/exam/MultipleChoicesViewModule.vue";
 import QuestionGroupSubQuestionViewModule from "@/components/exam/QuestionGroupSubQuestionViewModule.vue";
@@ -77,7 +77,7 @@ const model = defineModel({
             </div>
         </el-scrollbar>
         <div class="content" style="flex:1;display: flex;flex-direction: column">
-            <secure-markdown-viewer preview-theme="vuepress" :theme="UIMeta.colorScheme.value" :model-value="question.content"
+            <toast-markdown-viewer :theme="UIMeta.colorScheme.value" :model-value="question.content"
                                    class="preview-only" style="flex:1;overflow: visible;"/>
             <multiple-choices-view-module style="padding: 32px"
                                              v-if="question.type==='MultipleChoicesQuestion'"

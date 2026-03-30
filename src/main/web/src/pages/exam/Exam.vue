@@ -1,7 +1,6 @@
 <script setup>
 import router from "@/router/index.js";
 import QuestionCard from "@/components/exam/QuestionCard.vue";
-import 'md-editor-v3/lib/style.css';
 import UI_Meta from "@/utils/UI_Meta.js";
 import LockUtil from "@/utils/Lock.js";
 import _Loading_ from "@/components/common/_Loading_.vue";

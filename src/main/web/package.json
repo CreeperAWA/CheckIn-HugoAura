@@ -10,12 +10,14 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
+    "@toast-ui/editor": "^3.2.2",
     "@types/dompurify": "^3.0.5",
     "axios": "^1.12.2",
     "dompurify": "^3.3.2",
     "element-plus": "^2.11.4",
     "jwt-decode": "^4.0.0",
-    "md-editor-v3": "^6.4.1",
+    "katex": "^0.16.44",
+
     "splitpanes": "^4.0.4",
     "uuidv7": "^1.0.2",
     "vite": "^7.3.1",

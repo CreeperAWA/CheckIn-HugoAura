@@ -3,14 +3,13 @@ import {useRoute} from "vue-router";
 import WebSocketConnector from "@/api/websocket.js";
 import getAvatarUrlOf from "@/utils/Avatar.js";
 import Collapse from "@/components/common/Collapse.vue";
-import SecureMarkdownViewer from "@/components/common/SecureMarkdownViewer.vue";
+import ToastMarkdownViewer from "@/components/common/ToastMarkdownViewer.vue";
 import {sanitizeHtml} from "@/utils/SecureHtmlSanitizer.js";
 import UI_Meta from "@/utils/UI_Meta.js";
 import PartitionCache from "@/data/PartitionCache.js";
 import router from "@/router/index.js";
 import QuestionCache from "@/data/QuestionCache.js";
 import QuestionInfoPanel from "@/components/question/QuestionInfoPanel.vue";
-import 'md-editor-v3/lib/style.css';
 import LinkPanel from "@/components/common/LinkPanel.vue";
 import {ElMessageBox} from "element-plus";
 import PermissionInfo from "@/auth/PermissionInfo.js";
@@ -271,9 +270,8 @@ onBeforeUnmount(() => {
                                             </div>
                                         </template>
                                         <template #content>
-                                            <secure-markdown-viewer no-upload-img placeholder="结果" :model-value="data.result.message"
+                                            <toast-markdown-viewer placeholder="结果" :model-value="data.result.message"
                                                        class="preview-only"
-                                                       preview-theme="vuepress"
                                                        style="height: 100dvh;max-width:calc(90dvw - 100px);"
                                                        :theme="UI_Meta.colorScheme.value"/>
                                         </template>

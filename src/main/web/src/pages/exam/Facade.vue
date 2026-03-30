@@ -1,7 +1,5 @@
 <script setup>
-import {sanitizeHtml} from "@/utils/SecureHtmlSanitizer.js";
-import SecureMarkdownViewer from "@/components/common/SecureMarkdownViewer.vue";
-import 'md-editor-v3/lib/style.css';
+import ToastMarkdownViewer from "@/components/common/ToastMarkdownViewer.vue";
 import UIMeta from "@/utils/UI_Meta.js";
 import router from "@/router/index.js";
 import {Close} from "@element-plus/icons-vue";
@@ -127,9 +125,8 @@ const getSplitsFlexRate = (index) => {
             </div>
         </div>
         <div class="facade-content">
-            <secure-markdown-viewer no-upload-img placeholder="描述" :model-value="facadeData.description"
+            <toast-markdown-viewer placeholder="描述" :model-value="facadeData.description"
                        class="preview-only auto-padding-center"
-                       preview-theme="vuepress"
                        style="height: 100dvh;"
                        :theme="UIMeta.colorScheme.value"/>
             <div style="flex: 1;display: flex;flex-direction: column;align-items: center;justify-content: end">

@@ -1,7 +1,5 @@
 <script setup>
-import 'md-editor-v3/lib/style.css';
-import {MdEditor} from "md-editor-v3";
-import {sanitizeHtml} from "@/utils/SecureHtmlSanitizer.js";
+import ToastEditor from "@/components/common/ToastEditor.vue";
 import UIMeta from "@/utils/UI_Meta.js";
 import Collapse from "@/components/common/Collapse.vue";
 import UserDataInterface from "@/data/UserDataInterface.js";
@@ -87,10 +85,8 @@ onUnmounted(() => {
                 <el-text style="margin-left: 20px;height: 30px;display: block;line-height: 30px">消息</el-text>
             </template>
             <template #content>
-                <md-editor no-upload-img placeholder="消息" v-model="model.message"
-                           :sanitize="sanitizeHtml"
-                           :key="UIMeta.colorScheme" preview-theme="vuepress" :disabled="disabled"
-                           :toolbars-exclude="['save','catalog','github']"
+                <toast-editor placeholder="消息" v-model="model.message"
+                           :key="UIMeta.colorScheme" :disabled="disabled"
                            :theme="UIMeta.colorScheme.value" :show-toolbar-name="UIMeta.touch.value"
                            :preview="!UIMeta.mobile.value"/>
             </template>

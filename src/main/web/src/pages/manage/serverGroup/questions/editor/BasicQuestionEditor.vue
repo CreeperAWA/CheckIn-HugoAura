@@ -7,10 +7,8 @@ import CreateNewPartitionDialog from "@/components/question/CreateNewPartitionPo
 import UserDataInterface from "@/data/UserDataInterface.js";
 import Collapse from "@/components/common/Collapse.vue";
 import ImageViewer from "@/components/viewer/ImagesViewer.vue";
-import {MdEditor} from "md-editor-v3";
-import {sanitizeHtml} from "@/utils/SecureHtmlSanitizer.js";
+import ToastEditor from "@/components/common/ToastEditor.vue";
 import UIMeta from "@/utils/UI_Meta.js";
-import 'md-editor-v3/lib/style.css';
 import PermissionInfo from "@/auth/PermissionInfo.js";
 import {Link, Picture} from "@element-plus/icons-vue"
 import {uuidv7} from "uuidv7";
@@ -195,10 +193,7 @@ const newImageLoaded = () => {
         </template>
         <template #content>
             <div style="display: flex;min-height: 450px !important;">
-                <md-editor no-upload-img placeholder="内容" v-model="questionInfo.question.content"
-                           preview-theme="vuepress" :toolbars-exclude="['save','catalog','github']"
-                           style="height: 50dvh;min-height: 450px;"
-                           :sanitize="sanitizeHtml"
+                <toast-editor placeholder="内容" v-model="questionInfo.question.content"
                            :theme="UIMeta.colorScheme.value" :show-toolbar-name="UIMeta.touch.value"
                            :preview="!UIMeta.mobile.value" :footers="['scrollSwitch']"/>
             </div>

@@ -3,10 +3,8 @@ import WebSocketConnector from "@/api/websocket.js";
 import {ElMessage} from "element-plus";
 import {Picture} from "@element-plus/icons-vue";
 import UIMeta from "@/utils/UI_Meta.js";
-import {sanitizeHtml} from "@/utils/SecureHtmlSanitizer.js";
-import SecureMarkdownViewer from "@/components/common/SecureMarkdownViewer.vue";
-import {MdEditor} from "md-editor-v3";
-import 'md-editor-v3/lib/style.css';
+import ToastMarkdownViewer from "@/components/common/ToastMarkdownViewer.vue";
+import ToastEditor from "@/components/common/ToastEditor.vue";
 import HarmonyOSIcon_Remove from "@/components/icons/HarmonyOSIcon_Remove.vue";
 import PermissionInfo from "@/auth/PermissionInfo.js";
 import router from "@/router/index.js";
@@ -252,9 +250,8 @@ const getSplitsFlexRate = (index) => {
                                 </div>
                             </div>
                             <div style="flex:1;width: 100%;background: var(--html-bg) var(--lighting-effect-background-2);z-index: 1;margin-top: 64px;display: flex;flex-direction: column;align-items: center;padding-bottom: 200px">
-                                <secure-markdown-viewer no-upload-img placeholder="描述" :model-value="data.description"
+                                <toast-markdown-viewer placeholder="描述" :model-value="data.description"
                                            class="preview-only"
-                                           preview-theme="vuepress"
                                            style="height: 100dvh;width: 80%;padding: 0"
                                            :theme="UIMeta.colorScheme.value"/>
                             </div>
@@ -307,12 +304,9 @@ const getSplitsFlexRate = (index) => {
                                               v-model="data.subTitle"></el-input>
                                 </div>
                             </div>
-                            <md-editor no-upload-img placeholder="描述" v-model="data.description"
-                                       preview-theme="vuepress" :toolbars-exclude="['save','catalog','github']"
-                                       style="height: 100dvh;margin-top: 100px;margin-bottom: 120px"
-                                       :sanitize="sanitizeHtml"
+                            <toast-editor placeholder="描述" v-model="data.description"
                                        :theme="UIMeta.colorScheme.value" :show-toolbar-name="UIMeta.mobile.value"
-                                       :preview="!UIMeta.mobile.value"/>
+                                       :preview="!UIMeta.mobile.value" style="height: 100dvh;margin-top: 100px;margin-bottom: 120px"/>
                         </div>
                     </transition>
                 </div>

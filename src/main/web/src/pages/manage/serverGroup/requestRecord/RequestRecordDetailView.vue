@@ -4,7 +4,6 @@ import WebSocketConnector from "@/api/websocket.js";
 import getAvatarUrlOf from "@/utils/Avatar.js";
 import Collapse from "@/components/common/Collapse.vue";
 import router from "@/router/index.js";
-import 'md-editor-v3/lib/style.css';
 import LinkPanel from "@/components/common/LinkPanel.vue";
 import ObjectFieldViewer from "@/components/viewer/ObjectFieldViewer.vue";
 

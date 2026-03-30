@@ -1,7 +1,6 @@
 <script setup>
 import WebSocketConnector from "@/api/websocket.js";
 import {ElMessage} from "element-plus";
-import 'md-editor-v3/lib/style.css';
 import HarmonyOSIcon_Plus from "@/components/icons/HarmonyOSIcon_Plus.vue";
 import {VueDraggable} from "vue-draggable-plus";
 import HarmonyOSIcon_Handle from "@/components/icons/HarmonyOSIcon_Handle.vue";
