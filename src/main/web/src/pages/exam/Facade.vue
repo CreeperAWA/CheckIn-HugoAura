@@ -1,5 +1,5 @@
 <script setup>
-import sanitizeHtml from "@/utils/Sanitize.js";
+import {sanitizeHtml} from "@/utils/SecureHtmlSanitizer.js";
 import SecureMarkdownViewer from "@/components/common/SecureMarkdownViewer.vue";
 import 'md-editor-v3/lib/style.css';
 import UIMeta from "@/utils/UI_Meta.js";

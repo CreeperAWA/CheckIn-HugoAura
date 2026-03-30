@@ -4,7 +4,7 @@ import MultipleChoicesPreviewModule
 import QuestionGroupSubQuestionPreviewModule
     from "@/pages/manage/serverGroup/questions/editor/module/QuestionGroupSubQuestionPreviewModule.vue";
 import SecureMarkdownViewer from "@/components/common/SecureMarkdownViewer.vue";
-import sanitizeHtml from "@/utils/Sanitize.js";
+import {sanitizeHtml} from "@/utils/SecureHtmlSanitizer.js";
 import UIMeta from "@/utils/UI_Meta.js";
 import ImagesViewer from "@/components/viewer/ImagesViewer.vue";
 import router from "@/router/index.js";

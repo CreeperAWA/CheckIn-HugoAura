@@ -4,7 +4,7 @@ import WebSocketConnector from "@/api/websocket.js";
 import getAvatarUrlOf from "@/utils/Avatar.js";
 import Collapse from "@/components/common/Collapse.vue";
 import SecureMarkdownViewer from "@/components/common/SecureMarkdownViewer.vue";
-import sanitizeHtml from "@/utils/Sanitize.js";
+import {sanitizeHtml} from "@/utils/SecureHtmlSanitizer.js";
 import UI_Meta from "@/utils/UI_Meta.js";
 import PartitionCache from "@/data/PartitionCache.js";
 import router from "@/router/index.js";

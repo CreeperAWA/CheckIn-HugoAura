@@ -1,6 +1,6 @@
 <script setup>
 import SecureMarkdownViewer from "@/components/common/SecureMarkdownViewer.vue";
-import sanitizeHtml from "@/utils/Sanitize.js";
+import {sanitizeHtml} from "@/utils/SecureHtmlSanitizer.js";
 import MultipleChoicesViewModule from "@/components/exam/MultipleChoicesViewModule.vue";
 import QuestionGroupSubQuestionViewModule from "@/components/exam/QuestionGroupSubQuestionViewModule.vue";
 import ImagesViewer from "@/components/viewer/ImagesViewer.vue";

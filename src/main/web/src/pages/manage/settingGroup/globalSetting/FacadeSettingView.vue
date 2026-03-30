@@ -3,7 +3,7 @@ import WebSocketConnector from "@/api/websocket.js";
 import {ElMessage} from "element-plus";
 import {Picture} from "@element-plus/icons-vue";
 import UIMeta from "@/utils/UI_Meta.js";
-import sanitizeHtml from "@/utils/Sanitize.js";
+import {sanitizeHtml} from "@/utils/SecureHtmlSanitizer.js";
 import SecureMarkdownViewer from "@/components/common/SecureMarkdownViewer.vue";
 import {MdEditor} from "md-editor-v3";
 import 'md-editor-v3/lib/style.css';

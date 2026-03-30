@@ -1,7 +1,7 @@
 <script setup>
 import getAvatarUrlOf from "@/utils/Avatar.js";
 import UIMeta from "@/utils/UI_Meta.js";
-import sanitizeHtml from "@/utils/Sanitize.js";
+import {sanitizeHtml} from "@/utils/SecureHtmlSanitizer.js";
 import SecureMarkdownViewer from "@/components/common/SecureMarkdownViewer.vue";
 import 'md-editor-v3/lib/style.css';
 import router from "@/router/index.js";

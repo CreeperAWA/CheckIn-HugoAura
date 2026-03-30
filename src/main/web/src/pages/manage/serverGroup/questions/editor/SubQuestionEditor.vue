@@ -12,7 +12,7 @@ import MultipleChoicesEditorPlugin
 import QuestionCache from "@/data/QuestionCache.js";
 import ImageViewer from "@/components/viewer/ImagesViewer.vue";
 import UIMeta from "@/utils/UI_Meta.js";
-import sanitizeHtml from "@/utils/Sanitize.js";
+import {sanitizeHtml} from "@/utils/SecureHtmlSanitizer.js";
 import {MdEditor} from "md-editor-v3";
 import PermissionInfo from "@/auth/PermissionInfo.js";
 import {uuidv7} from "uuidv7";

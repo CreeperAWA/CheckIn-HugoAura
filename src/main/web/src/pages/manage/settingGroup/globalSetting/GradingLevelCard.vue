@@ -1,7 +1,7 @@
 <script setup>
 import 'md-editor-v3/lib/style.css';
 import {MdEditor} from "md-editor-v3";
-import sanitizeHtml from "@/utils/Sanitize.js";
+import {sanitizeHtml} from "@/utils/SecureHtmlSanitizer.js";
 import UIMeta from "@/utils/UI_Meta.js";
 import Collapse from "@/components/common/Collapse.vue";
 import UserDataInterface from "@/data/UserDataInterface.js";

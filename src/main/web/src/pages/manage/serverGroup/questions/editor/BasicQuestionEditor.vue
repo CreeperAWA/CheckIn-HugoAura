@@ -8,7 +8,7 @@ import UserDataInterface from "@/data/UserDataInterface.js";
 import Collapse from "@/components/common/Collapse.vue";
 import ImageViewer from "@/components/viewer/ImagesViewer.vue";
 import {MdEditor} from "md-editor-v3";
-import sanitizeHtml from "@/utils/Sanitize.js";
+import {sanitizeHtml} from "@/utils/SecureHtmlSanitizer.js";
 import UIMeta from "@/utils/UI_Meta.js";
 import 'md-editor-v3/lib/style.css';
 import PermissionInfo from "@/auth/PermissionInfo.js";
