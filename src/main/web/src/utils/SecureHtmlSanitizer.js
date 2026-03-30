@@ -355,19 +355,32 @@ function sanitizeNode(node, doc) {
 
     // 处理危险标签 - 转义为文本展示
     if (DANGEROUS_TAGS.has(tagName)) {
-        // 对于 script、style 等标签，DOMParser 会移除内容，需要手动构建
-        let content;
-        if (tagName === 'script' || tagName === 'style' || tagName === 'noscript') {
-            // 手动构建包含内容的标签
-            const startTag = `<${tagName}${Array.from(node.attributes).map(attr => ` ${attr.name}="${attr.value}"`).join('')}>`;
-            const endTag = `</${tagName}>`;
-            const innerContent = node.textContent || '';
-            content = startTag + innerContent + endTag;
-        } else {
-            content = node.outerHTML;
-        }
-        const escapedWrapper = doc.createElement('span');
-        escapedWrapper.innerHTML = createEscapedDisplay(content, tagName);
+        // 手动构建完整的标签，确保内容完整且不重复
+        const startTag = `<${tagName}${Array.from(node.attributes).map(attr => ` ${attr.name}="${attr.value}"`).join('')}>`;
+        const endTag = `</${tagName}>`;
+        const innerContent = node.textContent || '';
+        const content = startTag + innerContent + endTag;
+        
+        // 创建 pre 元素来保留格式
+        const escapedWrapper = doc.createElement('pre');
+        escapedWrapper.className = 'xss-escaped-content';
+        escapedWrapper.style.cssText = `
+            background-color: rgba(255, 193, 7, 0.15);
+            border: 1px dashed #ffc107;
+            border-radius: 3px;
+            padding: 8px 12px;
+            font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+            font-size: 0.9em;
+            color: #856404;
+            display: block;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 8px 0;
+            overflow: auto;
+        `;
+        escapedWrapper.title = '潜在危险内容已被安全转义';
+        // 使用 textContent 避免HTML实体被解析，确保标签完整显示
+        escapedWrapper.textContent = content;
         return escapedWrapper;
     }
 
@@ -535,6 +548,7 @@ export function sanitizeHtml(html) {
                     const comment = resultDoc.createComment(child.textContent);
                     resultHead.appendChild(comment);
                 } else if (child.nodeType === Node.ELEMENT_NODE) {
+                    // 对于危险标签，使用sanitizeNode处理
                     const sanitizedChild = sanitizeNode(child, resultDoc);
                     if (sanitizedChild) {
                         resultHead.appendChild(sanitizedChild);
@@ -559,6 +573,7 @@ export function sanitizeHtml(html) {
                     const comment = resultDoc.createComment(child.textContent);
                     resultBody.appendChild(comment);
                 } else if (child.nodeType === Node.ELEMENT_NODE) {
+                    // 对于危险标签，使用sanitizeNode处理
                     const sanitizedChild = sanitizeNode(child, resultDoc);
                     if (sanitizedChild) {
                         resultBody.appendChild(sanitizedChild);
