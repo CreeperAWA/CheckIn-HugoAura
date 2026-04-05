@@ -1,8 +1,8 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount, defineProps, defineEmits } from 'vue';
 import Editor from '@toast-ui/editor';
+import katexPlugin from '@techie_doubts/editor-plugin-katex';
 import 'katex/dist/katex.min.css';
-import katex from 'katex';
 import '@toast-ui/editor/dist/toastui-editor.css';
 
 const props = defineProps({
@@ -59,29 +59,11 @@ onMounted(() => {
         ['code', 'codeblock'],
         ['scrollSync']
       ],
-      plugins: [],
-      markdown: {
-        breaks: true,
-        gfm: true,
-        toc: true
-      },
+      plugins: [katexPlugin],
       hooks: {
         addImageBlobHook: (blob, callback) => {
           // 暂时不处理图片上传
           return false;
-        },
-        afterPreviewRender: (html) => {
-          // 处理行内数学公式: \(...\)
-          return html.replace(/\\\(([^\\)]+)\\\)/g, (match, formula) => {
-            try {
-              return katex.renderToString(formula, {
-                throwOnError: false,
-                displayMode: false
-              });
-            } catch (error) {
-              return `<span class="katex-error">${error.message}</span>`;
-            }
-          });
         }
       }
     });

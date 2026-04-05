@@ -1,8 +1,8 @@
 <script setup>
 import {ref, watch, onMounted, onUnmounted} from 'vue';
 import Editor from '@toast-ui/editor';
+import katexPlugin from '@techie_doubts/editor-plugin-katex';
 import 'katex/dist/katex.min.css';
-import katex from 'katex';
 import '@toast-ui/editor/dist/toastui-editor.css';
 import UIMeta from "@/utils/UI_Meta.js";
 
@@ -29,38 +29,7 @@ onMounted(() => {
             height: 'auto',
             theme: props.theme === 'dark' ? 'dark' : 'light',
             toolbarItems: [],
-            plugins: [],
-            markdown: {
-                breaks: true,
-                gfm: true,
-                toc: true
-            },
-            customBlock: {
-                latex: {
-                    parser: {
-                        match: /^\\(([\s\S]+?)\\)$/,
-                        parse: (source) => {
-                            const match = source.match(/^\\(([\s\S]+?)\\)$/);
-                            return {
-                                type: 'latex',
-                                content: match ? match[1].trim() : ''
-                            };
-                        }
-                    },
-                    renderer: {
-                        html: (node) => {
-                            try {
-                                return katex.renderToString(node.content, {
-                                    throwOnError: false,
-                                    displayMode: false
-                                });
-                            } catch (error) {
-                                return `<span class="katex-error">${error.message}</span>`;
-                            }
-                        }
-                    }
-                }
-            },
+            plugins: [katexPlugin],
             readOnly: true
         });
     }
