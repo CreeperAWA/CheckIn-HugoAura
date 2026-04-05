@@ -39,7 +39,12 @@ onMounted(() => {
             initialValue: props.modelValue || '',
             height: 'auto',
             theme: props.theme === 'dark' ? 'dark' : 'light',
-            plugins: [katexPlugin],
+            plugins: [[katexPlugin, {
+                katexOptions: {
+                    throwOnError: false,
+                    errorColor: '#cc0000'
+                }
+            }]],
             usageStatistics: false
         });
     }
@@ -93,5 +98,16 @@ watch(() => props.theme, () => {
     word-break: break-word !important;
     overflow-wrap: break-word !important;
     max-width: 100% !important;
+}
+
+:deep(.katex) {
+    font-size: 1.1em !important;
+    line-height: 1.2 !important;
+}
+
+:deep(.katex-display) {
+    margin: 0.5em 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
 }
 </style>
