@@ -12,7 +12,7 @@ import MultipleChoicesEditorPlugin
 import QuestionCache from "@/data/QuestionCache.js";
 import ImageViewer from "@/components/viewer/ImagesViewer.vue";
 import UIMeta from "@/utils/UI_Meta.js";
-import ToastEditor from "@/components/common/ToastEditor.vue";
+import QuestionEditor from "@/components/common/QuestionEditor.vue";
 import PermissionInfo from "@/auth/PermissionInfo.js";
 import {uuidv7} from "uuidv7";
 import {Link, Picture} from "@element-plus/icons-vue";
@@ -298,7 +298,7 @@ const newImageLoaded = () => {
                 <div style="position: relative;">
                     <div class="question-input" style="display: flex;min-height: 200px !important;"
                          :class="questionInfo.inputMeta['content-0']">
-                        <toast-editor placeholder="内容" v-model="questionInfo.question.content"
+                        <question-editor placeholder="内容" v-model="questionInfo.question.content"
                                    :show-toolbar-name="UIMeta.touch.value" :footers="['scrollSwitch']"
                                    :key="UIMeta.colorScheme"
                                    :theme="UIMeta.colorScheme.value"/>

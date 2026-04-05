@@ -66,13 +66,13 @@ watch(() => props.theme, () => {
 </script>
 
 <template>
-    <div class="toast-markdown-viewer" :style="{ width: width, maxHeight: maxHeight }">
+    <div class="frontend-markdown-viewer" :style="{ width: width, maxHeight: maxHeight }">
         <div ref="viewerRef" class="toast-ui-editor-container"></div>
     </div>
 </template>
 
 <style scoped>
-.toast-markdown-viewer {
+.frontend-markdown-viewer {
     min-height: 50px;
     position: relative;
     overflow: auto;
@@ -88,7 +88,7 @@ watch(() => props.theme, () => {
 
 :deep(.toastui-editor-contents) {
     padding: 20px !important;
-    background: #F0F5F5 !important;
+    background: transparent !important;
     word-wrap: break-word !important;
     word-break: break-word !important;
     overflow-wrap: break-word !important;

@@ -7,7 +7,7 @@ import CreateNewPartitionDialog from "@/components/question/CreateNewPartitionPo
 import UserDataInterface from "@/data/UserDataInterface.js";
 import Collapse from "@/components/common/Collapse.vue";
 import ImageViewer from "@/components/viewer/ImagesViewer.vue";
-import ToastEditor from "@/components/common/ToastEditor.vue";
+import QuestionEditor from "@/components/common/QuestionEditor.vue";
 import UIMeta from "@/utils/UI_Meta.js";
 import PermissionInfo from "@/auth/PermissionInfo.js";
 import {Link, Picture} from "@element-plus/icons-vue"
@@ -193,7 +193,7 @@ const newImageLoaded = () => {
         </template>
         <template #content>
             <div style="display: flex;min-height: 450px !important;">
-                <toast-editor placeholder="内容" v-model="questionInfo.question.content"
+                <question-editor placeholder="内容" v-model="questionInfo.question.content"
                            :theme="UIMeta.colorScheme.value" :show-toolbar-name="UIMeta.touch.value"
                            :preview="!UIMeta.mobile.value" :footers="['scrollSwitch']"/>
             </div>
