@@ -101,5 +101,38 @@ watch(() => props.theme, (newValue) => {
 .toast-editor {
   width: 100%;
   height: 100%;
+  margin-top: 25px;
+}
+
+/* 调整TOAST UI Editor的样式 */
+:deep(.toastui-editor) {
+  background: #F0F5F5 !important;
+}
+
+:deep(.toastui-editor-contents) {
+  padding: 20px !important;
+  background: #F0F5F5 !important;
+}
+
+:deep(.toastui-editor-md-container) {
+  padding: 20px !important;
+  background: #F0F5F5 !important;
+}
+
+:deep(.toastui-editor-preview-container) {
+  padding: 20px !important;
+  background: #F0F5F5 !important;
+}
+
+:deep(.toastui-editor-main) {
+  background: #F0F5F5 !important;
+}
+
+:deep(.toastui-editor-defaultUI) {
+  background: #F0F5F5 !important;
+}
+
+:deep(.toastui-editor-contents-wrapper) {
+  background: #F0F5F5 !important;
 }
 </style>

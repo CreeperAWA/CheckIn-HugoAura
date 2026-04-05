@@ -97,7 +97,7 @@ const onPreview = (file) => {
             </div>
             <toast-markdown-viewer :theme="UIMeta.colorScheme.value"
                                    :model-value="questionInfo.question.content"
-                                   class="preview-only" style="padding: 16px 32px"/>
+                                   class="preview-only" :width="'100%'" style="padding: 16px 32px"/>
             <multiple-choices-preview-module style="padding: 32px"
                                              v-if="questionInfo.question.type==='MultipleChoicesQuestion'"
                                              :question-info="questionInfo"/>

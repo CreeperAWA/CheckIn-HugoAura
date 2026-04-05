@@ -252,7 +252,9 @@ const getSplitsFlexRate = (index) => {
                             <div style="flex:1;width: 100%;background: var(--html-bg) var(--lighting-effect-background-2);z-index: 1;margin-top: 64px;display: flex;flex-direction: column;align-items: center;padding-bottom: 200px">
                                 <toast-markdown-viewer placeholder="描述" :model-value="data.description"
                                            class="preview-only"
-                                           style="height: 100dvh;width: 80%;padding: 0"
+                                           :width="'80%'"
+                                           :max-height="'100dvh'"
+                                           style="padding: 0"
                                            :theme="UIMeta.colorScheme.value"/>
                             </div>
                         </div>

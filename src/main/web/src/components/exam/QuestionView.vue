@@ -78,7 +78,7 @@ const model = defineModel({
         </el-scrollbar>
         <div class="content" style="flex:1;display: flex;flex-direction: column">
             <toast-markdown-viewer :theme="UIMeta.colorScheme.value" :model-value="question.content"
-                                   class="preview-only" style="flex:1;overflow: visible;"/>
+                                   class="preview-only" :width="'100%'" style="flex:1;overflow: visible;"/>
             <multiple-choices-view-module style="padding: 32px"
                                              v-if="question.type==='MultipleChoicesQuestion'"
                                              :question="question" v-model="model"/>
