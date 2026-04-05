@@ -2,6 +2,7 @@
 import { ref, watch, onMounted, onBeforeUnmount, defineProps, defineEmits } from 'vue';
 import Editor from '@toast-ui/editor';
 import katexPlugin from '@techie_doubts/editor-plugin-katex';
+import {KATEX_CONFIG} from '@/config/katex.js';
 import 'katex/dist/katex.min.css';
 import '@toast-ui/editor/dist/toastui-editor.css';
 
@@ -59,7 +60,7 @@ onMounted(() => {
         ['code', 'codeblock'],
         ['scrollSync']
       ],
-      plugins: [katexPlugin],
+      plugins: [[katexPlugin, KATEX_CONFIG]],
       hooks: {
         addImageBlobHook: (blob, callback) => {
           // 暂时不处理图片上传

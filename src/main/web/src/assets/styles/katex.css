@@ -1,0 +1,10 @@
+.katex {
+    font-size: 1.1em !important;
+    line-height: 1.2 !important;
+}
+
+.katex-display {
+    margin: 0.5em 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+}

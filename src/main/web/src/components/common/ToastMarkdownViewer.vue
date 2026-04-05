@@ -2,6 +2,8 @@
 import {ref, watch, onMounted, onUnmounted, computed} from 'vue';
 import Editor from '@toast-ui/editor';
 import katexPlugin from '@techie_doubts/editor-plugin-katex';
+import {KATEX_CONFIG} from '@/config/katex.js';
+import '@/assets/styles/katex.css';
 import 'katex/dist/katex.min.css';
 import '@toast-ui/editor/dist/toastui-editor.css';
 
@@ -39,12 +41,7 @@ onMounted(() => {
             initialValue: props.modelValue || '',
             height: 'auto',
             theme: props.theme === 'dark' ? 'dark' : 'light',
-            plugins: [[katexPlugin, {
-                katexOptions: {
-                    throwOnError: false,
-                    errorColor: '#cc0000'
-                }
-            }]],
+            plugins: [[katexPlugin, KATEX_CONFIG]],
             usageStatistics: false
         });
     }
@@ -98,16 +95,5 @@ watch(() => props.theme, () => {
     word-break: break-word !important;
     overflow-wrap: break-word !important;
     max-width: 100% !important;
-}
-
-:deep(.katex) {
-    font-size: 1.1em !important;
-    line-height: 1.2 !important;
-}
-
-:deep(.katex-display) {
-    margin: 0.5em 0 !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
 }
 </style>
