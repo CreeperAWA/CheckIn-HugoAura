@@ -72,7 +72,7 @@ const getIcon = () => {
                     <!--suppress JSValidateTypes -->
                     <el-breadcrumb-item :to="{ name: 'home' }" style="line-height: 14px;">
                         <img :src="getIcon()" alt="" width="14" height="14" style="float: left;margin-right: 4px;"/>
-                        checkIn
+                        CheckIn
                     </el-breadcrumb-item>
                     <TransitionGroup name="breadcrumb-item">
                         <!--suppress JSValidateTypes -->

@@ -181,7 +181,7 @@ const newImageLoaded = () => {
                 <el-text style="margin-right: 24px">题目内容</el-text>
                 <div style="display: flex">
                     <el-link href="https://markdown.com.cn/basic-syntax/" target="_blank" type="info"
-                             style="margin-right: 16px" @click.stop>Markdown指南
+                             style="margin-right: 16px" @click.stop>Markdown 指南
                     </el-link>
                 </div>
                 <div class="flex-blank-1"></div>

@@ -79,7 +79,7 @@ const clearCaches = () => {
                         <el-text size="large" style="align-self: baseline">CheckIn</el-text>
                         <el-text type="info" style="align-self: baseline">{{ version }}</el-text>
                         <el-link type="info" style="align-self: baseline"
-                                 href="https://github.com/Etern-34520/CheckIn" target="_blank">Github
+                                 href="https://github.com/CreeperAWA/CheckIn" target="_blank">GitHub
                         </el-link>
                     </div>
                     <div class="flex-blank-1"></div>

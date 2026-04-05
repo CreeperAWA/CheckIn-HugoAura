@@ -81,7 +81,7 @@ const groups = [
             {
                 name: "高级设置",
                 show: showAdvanceSetting,
-                description: "请求头IP兼容 外部API Turnstile",
+                description: "请求头 IP 兼容、外部 API Turnstile",
                 icon: MoreFilled,
                 action: () => {
                     router.push({name: "advance-setting"});
@@ -89,7 +89,7 @@ const groups = [
             },
             {
                 name: "关于",
-                description: "使用到的开源项目 Github",
+                description: "使用到的开源项目 GitHub",
                 icon: HarmonyOSIcon_InfoCircle,
                 action: () => {
                     router.push({name: "about"});
