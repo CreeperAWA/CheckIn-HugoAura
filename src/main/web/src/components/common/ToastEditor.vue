@@ -105,7 +105,19 @@ watch(() => props.theme, (newValue) => {
   margin-top: 25px;
 }
 
-/* 调整TOAST UI Editor的样式 */
+/* 调整 TOAST UI Editor 的样式 - 统一字体大小为 16px */
+:deep(.toastui-editor),
+:deep(.toastui-editor-contents),
+:deep(.toastui-editor-md-container),
+:deep(.toastui-editor-preview-container),
+:deep(.toastui-editor-main),
+:deep(.toastui-editor-defaultUI),
+:deep(.toastui-editor-contents-wrapper),
+:deep(.toastui-editor .CodeMirror),
+:deep(.toastui-editor .CodeMirror .CodeMirror-code) {
+  font-size: 16px !important;
+}
+
 :deep(.toastui-editor) {
   background: #F0F5F5 !important;
 }

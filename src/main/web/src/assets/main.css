@@ -354,3 +354,34 @@ div.panel {
     height: 36px;
     -webkit-app-region: drag;
 }
+
+/* 编辑器字体大小配置 - 16px */
+/* ProseMirror 编辑器 */
+.ProseMirror,
+.ProseMirror .toastui-editor-md-code-block,
+.ProseMirror .toastui-editor-md-code-block-line-background {
+    font-size: 16px !important;
+}
+
+/* TOAST UI Editor 内容区域 */
+.toastui-editor-contents,
+.toastui-editor-contents p {
+    font-size: 16px !important;
+}
+
+/* WYSIWYG 编辑器 */
+.toastui-editor-ww-container,
+.toastui-editor-ww-editor {
+    font-size: 16px !important;
+}
+
+/* 代码块字体配置 - 专业等宽字体 */
+.toastui-editor-contents pre,
+.toastui-editor-contents code {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, 'Courier New', monospace !important;
+}
+
+.toastui-editor .CodeMirror pre,
+.toastui-editor .CodeMirror .cm-content {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, 'Courier New', monospace !important;
+}
