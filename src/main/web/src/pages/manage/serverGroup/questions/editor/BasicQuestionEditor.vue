@@ -183,9 +183,6 @@ const newImageLoaded = () => {
                     <el-link href="https://markdown.com.cn/basic-syntax/" target="_blank" type="info"
                              style="margin-right: 16px" @click.stop>Markdown指南
                     </el-link>
-                    <el-link href="https://mermaid.nodejs.cn/intro/getting-started.html" target="_blank" type="info"
-                             style="margin-right: 16px" @click.stop>Mermaid指南
-                    </el-link>
                 </div>
                 <div class="flex-blank-1"></div>
                 <el-text type="info">字数 {{ questionInfo.question.content.length }}</el-text>

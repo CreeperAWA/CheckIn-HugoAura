@@ -1,6 +1,6 @@
 {
   "name": "check-in",
-  "version": "2.2.13-beta",
+  "version": "2.2.12-HugoAura.16",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,7 +11,6 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
     "@techie_doubts/editor-plugin-katex": "^3.1.2",
-    "@techie_doubts/editor-plugin-mermaid": "^3.1.0",
     "@toast-ui/editor": "^3.2.2",
     "@types/dompurify": "^3.0.5",
     "axios": "^1.12.2",
