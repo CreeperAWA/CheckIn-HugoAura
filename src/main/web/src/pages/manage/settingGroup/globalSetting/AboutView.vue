@@ -14,7 +14,7 @@ const data = [{
         "Vue Draggable",
         "Vue3 Cookies",
         "Element Plus",
-        "MdEditorV3",
+        "TOAST UI Editor",
         "Axios",
         "Splitpanes",
         "JWT Decode",
@@ -24,7 +24,7 @@ const data = [{
 }, {
     type: "后端",
     projects: [
-        "Spring Boot & Spring series",
+        "Spring Boot & Spring Series",
         "Hibernate",
         "Tomcat",
         "Jackson",
