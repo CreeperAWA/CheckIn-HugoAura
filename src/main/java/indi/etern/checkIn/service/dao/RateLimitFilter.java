@@ -35,7 +35,7 @@ public class RateLimitFilter implements Filter {
     }
     
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, 
                         FilterChain filterChain) throws IOException, ServletException {
         if (!(servletRequest instanceof HttpServletRequest request) ||
             !(servletResponse instanceof HttpServletResponse response)) {
@@ -49,13 +49,16 @@ public class RateLimitFilter implements Filter {
             return;
         }
         
-        String ipAddress = getClientIp(request);
-        String cookieValue = getCookieValue(request);
-        Long qqNumber = getQqNumber(request);
-        String oauthInfo = getOAuthInfo(request);
+        // 包装请求，以便在读取请求体后，后续的控制器仍然能够读取到请求体
+        CachedBodyHttpServletRequest cachedRequest = new CachedBodyHttpServletRequest(request);
+        
+        String ipAddress = getClientIp(cachedRequest);
+        String cookieValue = getCookieValue(cachedRequest);
+        Long qqNumber = getQqNumber(cachedRequest);
+        String oauthInfo = getOAuthInfo(cachedRequest);
         
         if (isSuperAdmin() || hasBypassRateLimitPermission()) {
-            filterChain.doFilter(request, response);
+            filterChain.doFilter(cachedRequest, response);
             return;
         }
         
@@ -66,7 +69,7 @@ public class RateLimitFilter implements Filter {
         contextInfo.put("oauth", oauthInfo);
         
         for (RateLimitRule rule : enabledRules) {
-            String identifier = getIdentifierForDimension(rule.getDimension(), request, contextInfo);
+            String identifier = getIdentifierForDimension(rule.getDimension(), cachedRequest, contextInfo);
             
             if (identifier == null || identifier.isEmpty()) continue;
             
@@ -76,12 +79,12 @@ public class RateLimitFilter implements Filter {
                     rateLimitService.checkRateLimit(identifier, rule);
             
             if (!checkResult.allowed()) {
-                handleRateLimited(response, rule, contextInfo, request);
+                handleRateLimited(response, rule, contextInfo, cachedRequest);
                 return;
             }
         }
         
-        filterChain.doFilter(request, response);
+        filterChain.doFilter(cachedRequest, response);
     }
     
     private boolean isSuperAdmin() {
@@ -230,10 +233,19 @@ public class RateLimitFilter implements Filter {
     }
     
     private Long getQqNumber(HttpServletRequest request) {
+        // 优先从请求体中获取 QQ 号（用户生成题目时提交的）
+        Long qqFromBody = getQqFromRequestBody(request);
+        if (qqFromBody != null) {
+            return qqFromBody;
+        }
+        
+        // 从当前用户对象中获取 QQ 号
         Object userAttr = request.getAttribute("currentUser");
         if (userAttr instanceof User user) {
             return user.getQQNumber();
         }
+        
+        // 从 cookie 中获取 QQ 号
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
@@ -249,6 +261,44 @@ public class RateLimitFilter implements Filter {
         return null;
     }
     
+    private Long getQqFromRequestBody(HttpServletRequest request) {
+        try {
+            // 检查请求路径是否是生成考试的接口
+            if ("/api/generate".equals(request.getRequestURI()) && "POST".equals(request.getMethod())) {
+                // 读取请求体
+                StringBuilder sb = new StringBuilder();
+                try (var reader = request.getReader()) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line);
+                    }
+                }
+                
+                // 解析 JSON 请求体
+                String requestBody = sb.toString();
+                if (!requestBody.isEmpty()) {
+                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                    java.util.Map<String, Object> requestData = mapper.readValue(requestBody, java.util.Map.class);
+                    if (requestData.containsKey("qq")) {
+                        Object qqObj = requestData.get("qq");
+                        if (qqObj instanceof Number number) {
+                            return number.longValue();
+                        } else if (qqObj instanceof String str) {
+                            try {
+                                return Long.parseLong(str);
+                            } catch (NumberFormatException e) {
+                                // 忽略解析错误
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // 忽略解析错误，继续尝试其他方式获取 QQ 号
+        }
+        return null;
+    }
+    
     private String getOAuthInfo(HttpServletRequest request) {
         String authorization = request.getHeader("Authorization");
         if (authorization != null && authorization.startsWith("Bearer ")) {
@@ -259,5 +309,79 @@ public class RateLimitFilter implements Filter {
             return auth.getName();
         }
         return null;
+    }
+    
+    // 用于缓存请求体的包装类
+    private static class CachedBodyHttpServletRequest extends jakarta.servlet.http.HttpServletRequestWrapper {
+        private final byte[] cachedBody;
+        
+        public CachedBodyHttpServletRequest(jakarta.servlet.http.HttpServletRequest request) throws java.io.IOException {
+            super(request);
+            // 读取请求体并缓存
+            try (jakarta.servlet.ServletInputStream inputStream = request.getInputStream()) {
+                this.cachedBody = inputStream.readAllBytes();
+            }
+        }
+        
+        @Override
+        public java.io.BufferedReader getReader() throws java.io.IOException {
+            return new java.io.BufferedReader(new java.io.InputStreamReader(getInputStream()));
+        }
+        
+        @Override
+        public jakarta.servlet.ServletInputStream getInputStream() throws java.io.IOException {
+            return new jakarta.servlet.ServletInputStream() {
+                private final java.io.ByteArrayInputStream inputStream = new java.io.ByteArrayInputStream(cachedBody);
+                
+                @Override
+                public int read() throws java.io.IOException {
+                    return inputStream.read();
+                }
+                
+                @Override
+                public int read(byte[] b) throws java.io.IOException {
+                    return inputStream.read(b);
+                }
+                
+                @Override
+                public int read(byte[] b, int off, int len) throws java.io.IOException {
+                    return inputStream.read(b, off, len);
+                }
+                
+                @Override
+                public long skip(long n) throws java.io.IOException {
+                    return inputStream.skip(n);
+                }
+                
+                @Override
+                public int available() throws java.io.IOException {
+                    return inputStream.available();
+                }
+                
+                @Override
+                public void close() throws java.io.IOException {
+                    inputStream.close();
+                }
+                
+                @Override
+                public boolean isFinished() {
+                    try {
+                        return inputStream.available() == 0;
+                    } catch (Exception e) {
+                        return true;
+                    }
+                }
+                
+                @Override
+                public boolean isReady() {
+                    return true;
+                }
+                
+                @Override
+                public void setReadListener(jakarta.servlet.ReadListener listener) {
+                    // 不支持异步读取
+                }
+            };
+        }
     }
 }
