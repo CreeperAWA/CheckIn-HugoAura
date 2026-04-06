@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -140,19 +141,24 @@ public class RateLimitService {
     
     @Transactional
     public void saveRules(List<RateLimitRule> rules) {
+        ruleRepository.deleteAll();
         ruleRepository.saveAll(rules);
         loadRules();
     }
     
     @Transactional
-    public void saveWhitelistItem(RateLimitWhitelist item) {
-        whitelistRepository.save(item);
-        loadWhitelist();
-    }
-    
-    @Transactional
-    public void deleteWhitelistItem(String id) {
-        whitelistRepository.deleteById(id);
+    public void updateWhitelist(List<RateLimitWhitelist> createdItems,
+                                List<String> deletedIds) {
+        if (deletedIds != null && !deletedIds.isEmpty()) {
+            for (String id : deletedIds) {
+                whitelistRepository.deleteById(id);
+            }
+        }
+        
+        if (createdItems != null && !createdItems.isEmpty()) {
+            whitelistRepository.saveAll(createdItems);
+        }
+        
         loadWhitelist();
     }
     

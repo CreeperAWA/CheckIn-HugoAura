@@ -32,7 +32,8 @@ const pageGroups = [
         groupName: "设置",
         paths: [
             {pathName: 'global-setting-base', name: '服务器设置', icon: "Tools"},
-            {pathName: 'rate-limit-monitor', name: '限流监控', icon: "Warning", show: PermissionInfo.hasPermission('advance setting', 'get advance setting')},
+            {pathName: 'rate-limit-setting', name: '限流设置', icon: "Setting"},
+            {pathName: 'rate-limit-monitor', name: '限流监控', icon: "Warning"},
             {pathName: 'account-base', name: '账户', icon: "SetUp"},
         ]
     }

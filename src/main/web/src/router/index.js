@@ -149,6 +149,11 @@ const router = createRouter({
                             name: "rate-limit-monitor",
                             component: () => import("@/pages/manage/settingGroup/globalSetting/RateLimitMonitorView.vue")
                         },
+                        {
+                            path: "rate-limit-setting/",
+                            name: "rate-limit-setting",
+                            component: () => import("@/pages/manage/settingGroup/globalSetting/RateLimitSettingView.vue")
+                        },
                                 {
                                     path: "oauth2-setting/",
                                     name: "oauth2-setting",
