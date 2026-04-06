@@ -377,7 +377,8 @@ div.panel {
 
 /* 代码块字体配置 - 专业等宽字体 */
 .toastui-editor-contents pre,
-.toastui-editor-contents code {
+.toastui-editor-contents code,
+.ProseMirror .toastui-editor-md-code-block {
     font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, 'Courier New', monospace !important;
 }
 
