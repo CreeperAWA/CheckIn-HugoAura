@@ -51,8 +51,16 @@ onUnmounted(() => {
 
 const formatTime = (timeStr) => {
     if (!timeStr) return "";
-    const date = new Date(timeStr);
-    return date.toLocaleString("zh-CN");
+    try {
+        // 处理 "yyyy-MM-dd HH:mm:ss" 格式的日期字符串
+        const date = new Date(timeStr.replace(" ", "T") + ".000Z");
+        if (isNaN(date.getTime())) {
+            return timeStr;
+        }
+        return date.toLocaleString("zh-CN");
+    } catch (error) {
+        return timeStr;
+    }
 };
 
 const getDimensionTagType = (dimension) => {
