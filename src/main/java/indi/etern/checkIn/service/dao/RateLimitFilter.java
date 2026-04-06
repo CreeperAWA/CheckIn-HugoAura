@@ -54,7 +54,7 @@ public class RateLimitFilter implements Filter {
         Long qqNumber = getQqNumber(request);
         String oauthInfo = getOAuthInfo(request);
         
-        if (isSuperAdmin()) {
+        if (isSuperAdmin() || hasBypassRateLimitPermission()) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -91,6 +91,15 @@ public class RateLimitFilter implements Filter {
                 return "super_admin".equals(user.getRole().getType());
             }
             return false;
+        }
+        return false;
+    }
+    
+    private boolean hasBypassRateLimitPermission() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) {
+            return auth.getAuthorities().stream()
+                .anyMatch(authority -> "BYPASS_RATE_LIMIT".equals(authority.getAuthority()));
         }
         return false;
     }

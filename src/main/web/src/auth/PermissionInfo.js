@@ -26,9 +26,29 @@ const PermissionInfo = {
         return promise;
     },
     hasPermission: function (group, name) {
-        const permissions1 = PermissionInfo.permissions.value[group];
-        const regExp = new RegExp(name, "i");
-        return permissions1 instanceof Array && Boolean(permissions1.find(item => regExp.test(item.name)));
+        // 支持两种调用方式：
+        // 1. hasPermission('group', 'permission') - 传统方式
+        // 2. hasPermission('permission') - 直接使用权限名称
+        if (name === undefined) {
+            // 直接使用权限名称的情况
+            const permissionName = group;
+            // 遍历所有权限组，查找是否存在该权限
+            for (const groupName in PermissionInfo.permissions.value) {
+                const permissions = PermissionInfo.permissions.value[groupName];
+                if (permissions instanceof Array) {
+                    const found = permissions.find(item => item.name === permissionName);
+                    if (found) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        } else {
+            // 传统方式：指定权限组和权限名称
+            const permissions1 = PermissionInfo.permissions.value[group];
+            const regExp = new RegExp(name, "i");
+            return permissions1 instanceof Array && Boolean(permissions1.find(item => regExp.test(item.name)));
+        }
     },
     waitingForInitialize: async function () {
         if (PermissionInfo.initialized) {

@@ -5,6 +5,19 @@ import HarmonyOSIcon_Plus from "@/components/icons/HarmonyOSIcon_Plus.vue";
 import CustomDialog from "@/components/common/CustomDialog.vue";
 import {uuidv7} from "uuidv7";
 import HarmonyOSIcon_Remove from "@/components/icons/HarmonyOSIcon_Remove.vue";
+import PermissionInfo from "@/auth/PermissionInfo.js";
+
+// 检查查看权限
+if (!PermissionInfo.hasPermission('VIEW_RATE_LIMIT_CONFIG')) {
+    ElMessage({
+        type: "error",
+        message: "无权限访问限流配置页面"
+    });
+    // 可以在这里添加路由跳转逻辑，比如跳转到首页
+}
+
+// 检查修改权限
+const canModify = PermissionInfo.hasPermission('MODIFY_RATE_LIMIT_CONFIG');
 
 const editing = ref(false);
 const data = ref({
@@ -217,25 +230,25 @@ const removeWhitelistItem = (index) => {
 <template>
     <div style="display: flex;flex-direction: column;">
         <div style="display: flex;flex-direction: row;margin-bottom: 32px;">
-            <el-text style="align-self:baseline;font-size: 24px">请求频率限流设置</el-text>
-            <div style="display: flex;margin-left: 32px;">
-                <transition-group name="blur-scale">
-                    <el-button-group key="button-group">
-                        <transition-group name="blur-scale">
-                            <el-button class="disable-init-animate" style="margin-right: 4px;"
-                                       @click="editing ? finishEditing():startEditing()"
-                                       :disabled="loading || error" key="edit">
-                                {{ editing ? '完成' : '编辑' }}
-                            </el-button>
-                            <el-button class="disable-init-animate" style="margin-right: 24px;"
-                                       @click="cancel" v-if="editing" key="cancel">
-                                取消
-                            </el-button>
-                        </transition-group>
-                    </el-button-group>
-                </transition-group>
+                <el-text style="align-self:baseline;font-size: 24px">请求频率限流设置</el-text>
+                <div style="display: flex;margin-left: 32px;" v-if="canModify">
+                    <transition-group name="blur-scale">
+                        <el-button-group key="button-group">
+                            <transition-group name="blur-scale">
+                                <el-button class="disable-init-animate" style="margin-right: 4px;" 
+                                           @click="editing ? finishEditing():startEditing()" 
+                                           :disabled="loading || error" key="edit">
+                                    {{ editing ? '完成' : '编辑' }}
+                                </el-button>
+                                <el-button class="disable-init-animate" style="margin-right: 24px;" 
+                                           @click="cancel" v-if="editing" key="cancel">
+                                    取消
+                                </el-button>
+                            </transition-group>
+                        </el-button-group>
+                    </transition-group>
+                </div>
             </div>
-        </div>
         <el-scrollbar v-loading="loading">
             <div style="display: flex;flex-direction: column;align-items: center">
                 <transition name="blur-scale" mode="out-in">
@@ -248,7 +261,7 @@ const removeWhitelistItem = (index) => {
                         <div v-for="(rule, ruleIndex) in (data.rateLimitRules || [])" :key="ruleIndex" 
                              style="background: var(--el-fill-color-light);padding: 16px;border-radius: 8px;margin-bottom: 12px">
                             <div style="display: flex;align-items: center;margin-bottom: 12px">
-                                <el-switch v-model="rule.enabled" :disabled="!editing" style="margin-right: 12px"/>
+                                <el-switch v-model="rule.enabled" :disabled="!editing || !canModify" style="margin-right: 12px"/>
                                 <el-text size="large" style="font-weight: 500">{{ getDimensionName(rule.dimension) }}</el-text>
                             </div>
                             
@@ -256,7 +269,7 @@ const removeWhitelistItem = (index) => {
                                 <div style="display: flex;gap: 16px;flex-wrap: wrap;align-items: end">
                                     <div style="flex: 1;min-width: 200px">
                                         <el-text style="margin-bottom: 4px;display: block">时间窗口</el-text>
-                                        <el-select v-model="rule.timeWindowSeconds" :disabled="!editing" style="width: 100%">
+                                        <el-select v-model="rule.timeWindowSeconds" :disabled="!editing || !canModify" style="width: 100%">
                                             <el-option label="1 分钟" :value="60"/>
                                             <el-option label="5 分钟" :value="300"/>
                                             <el-option label="15 分钟" :value="900"/>
@@ -268,12 +281,12 @@ const removeWhitelistItem = (index) => {
                                     <div style="flex: 1;min-width: 200px">
                                         <el-text style="margin-bottom: 4px;display: block">最大请求数</el-text>
                                         <el-input-number v-model="rule.maxRequests" :min="1" :max="10000" 
-                                                       :disabled="!editing" style="width: 100%"/>
+                                                       :disabled="!editing || !canModify" style="width: 100%"/>
                                     </div>
                                     
                                     <div style="flex: 1;min-width: 200px">
                                         <el-text style="margin-bottom: 4px;display: block">响应策略</el-text>
-                                        <el-select v-model="rule.responseStrategy" :disabled="!editing" style="width: 100%">
+                                        <el-select v-model="rule.responseStrategy" :disabled="!editing || !canModify" style="width: 100%">
                                             <el-option label="返回 429 状态码" value="RETURN_429"/>
                                             <el-option label="自定义提示信息" value="CUSTOM_MESSAGE"/>
                                             <el-option label="渐进式延迟" value="PROGRESSIVE_DELAY"/>
@@ -284,19 +297,19 @@ const removeWhitelistItem = (index) => {
                                 <div v-if="rule.responseStrategy === 'CUSTOM_MESSAGE'" style="max-width: 600px">
                                     <el-text style="margin-bottom: 4px;display: block">自定义提示信息</el-text>
                                     <el-input v-model="rule.customMessage" type="textarea" :rows="2" 
-                                              placeholder="输入自定义的限流提示信息..." :disabled="!editing"/>
+                                              placeholder="输入自定义的限流提示信息..." :disabled="!editing || !canModify"/>
                                 </div>
                                 
                                 <div v-if="rule.responseStrategy === 'PROGRESSIVE_DELAY'" style="max-width: 300px">
                                     <el-text style="margin-bottom: 4px;display: block">基础延迟（毫秒）</el-text>
                                     <el-input-number v-model="rule.baseDelayMs" :min="100" :max="10000" :step="100"
-                                                   :disabled="!editing" style="width: 100%"/>
+                                                   :disabled="!editing || !canModify" style="width: 100%"/>
                                 </div>
                                 
                                 <div style="max-width: 200px">
                                     <el-text style="margin-bottom: 4px;display: block">优先级</el-text>
                                     <el-input-number v-model="rule.priority" :min="0" :max="100" 
-                                                   :disabled="!editing" style="width: 100%"/>
+                                                   :disabled="!editing || !canModify" style="width: 100%"/>
                                 </div>
                             </div>
                         </div>
@@ -305,7 +318,7 @@ const removeWhitelistItem = (index) => {
                         <div style="margin-top: 32px;padding-top: 24px;border-top: 1px solid var(--el-border-color)">
                             <div style="display: flex;align-items: center;margin-bottom: 12px">
                                 <el-text size="large" style="font-weight: 500">白名单管理</el-text>
-                                <el-button v-if="editing" link type="primary" style="margin-left: 12px" @click="addWhitelistItem">
+                                <el-button v-if="editing && canModify" link type="primary" style="margin-left: 12px" @click="addWhitelistItem">
                                     <HarmonyOSIcon_Plus style="margin-right: 4px"/>
                                     添加白名单
                                 </el-button>
@@ -316,7 +329,7 @@ const removeWhitelistItem = (index) => {
                                 <el-tag :type="getWhitelistDimensionType(item.dimension)" size="small">{{ item.dimension }}</el-tag>
                                 <el-text style="flex: 1;font-family: monospace">{{ item.value }}</el-text>
                                 <el-text v-if="item.description" type="info" style="flex: 2">{{ item.description }}</el-text>
-                                <el-button v-if="editing" link type="danger" size="small" @click="removeWhitelistItem(index)">
+                                <el-button v-if="editing && canModify" link type="danger" size="small" @click="removeWhitelistItem(index)">
                                     移除
                                 </el-button>
                             </div>

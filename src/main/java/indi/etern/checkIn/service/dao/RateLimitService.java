@@ -139,8 +139,12 @@ public class RateLimitService {
         return TimeUnit.MINUTES.toNanos(1);
     }
     
-    @Transactional
-    public void saveRules(List<RateLimitRule> rules) {
+    @Transactional(rollbackFor = Exception.class)
+    public synchronized void saveRules(List<RateLimitRule> rules) {
+        if (rules == null || rules.isEmpty()) {
+            throw new IllegalArgumentException("限流规则列表不能为空，系统将至少保留一条规则以提供限流保护");
+        }
+        
         ruleRepository.deleteAll();
         ruleRepository.saveAll(rules);
         loadRules();

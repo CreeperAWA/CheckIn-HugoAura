@@ -2,6 +2,16 @@
 import WebSocketConnector from "@/api/websocket.js";
 import {ElMessage} from "element-plus";
 import {ref, onMounted, onUnmounted} from "vue";
+import PermissionInfo from "@/auth/PermissionInfo.js";
+
+// 检查权限
+if (!PermissionInfo.hasPermission('VIEW_RATE_LIMIT_MONITOR')) {
+    ElMessage({
+        type: "error",
+        message: "无权限访问限流监控页面"
+    });
+    // 可以在这里添加路由跳转逻辑，比如跳转到首页
+}
 
 const loading = ref(true);
 const statistics = ref({

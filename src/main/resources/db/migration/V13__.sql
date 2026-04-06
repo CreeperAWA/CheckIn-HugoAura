@@ -51,3 +51,22 @@ INSERT INTO rate_limit_rules (id, dimension, enabled, time_window_seconds, max_r
 ('cookie-rule-001', 'COOKIE', 0, 60, 100, 'RETURN_429', NULL, 1000, 20),
 ('qq-rule-001', 'QQ', 0, 60, 100, 'RETURN_429', NULL, 1000, 30),
 ('oauth-rule-001', 'OAUTH', 0, 60, 100, 'RETURN_429', NULL, 1000, 40);
+
+-- 5. 添加限流权限组和权限
+-- 添加限流权限组
+INSERT IGNORE INTO permission_groups (name, description)
+VALUES ('rate limit', '限流管理');
+
+-- 添加限流相关权限
+INSERT IGNORE INTO permissions (id, description, name, group_name)
+VALUES ('a1b2c3d4-e5f6-4g7h-8i9j-0k1l2m3n4o5p', '绕过限流约束', 'BYPASS_RATE_LIMIT', 'rate limit'),
+       ('b2c3d4e5-f6g7-8h9i-0j1k-2l3m4n5o6p7q', '查看限流监控', 'VIEW_RATE_LIMIT_MONITOR', 'rate limit'),
+       ('c3d4e5f6-g7h8-9i0j-1k2l-3m4n5o6p7q8r', '查看限流配置', 'VIEW_RATE_LIMIT_CONFIG', 'rate limit'),
+       ('d4e5f6g7-h8i9-0j1k-2l3m-4n5o6p7q8r9s', '修改限流配置', 'MODIFY_RATE_LIMIT_CONFIG', 'rate limit');
+
+-- 为超级管理员角色添加限流权限
+INSERT IGNORE INTO role_permission_mapping (role_type, permission_id)
+VALUES ('super admin', 'a1b2c3d4-e5f6-4g7h-8i9j-0k1l2m3n4o5p'),
+       ('super admin', 'b2c3d4e5-f6g7-8h9i-0j1k-2l3m4n5o6p7q'),
+       ('super admin', 'c3d4e5f6-g7h8-9i0j-1k2l-3m4n5o6p7q8r'),
+       ('super admin', 'd4e5f6g7-h8i9-0j1k-2l3m-4n5o6p7q8r9s');
