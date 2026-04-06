@@ -168,7 +168,8 @@ public class RateLimitFilter implements Filter {
                 Map<String, Object> errorResponse = new HashMap<>();
                 errorResponse.put("error", "Too Many Requests");
                 errorResponse.put("message", "请求过于频繁，请稍后再试");
-                errorResponse.put("retryAfter", rule.getTimeWindowSeconds());
+                errorResponse.put("retryAfter", rule.getLimitDurationSeconds());
+                errorResponse.put("limitDuration", rule.getLimitDurationSeconds());
                 response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
             }
             case CUSTOM_MESSAGE -> {
@@ -178,6 +179,7 @@ public class RateLimitFilter implements Filter {
                 customResponse.put("error", "Rate Limited");
                 customResponse.put("message", rule.getCustomMessage() != null ?
                         rule.getCustomMessage() : "请求频率超限，请稍后再试");
+                customResponse.put("limitDuration", rule.getLimitDurationSeconds());
                 response.getWriter().write(objectMapper.writeValueAsString(customResponse));
             }
             case PROGRESSIVE_DELAY -> {
@@ -191,6 +193,7 @@ public class RateLimitFilter implements Filter {
                 delayResponse.put("appliedDelayMs", delayMs);
                 delayResponse.put("currentCount", currentCount);
                 delayResponse.put("maxRequests", rule.getMaxRequests());
+                delayResponse.put("limitDuration", rule.getLimitDurationSeconds());
                 response.getWriter().write(objectMapper.writeValueAsString(delayResponse));
             }
         }

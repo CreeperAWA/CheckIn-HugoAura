@@ -130,6 +130,19 @@ const validateRateLimitRules = () => {
                 return false;
             }
         }
+        
+        if (!rule.limitDurationSeconds) {
+            ElMessage({type: 'error', message: `${ruleIndex}：限流持续时间不能为空`});
+            return false;
+        }
+        if (rule.limitDurationSeconds <= 0) {
+            ElMessage({type: 'error', message: `${ruleIndex}：限流持续时间必须为正整数（单位：秒）`});
+            return false;
+        }
+        if (rule.limitDurationSeconds > 86400) {
+            ElMessage({type: 'error', message: `${ruleIndex}：限流持续时间不能超过 24 小时（86400 秒）`});
+            return false;
+        }
     }
     return true;
 }
@@ -282,6 +295,17 @@ const removeWhitelistItem = (index) => {
                                         <el-text style="margin-bottom: 4px;display: block">最大请求数</el-text>
                                         <el-input-number v-model="rule.maxRequests" :min="1" :max="10000" 
                                                        :disabled="!editing || !canModify" style="width: 100%"/>
+                                    </div>
+                                    
+                                    <div style="flex: 1;min-width: 200px">
+                                        <el-text style="margin-bottom: 4px;display: block">限流持续时间</el-text>
+                                        <el-select v-model="rule.limitDurationSeconds" :disabled="!editing || !canModify" style="width: 100%">
+                                            <el-option label="1 分钟" :value="60"/>
+                                            <el-option label="5 分钟" :value="300"/>
+                                            <el-option label="15 分钟" :value="900"/>
+                                            <el-option label="1 小时" :value="3600"/>
+                                            <el-option label="24 小时" :value="86400"/>
+                                        </el-select>
                                     </div>
                                     
                                     <div style="flex: 1;min-width: 200px">

@@ -40,6 +40,9 @@ public class RateLimitRule {
     @Column(name = "priority", nullable = false)
     private int priority;
     
+    @Column(name = "limit_duration_seconds", nullable = false)
+    private int limitDurationSeconds;
+    
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     

@@ -75,6 +75,7 @@ public class SaveRateLimitSetting extends BaseAction<SaveRateLimitSetting.Input,
             validateResponseStrategy(ruleData, ruleIndex);
             validateBaseDelay(ruleData, ruleIndex);
             validatePriority(ruleData, ruleIndex);
+            validateLimitDuration(ruleData, ruleIndex);
             
             RateLimitRule rule = objectMapper.convertValue(ruleData, RateLimitRule.class);
             
@@ -183,6 +184,19 @@ public class SaveRateLimitSetting extends BaseAction<SaveRateLimitSetting.Input,
             if (priority < 0 || priority > 100) {
                 throw new IllegalArgumentException(ruleIndex + "：优先级必须在 0-100 之间");
             }
+        }
+    }
+    
+    private void validateLimitDuration(Map<String, Object> ruleData, String ruleIndex) {
+        if (ruleData.get("limitDurationSeconds") == null) {
+            throw new IllegalArgumentException(ruleIndex + "：限流持续时间不能为空");
+        }
+        int limitDurationSeconds = ((Number) ruleData.get("limitDurationSeconds")).intValue();
+        if (limitDurationSeconds <= 0) {
+            throw new IllegalArgumentException(ruleIndex + "：限流持续时间必须为正整数（单位：秒）");
+        }
+        if (limitDurationSeconds > 86400) {
+            throw new IllegalArgumentException(ruleIndex + "：限流持续时间不能超过 24 小时（86400 秒）");
         }
     }
 }

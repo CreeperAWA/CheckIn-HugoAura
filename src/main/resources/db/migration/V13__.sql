@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS rate_limit_rules (
     custom_message TEXT COMMENT '自定义提示信息（response_strategy为CUSTOM_MESSAGE时使用）',
     base_delay_ms INT NOT NULL DEFAULT 1000 COMMENT '基础延迟毫秒数（PROGRESSIVE_DELAY策略使用）',
     priority INT NOT NULL DEFAULT 0 COMMENT '规则优先级，数字越大优先级越高',
+    limit_duration_seconds INT NOT NULL DEFAULT 300 COMMENT '限流持续时间（秒）',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -46,11 +47,11 @@ CREATE INDEX IF NOT EXISTS idx_created_at ON rate_limit_logs (created_at);
 CREATE INDEX IF NOT EXISTS idx_triggered_dimension ON rate_limit_logs (triggered_dimension);
 
 -- 4. 初始化默认的限流规则数据
-INSERT INTO rate_limit_rules (id, dimension, enabled, time_window_seconds, max_requests, response_strategy, custom_message, base_delay_ms, priority) VALUES
-('ip-rule-001', 'IP', 0, 60, 100, 'RETURN_429', NULL, 1000, 10),
-('cookie-rule-001', 'COOKIE', 0, 60, 100, 'RETURN_429', NULL, 1000, 20),
-('qq-rule-001', 'QQ', 0, 60, 100, 'RETURN_429', NULL, 1000, 30),
-('oauth-rule-001', 'OAUTH', 0, 60, 100, 'RETURN_429', NULL, 1000, 40);
+INSERT INTO rate_limit_rules (id, dimension, enabled, time_window_seconds, max_requests, response_strategy, custom_message, base_delay_ms, priority, limit_duration_seconds) VALUES
+('ip-rule-001', 'IP', 0, 60, 100, 'RETURN_429', NULL, 1000, 10, 300),
+('cookie-rule-001', 'COOKIE', 0, 60, 100, 'RETURN_429', NULL, 1000, 20, 300),
+('qq-rule-001', 'QQ', 0, 60, 100, 'RETURN_429', NULL, 1000, 30, 300),
+('oauth-rule-001', 'OAUTH', 0, 60, 100, 'RETURN_429', NULL, 1000, 40, 300);
 
 -- 5. 添加限流权限组和权限
 -- 添加限流权限组

@@ -26,6 +26,7 @@ public class RateLimitService {
     private final RateLimitWhitelistRepository whitelistRepository;
     
     private Cache<String, AtomicInteger> requestCounters;
+    private Cache<String, Long> rateLimitedUsers;
     private List<RateLimitRule> cachedRules;
     private Map<String, Boolean> whitelistCache;
     
@@ -53,6 +54,29 @@ public class RateLimitService {
                     @Override
                     public long expireAfterRead(String key, AtomicInteger value, long currentTime, long currentDuration) {
                         return currentDuration;
+                    }
+                })
+                .build();
+        
+        rateLimitedUsers = Caffeine.newBuilder()
+                .maximumSize(100_000)
+                .expireAfter(new Expiry<String, Long>() {
+                    @Override
+                    public long expireAfterCreate(String key, Long value, long currentTime) {
+                        long duration = value - System.currentTimeMillis();
+                        return duration > 0 ? TimeUnit.MILLISECONDS.toNanos(duration) : 0;
+                    }
+                    
+                    @Override
+                    public long expireAfterUpdate(String key, Long value, long currentTime, long currentDuration) {
+                        long duration = value - System.currentTimeMillis();
+                        return duration > 0 ? TimeUnit.MILLISECONDS.toNanos(duration) : 0;
+                    }
+                    
+                    @Override
+                    public long expireAfterRead(String key, Long value, long currentTime, long currentDuration) {
+                        long duration = value - System.currentTimeMillis();
+                        return duration > 0 ? TimeUnit.MILLISECONDS.toNanos(duration) : 0;
                     }
                 })
                 .build();
@@ -99,11 +123,22 @@ public class RateLimitService {
     }
     
     public RateLimitCheckResult checkRateLimit(String identifier, RateLimitRule rule) {
+        String rateLimitKey = buildRateLimitKey(rule.getId(), identifier);
+        
+        // 检查用户是否已经被限流
+        Long limitEndTime = rateLimitedUsers.getIfPresent(rateLimitKey);
+        if (limitEndTime != null && System.currentTimeMillis() < limitEndTime) {
+            return new RateLimitCheckResult(false, rule.getMaxRequests() + 1, rule);
+        }
+        
         String cacheKey = buildCacheKeyWithRuleId(rule.getId(), identifier);
         AtomicInteger counter = requestCounters.get(cacheKey, k -> new AtomicInteger(0));
         int currentCount = counter.incrementAndGet();
         
         if (currentCount > rule.getMaxRequests()) {
+            // 记录用户被限流，设置限流结束时间
+            long endTime = System.currentTimeMillis() + (rule.getLimitDurationSeconds() * 1000L);
+            rateLimitedUsers.put(rateLimitKey, endTime);
             return new RateLimitCheckResult(false, currentCount, rule);
         }
         return new RateLimitCheckResult(true, currentCount, rule);
@@ -124,6 +159,10 @@ public class RateLimitService {
     
     private String buildCacheKeyWithRuleId(String ruleId, String identifier) {
         return "rate_limit:" + ruleId + ":" + identifier;
+    }
+    
+    private String buildRateLimitKey(String ruleId, String identifier) {
+        return "rate_limited:" + ruleId + ":" + identifier;
     }
     
     private long getTimeWindowForKey(String key) {
