@@ -27,7 +27,7 @@ public interface RateLimitLogRepository extends JpaRepository<RateLimitLog, Stri
     List<Object[]> findTopLimitedIp(@Param("startTime") LocalDateTime startTime, Pageable pageable);
     
     @Query("SELECT l.qqNumber as identifier, COUNT(l) as count FROM RateLimitLog l " +
-           "WHERE l.createdAt >= :startTime AND l.qqNumber IS NOT NULL " +
+           "WHERE l.createdAt >= :startTime AND l.qqNumber IS NOT NULL AND l.qqNumber != 0 " +
            "GROUP BY l.qqNumber ORDER BY count DESC")
     List<Object[]> findTopLimitedQq(@Param("startTime") LocalDateTime startTime, Pageable pageable);
     

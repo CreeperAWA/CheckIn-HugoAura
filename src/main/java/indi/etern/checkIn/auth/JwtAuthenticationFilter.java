@@ -52,6 +52,9 @@ public class JwtAuthenticationFilter implements Filter {
                 
                 setUserToSecurityContextHolder(userDetails);
                 request.setAttribute("currentUser", userDetails);
+
+                // 额外设置qqNumber属性供其他过滤器使用（如RateLimitFilter）
+                request.setAttribute("qqNumber", userDetails.getQQNumber());
             }
         }
         filterChain.doFilter(servletRequest, servletResponse);

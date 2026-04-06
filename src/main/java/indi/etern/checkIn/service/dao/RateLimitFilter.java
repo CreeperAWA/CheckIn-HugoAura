@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -57,7 +58,14 @@ public class RateLimitFilter implements Filter {
         Long qqNumber = getQqNumber(cachedRequest);
         String oauthInfo = getOAuthInfo(cachedRequest);
         
+        // 调试日志：检查权限状态
+        Authentication currentAuth = SecurityContextHolder.getContext().getAuthentication();
+        logger.debug("Rate limit check - Auth status: {}, Principal: {}", 
+            currentAuth != null ? currentAuth.isAuthenticated() : "null",
+            currentAuth != null ? currentAuth.getPrincipal().getClass().getSimpleName() : "null");
+        
         if (isSuperAdmin() || hasBypassRateLimitPermission()) {
+            logger.info("Rate limit bypassed for user with elevated privileges");
             filterChain.doFilter(cachedRequest, response);
             return;
         }
@@ -89,9 +97,19 @@ public class RateLimitFilter implements Filter {
     
     private boolean isSuperAdmin() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        logger.debug("isSuperAdmin check - Auth: {}, isAuthenticated: {}, Principal: {}", 
+            auth != null, 
+            auth != null && auth.isAuthenticated(),
+            auth != null ? auth.getPrincipal().getClass().getName() : "null");
+        
         if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof User user) {
+            String roleType = user.getRole() != null ? user.getRole().getType() : "null";
+            logger.debug("isSuperAdmin - User role: {}", roleType);
+            
             if (user.getRole() != null) {
-                return "super_admin".equals(user.getRole().getType());
+                boolean isSuperAdmin = "super_admin".equals(user.getRole().getType());
+                logger.debug("isSuperAdmin result: {}", isSuperAdmin);
+                return isSuperAdmin;
             }
             return false;
         }
@@ -100,9 +118,15 @@ public class RateLimitFilter implements Filter {
     
     private boolean hasBypassRateLimitPermission() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        logger.debug("hasBypassRateLimitPermission check - Auth: {}", auth != null);
+        
         if (auth != null && auth.isAuthenticated()) {
-            return auth.getAuthorities().stream()
+            boolean hasPermission = auth.getAuthorities().stream()
                 .anyMatch(authority -> "BYPASS_RATE_LIMIT".equals(authority.getAuthority()));
+            logger.debug("hasBypassRateLimitPermission result: {}, authorities: {}", 
+                hasPermission, 
+                auth.getAuthorities().stream().map(Object::toString).toList());
+            return hasPermission;
         }
         return false;
     }
@@ -197,6 +221,22 @@ public class RateLimitFilter implements Filter {
         log.setTriggeredDimension(rule.getDimension());
         log.setResponseAction(rule.getResponseStrategy().name());
         log.setCreatedAt(LocalDateTime.now());
+
+        // 增强调试信息日志
+        if (log.getQqNumber() == null || log.getQqNumber() == 0) {
+            logger.warn("Rate limit triggered without valid QQ number - IP: {}, Path: {}, Dimension: {}, " +
+                        "Auth: {}",
+                log.getIpAddress(),
+                log.getRequestPath(),
+                log.getTriggeredDimension(),
+                (SecurityContextHolder.getContext().getAuthentication() != null &&
+                 SecurityContextHolder.getContext().getAuthentication().isAuthenticated() ?
+                 "authenticated" : "not authenticated"));
+        } else {
+            logger.info("Rate limit triggered for QQ: {}, IP: {}, Path: {}, Dimension: {}",
+                log.getQqNumber(), log.getIpAddress(), log.getRequestPath(), log.getTriggeredDimension());
+        }
+
         return log;
     }
     
@@ -233,68 +273,265 @@ public class RateLimitFilter implements Filter {
     }
     
     private Long getQqNumber(HttpServletRequest request) {
-        // 优先从请求体中获取 QQ 号（用户生成题目时提交的）
-        Long qqFromBody = getQqFromRequestBody(request);
-        if (qqFromBody != null) {
-            return qqFromBody;
-        }
-        
-        // 从当前用户对象中获取 QQ 号
-        Object userAttr = request.getAttribute("currentUser");
-        if (userAttr instanceof User user) {
-            return user.getQQNumber();
-        }
-        
-        // 从 cookie 中获取 QQ 号
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("qq".equals(cookie.getName())) {
-                    try {
-                        return Long.parseLong(cookie.getValue());
-                    } catch (NumberFormatException e) {
-                        return null;
+        Long qqNumber = null;
+        String source = "unknown";
+
+        try {
+            // 1. 优先从请求属性中获取 QQ 号（如果之前的处理逻辑已经设置了）
+            Object qqAttr = request.getAttribute("qqNumber");
+            if (qqAttr instanceof Long qq) {
+                if (qq != 0 && isValidQQNumber(qq)) {
+                    logger.debug("Got QQ number from request attribute: {}", qq);
+                    return qq;
+                }
+            } else {
+                logger.debug("qqNumber attribute not found or not Long: {}", qqAttr);
+            }
+
+            // 2. 从当前用户对象中获取 QQ 号
+            Object userAttr = request.getAttribute("currentUser");
+            if (userAttr instanceof User user) {
+                qqNumber = user.getQQNumber();
+                if (qqNumber != null && qqNumber != 0 && isValidQQNumber(qqNumber)) {
+                    source = "currentUser attribute";
+                    logger.debug("Got QQ number from currentUser attribute: {}", qqNumber);
+                    return qqNumber;
+                } else {
+                    logger.debug("currentUser QQ invalid: {}", qqNumber);
+                }
+            } else {
+                logger.debug("currentUser attribute not found or not User: {}", userAttr);
+            }
+
+            // 3. 从 Spring Security Context 获取当前认证用户（补充途径）
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof User secUser) {
+                qqNumber = secUser.getQQNumber();
+                if (qqNumber != null && qqNumber != 0 && isValidQQNumber(qqNumber)) {
+                    source = "SecurityContext";
+                    logger.debug("Got QQ number from SecurityContext: {}", qqNumber);
+                    return qqNumber;
+                } else {
+                    logger.debug("SecurityContext user QQ invalid: {}", qqNumber);
+                }
+            } else {
+                logger.debug("SecurityContext not authenticated or principal not User: auth={}, principal={}", 
+                    auth, auth != null ? auth.getPrincipal().getClass().getName() : "null");
+            }
+
+            // 4. 从 user cookie 中解析 QQ 号（关键修复：支持正常登录场景）
+            qqNumber = getQqFromUserCookie(request);
+            if (qqNumber != null && qqNumber != 0 && isValidQQNumber(qqNumber)) {
+                source = "user cookie";
+                logger.debug("Got QQ number from user cookie: {}", qqNumber);
+                return qqNumber;
+            }
+
+            // 5. 从独立的 qq cookie 中获取 QQ 号
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if ("qq".equals(cookie.getName())) {
+                        try {
+                            qqNumber = Long.parseLong(cookie.getValue());
+                            if (qqNumber != 0 && isValidQQNumber(qqNumber)) {
+                                source = "qq cookie";
+                                logger.debug("Got QQ number from qq cookie: {}", qqNumber);
+                                return qqNumber;
+                            }
+                        } catch (NumberFormatException e) {
+                            logger.warn("Invalid QQ number format in qq cookie: {}", cookie.getValue());
+                        }
                     }
                 }
             }
+
+            // 6. 从请求体中获取 QQ 号（扩展支持更多接口）
+            qqNumber = getQqFromRequestBody(request);
+            if (qqNumber != null && qqNumber != 0 && isValidQQNumber(qqNumber)) {
+                source = "request body";
+                logger.debug("Got QQ number from request body: {}", qqNumber);
+                return qqNumber;
+            }
+
+            // 7. 从 URL 参数中获取 QQ 号（新增）
+            qqNumber = getQqFromParameter(request);
+            if (qqNumber != null && qqNumber != 0 && isValidQQNumber(qqNumber)) {
+                source = "URL parameter";
+                logger.debug("Got QQ number from URL parameter: {}", qqNumber);
+                return qqNumber;
+            }
+
+        } catch (Exception e) {
+            logger.error("Error while extracting QQ number from source: {}", source, e);
+        }
+
+        logger.warn("Could not extract valid QQ number from any source. Auth status: {}", 
+            SecurityContextHolder.getContext().getAuthentication() != null && 
+            SecurityContextHolder.getContext().getAuthentication().isAuthenticated() ? 
+            "authenticated" : "not authenticated");
+        return null;
+    }
+
+    /**
+     * 验证QQ号是否合法
+     * QQ号范围：10000 - 2147483647（约21亿，符合腾讯QQ号规则）
+     */
+    private boolean isValidQQNumber(Long qqNumber) {
+        if (qqNumber == null) return false;
+        // QQ号最小为10000，最大不超过Long.MAX_VALUE的合理范围
+        return qqNumber >= 10000L && qqNumber <= 99999999999999L;
+    }
+
+    /**
+     * 从user cookie中解析QQ号
+     * user cookie格式：URL编码的JSON字符串，包含qq字段
+     */
+    private Long getQqFromUserCookie(HttpServletRequest request) {
+        try {
+            Cookie[] cookies = request.getCookies();
+            if (cookies == null) return null;
+
+            for (Cookie cookie : cookies) {
+                if ("user".equals(cookie.getName())) {
+                    String userCookieValue = cookie.getValue();
+                    if (userCookieValue == null || userCookieValue.isEmpty()) continue;
+
+                    try {
+                        // 解析URL编码的JSON
+                        String decodedValue = java.net.URLDecoder.decode(userCookieValue, StandardCharsets.UTF_8);
+                        @SuppressWarnings("unchecked")
+                        java.util.Map<String, Object> userData = objectMapper.readValue(decodedValue, java.util.Map.class);
+
+                        if (userData.containsKey("qq")) {
+                            Object qqObj = userData.get("qq");
+                            if (qqObj instanceof Number number) {
+                                return number.longValue();
+                            } else if (qqObj instanceof String str) {
+                                return Long.parseLong(str);
+                            }
+                        }
+                    } catch (Exception e) {
+                        logger.debug("Failed to parse user cookie: {}", e.getMessage());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error extracting QQ from user cookie", e);
+        }
+        return null;
+    }
+
+    /**
+     * 从URL参数中获取QQ号
+     */
+    private Long getQqFromParameter(HttpServletRequest request) {
+        try {
+            String qqParam = request.getParameter("qq");
+            if (qqParam != null && !qqParam.isEmpty()) {
+                return Long.parseLong(qqParam);
+            }
+        } catch (NumberFormatException e) {
+            logger.debug("Invalid QQ number format in parameter");
         }
         return null;
     }
     
     private Long getQqFromRequestBody(HttpServletRequest request) {
         try {
-            // 检查请求路径是否是生成考试的接口
-            if ("/api/generate".equals(request.getRequestURI()) && "POST".equals(request.getMethod())) {
-                // 读取请求体
-                StringBuilder sb = new StringBuilder();
-                try (var reader = request.getReader()) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        sb.append(line);
-                    }
+            String requestURI = request.getRequestURI();
+            String method = request.getMethod();
+            logger.debug("Checking request: {} {}", method, requestURI);
+
+            // 仅对 POST/PUT/PATCH 请求解析请求体
+            if (!("POST".equals(method) || "PUT".equals(method) || "PATCH".equals(method))) {
+                return null;
+            }
+
+            // 支持的接口列表（可根据需要扩展）
+            // 注意：请求路径可能包含上下文路径前缀（如/checkIn/api/generate）
+            Set<String> supportedPaths = Set.of(
+                "/api/generate",
+                "/api/submit",
+                "/api/login"
+            );
+
+            // 检查是否包含支持的 API 路径（兼容有上下文路径前缀的情况）
+            boolean isSupported = supportedPaths.stream().anyMatch(requestURI::endsWith);
+            if (isSupported) {
+                return extractQQFromJsonBody(request);
+            }
+
+            // 对于其他 API 路径，也尝试提取（宽松模式）
+            if (requestURI.contains("/api/")) {
+                Long qq = extractQQFromJsonBody(request);
+                if (qq != null) {
+                    logger.debug("Extracted QQ from non-whitelisted API: {}", requestURI);
+                    return qq;
                 }
-                
-                // 解析 JSON 请求体
-                String requestBody = sb.toString();
-                if (!requestBody.isEmpty()) {
-                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                    java.util.Map<String, Object> requestData = mapper.readValue(requestBody, java.util.Map.class);
-                    if (requestData.containsKey("qq")) {
-                        Object qqObj = requestData.get("qq");
-                        if (qqObj instanceof Number number) {
-                            return number.longValue();
-                        } else if (qqObj instanceof String str) {
-                            try {
-                                return Long.parseLong(str);
-                            } catch (NumberFormatException e) {
-                                // 忽略解析错误
+            }
+        } catch (Exception e) {
+            logger.error("Failed to get QQ number from request body", e);
+        }
+        logger.debug("Returning null for QQ number from request body");
+        return null;
+    }
+
+    /**
+     * 从JSON请求体中提取QQ号
+     */
+    private Long extractQQFromJsonBody(HttpServletRequest request) {
+        try {
+            String requestBody;
+            try (var reader = request.getReader()) {
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+                requestBody = sb.toString();
+            }
+
+            logger.debug("Request body for QQ extraction: {}", requestBody);
+
+            if (requestBody == null || requestBody.isEmpty()) {
+                return null;
+            }
+
+            // 解析 JSON 请求体
+            java.util.Map<String, Object> requestData = objectMapper.readValue(requestBody, java.util.Map.class);
+
+            // 尝试多种可能的字段名
+            String[] possibleFields = {"qq", "qqNumber", "userId", "user_qq", "usernameOrQQ"};
+
+            for (String field : possibleFields) {
+                if (requestData.containsKey(field)) {
+                    Object qqObj = requestData.get(field);
+                    logger.debug("Found field '{}' in request body: {}", field, qqObj);
+
+                    if (qqObj instanceof Number number) {
+                        long qq = number.longValue();
+                        if (isValidQQNumber(qq)) {
+                            logger.debug("Successfully parsed QQ number from field '{}': {}", field, qq);
+                            return qq;
+                        }
+                    } else if (qqObj instanceof String str) {
+                        try {
+                            long qq = Long.parseLong(str);
+                            if (isValidQQNumber(qq)) {
+                                logger.debug("Successfully parsed QQ number from string field '{}': {}", field, qq);
+                                return qq;
                             }
+                        } catch (NumberFormatException e) {
+                            logger.debug("Field '{}' is not a valid number: {}", field, str);
                         }
                     }
                 }
             }
+
+            logger.debug("No valid QQ field found in request body. Available keys: {}", requestData.keySet());
         } catch (Exception e) {
-            // 忽略解析错误，继续尝试其他方式获取 QQ 号
+            logger.error("Error parsing request body for QQ extraction", e);
         }
         return null;
     }

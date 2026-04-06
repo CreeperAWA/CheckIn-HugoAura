@@ -146,7 +146,7 @@ const getDimensionTagType = (dimension) => {
                             <div style="display: flex;gap: 16px;flex-wrap: wrap;font-size: 13px">
                                 <span><strong>IP:</strong> {{ log.ipAddress || '-' }}</span>
                                 <span><strong>Cookie:</strong> {{ log.cookieValue ? log.cookieValue.substring(0, 20) + '...' : '-' }}</span>
-                                <span><strong>QQ:</strong> {{ log.qqNumber !== null && log.qqNumber !== undefined ? log.qqNumber : '-' }}</span>
+                                <span><strong>QQ:</strong> {{ log.qqNumber && log.qqNumber !== 0 ? log.qqNumber : '-' }}</span>
                                 <span><strong>路径:</strong> {{ log.requestPath }}</span>
                                 <span><strong>方法:</strong> {{ log.requestMethod }}</span>
                             </div>
