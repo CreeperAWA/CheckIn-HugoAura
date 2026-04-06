@@ -140,10 +140,15 @@ const router = createRouter({
                                     component: () => import("@/pages/manage/settingGroup/globalSetting/FacadeSettingView.vue")
                                 },
                                 {
-                                    path: "advance-setting/",
-                                    name: "advance-setting",
-                                    component: () => import("@/pages/manage/settingGroup/globalSetting/AdvanceSettingView.vue")
-                                },
+                            path: "advance-setting/",
+                            name: "advance-setting",
+                            component: () => import("@/pages/manage/settingGroup/globalSetting/AdvanceSettingView.vue")
+                        },
+                        {
+                            path: "rate-limit-monitor/",
+                            name: "rate-limit-monitor",
+                            component: () => import("@/pages/manage/settingGroup/globalSetting/RateLimitMonitorView.vue")
+                        },
                                 {
                                     path: "oauth2-setting/",
                                     name: "oauth2-setting",
