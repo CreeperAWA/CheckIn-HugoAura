@@ -96,7 +96,7 @@ const getDimensionTagType = (dimension) => {
         </div>
 
         <el-scrollbar v-loading="loading">
-            <div style="max-width: 1280px;width: min(85%,1280px);display: flex;flex-direction: column;gap: 24px;padding-bottom: 32px">
+            <div style="width: 100%;display: flex;flex-direction: column;gap: 24px;padding: 0 24px 32px 24px;box-sizing: border-box">
                 <!-- 统计概览 -->
                 <div style="display: grid;grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));gap: 16px">
                     <div class="panel-1" style="padding: 20px;display: flex;flex-direction: column;align-items: center">
@@ -118,36 +118,39 @@ const getDimensionTagType = (dimension) => {
                     </div>
                 </div>
 
-                <!-- TOP IP 排行 -->
-                <div class="panel-1" style="padding: 20px">
-                    <el-text size="large" style="font-weight: bold;margin-bottom: 16px;display: block">TOP 限流 IP 地址</el-text>
-                    <div v-if="statistics.topIps && statistics.topIps.length > 0">
-                        <div v-for="(item, index) in statistics.topIps" :key="index"
-                             style="display: flex;align-items: center;padding: 8px 0;border-bottom: 1px solid var(--el-border-color-lighter)">
-                            <el-text style="width: 40px;font-weight: bold" :type="index < 3 ? 'danger' : 'info'">
-                                {{ index + 1 }}
-                            </el-text>
-                            <el-text style="flex: 1;font-family: monospace">{{ item.identifier }}</el-text>
-                            <el-tag type="danger" size="small">{{ item.count }} 次</el-tag>
+                <!-- TOP 排行 -->
+                <div class="top-rankings-container">
+                    <!-- TOP IP 排行 -->
+                    <div class="panel-1 top-ranking-panel">
+                        <el-text size="large" style="font-weight: bold;margin-bottom: 16px;display: block">TOP 限流 IP 地址</el-text>
+                        <div v-if="statistics.topIps && statistics.topIps.length > 0">
+                            <div v-for="(item, index) in statistics.topIps" :key="index"
+                                 style="display: flex;align-items: center;padding: 8px 0;border-bottom: 1px solid var(--el-border-color-lighter)">
+                                <el-text style="width: 40px;font-weight: bold" :type="index < 3 ? 'danger' : 'info'">
+                                    {{ index + 1 }}
+                                </el-text>
+                                <el-text style="flex: 1;font-family: monospace">{{ item.identifier }}</el-text>
+                                <el-tag type="danger" size="small">{{ item.count }} 次</el-tag>
+                            </div>
                         </div>
+                        <el-empty v-else description="暂无数据" :image-size="60"/>
                     </div>
-                    <el-empty v-else description="暂无数据" :image-size="60"/>
-                </div>
 
-                <!-- TOP QQ 排行 -->
-                <div class="panel-1" style="padding: 20px">
-                    <el-text size="large" style="font-weight: bold;margin-bottom: 16px;display: block">TOP 限流 QQ 号</el-text>
-                    <div v-if="statistics.topQqs && statistics.topQqs.length > 0">
-                        <div v-for="(item, index) in statistics.topQqs" :key="index"
-                             style="display: flex;align-items: center;padding: 8px 0;border-bottom: 1px solid var(--el-border-color-lighter)">
-                            <el-text style="width: 40px;font-weight: bold" :type="index < 3 ? 'danger' : 'info'">
-                                {{ index + 1 }}
-                            </el-text>
-                            <el-text style="flex: 1;font-family: monospace">{{ item.identifier }}</el-text>
-                            <el-tag type="danger" size="small">{{ item.count }} 次</el-tag>
+                    <!-- TOP QQ 排行 -->
+                    <div class="panel-1 top-ranking-panel">
+                        <el-text size="large" style="font-weight: bold;margin-bottom: 16px;display: block">TOP 限流 QQ 号</el-text>
+                        <div v-if="statistics.topQqs && statistics.topQqs.length > 0">
+                            <div v-for="(item, index) in statistics.topQqs" :key="index"
+                                 style="display: flex;align-items: center;padding: 8px 0;border-bottom: 1px solid var(--el-border-color-lighter)">
+                                <el-text style="width: 40px;font-weight: bold" :type="index < 3 ? 'danger' : 'info'">
+                                    {{ index + 1 }}
+                                </el-text>
+                                <el-text style="flex: 1;font-family: monospace">{{ item.identifier }}</el-text>
+                                <el-tag type="danger" size="small">{{ item.count }} 次</el-tag>
+                            </div>
                         </div>
+                        <el-empty v-else description="暂无数据" :image-size="60"/>
                     </div>
-                    <el-empty v-else description="暂无数据" :image-size="60"/>
                 </div>
 
                 <!-- 最近限流日志 -->
@@ -184,5 +187,30 @@ const getDimensionTagType = (dimension) => {
     background: var(--el-bg-color);
     border: 1px solid var(--el-border-color-light);
     border-radius: 8px;
+}
+
+.top-rankings-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    width: 100%;
+}
+
+.top-ranking-panel {
+    flex: 1;
+    padding: 20px;
+    min-width: 0;
+}
+
+/* 响应式设计：屏幕宽度小于 768px 时，改为垂直堆叠布局 */
+@media screen and (max-width: 768px) {
+    .top-rankings-container {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .top-ranking-panel {
+        width: 100%;
+    }
 }
 </style>
