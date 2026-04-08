@@ -52,12 +52,24 @@ onUnmounted(() => {
 const formatTime = (timeStr) => {
     if (!timeStr) return "";
     try {
-        // 处理 "yyyy-MM-dd HH:mm:ss" 格式的日期字符串
-        const date = new Date(timeStr.replace(" ", "T") + ".000Z");
-        if (isNaN(date.getTime())) {
+        let date;
+        // 处理后端返回的LocalDateTime数组格式 [年, 月, 日, 时, 分, 秒, 毫秒]
+        if (Array.isArray(timeStr) && timeStr.length >= 6) {
+            date = new Date(timeStr[0], timeStr[1] - 1, timeStr[2], timeStr[3], timeStr[4], timeStr[5], timeStr[6] || 0);
+        } else {
             return timeStr;
         }
-        return date.toLocaleString("zh-CN");
+        
+        if (isNaN(date.getTime())) return timeStr;
+        
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     } catch (error) {
         return timeStr;
     }
