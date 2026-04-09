@@ -81,6 +81,11 @@ const router = createRouter({
                             ]
                         },
                         {
+                            path: "rate-limit-monitor/",
+                            name: "rate-limit-monitor",
+                            component: () => import("@/pages/manage/settingGroup/globalSetting/RateLimitMonitorView.vue")
+                        },
+                        {
                             path: "manage-user/",
                             name: "manage-user",
                             component: () => import("@/pages/manage/manageGroup/userManage/ManageUserView.vue"),
@@ -143,16 +148,6 @@ const router = createRouter({
                             path: "advance-setting/",
                             name: "advance-setting",
                             component: () => import("@/pages/manage/settingGroup/globalSetting/AdvanceSettingView.vue")
-                        },
-                        {
-                            path: "rate-limit-monitor/",
-                            name: "rate-limit-monitor",
-                            component: () => import("@/pages/manage/settingGroup/globalSetting/RateLimitMonitorView.vue")
-                        },
-                        {
-                            path: "rate-limit-setting/",
-                            name: "rate-limit-setting",
-                            component: () => import("@/pages/manage/settingGroup/globalSetting/RateLimitSettingView.vue")
                         },
                                 {
                                     path: "oauth2-setting/",

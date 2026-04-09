@@ -103,6 +103,7 @@ public class SaveRateLimitSetting extends BaseAction<SaveRateLimitSetting.Input,
             item.setWhitelistValue(((String) itemData.get("value")).trim());
             item.setDescription(itemData.get("description") != null ? 
                     ((String) itemData.get("description")).trim() : null);
+            item.setCreatedAt(java.time.LocalDateTime.now());
             
             items.add(item);
         }

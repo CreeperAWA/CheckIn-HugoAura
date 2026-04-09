@@ -20,6 +20,7 @@ const pageGroups = [
                 pathName: 'request-record', name: '请求记录', icon: "Link",
                 show: PermissionInfo.hasPermission('request record', 'get request records')
             },
+            {pathName: 'rate-limit-monitor', name: '限流监控', icon: "Warning"},
             {pathName: 'questions', name: '题库', icon: "Finished"}
         ]
     }, {
@@ -29,14 +30,12 @@ const pageGroups = [
             {pathName: 'manage-group', name: '组管理', icon: "Files"},
         ]
     }, {
-        groupName: "设置",
-        paths: [
-            {pathName: 'global-setting-base', name: '服务器设置', icon: "Tools"},
-            {pathName: 'rate-limit-setting', name: '限流设置', icon: "Setting"},
-            {pathName: 'rate-limit-monitor', name: '限流监控', icon: "Warning"},
-            {pathName: 'account-base', name: '账户', icon: "SetUp"},
-        ]
-    }
+            groupName: "设置",
+            paths: [
+                {pathName: 'global-setting-base', name: '服务器设置', icon: "Tools"},
+                {pathName: 'account-base', name: '账户', icon: "SetUp"},
+            ]
+        }
 ]
 
 const inlineBool = defineModel("inlineStyle", {
