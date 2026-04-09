@@ -118,7 +118,7 @@ const getSplitsFlexRate = (index) => {
 <template>
     <div style="display: flex;flex-direction: column;">
         <div style="display: flex;flex-direction: row;flex-wrap: wrap">
-            <el-text style="align-self:baseline;font-size: 24px;margin-right: 32px;">前台自定义</el-text>
+            <el-text style="font-weight: bold;margin-bottom: 16px;display: block;font-size: 24px;margin-right: 32px;">前台自定义</el-text>
             <template
                     v-if="PermissionInfo.hasPermission('setting','save facade setting')">
                 <transition-group name="blur-scale">

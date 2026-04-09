@@ -116,7 +116,7 @@ const updateLimits = (partitionIds) => {
 <template>
     <div style="display: flex;flex-direction: column;">
         <div style="display: flex;flex-direction: row;margin-bottom: 32px;">
-            <el-text style="align-self:baseline;font-size: 24px">生成设置</el-text>
+            <el-text style="font-weight: bold;margin-bottom: 16px;display: block;font-size: 24px">生成设置</el-text>
             <div style="display: flex;margin-left: 32px;">
                 <transition-group name="blur-scale">
                     <el-button-group key="button-group">
