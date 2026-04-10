@@ -88,7 +88,7 @@ const getDimensionTagType = (dimension) => {
 
 <template>
     <div style="display: flex;flex-direction: column;height: 100%">
-        <div style="display: flex;flex-direction: row;margin-bottom: 24px;align-items: center">
+        <div style="display: flex;flex-direction: row;margin-bottom: 24px;align-items: center;padding: 0 24px;margin-top: 16px">
             <el-text style="font-size: 24px;font-weight: bold">限流监控</el-text>
             <el-button style="margin-left: auto" @click="getStatistics" :loading="loading">
                 刷新数据
