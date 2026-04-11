@@ -22,7 +22,7 @@ public class Blacklist {
     
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    
-    @Column(name = "created_by", length = 255)
-    private String createdBy;
+
+    @Column(name = "created_by_qq")
+    private Long createdByQQ;
 }

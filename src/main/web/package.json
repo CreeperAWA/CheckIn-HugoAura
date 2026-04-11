@@ -1,6 +1,6 @@
 {
   "name": "check-in",
-  "version": "2.2.12-HugoAura.32",
+  "version": "2.2.12-HugoAura.34",
   "private": true,
   "type": "module",
   "scripts": {

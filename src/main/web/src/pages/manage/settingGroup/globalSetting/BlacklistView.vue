@@ -3,6 +3,9 @@ import WebSocketConnector from "@/api/websocket.js";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {ref, onMounted, watch} from "vue";
 import PermissionInfo from "@/auth/PermissionInfo.js";
+import UserDataInterface from "@/data/UserDataInterface.js";
+import getAvatarUrlOf from "@/utils/Avatar.js";
+import router from "@/router/index.js";
 
 // 检查权限
 if (!PermissionInfo.hasPermission('blacklist.view')) {
@@ -18,6 +21,11 @@ const blacklist = ref([]);
 const newTargetId = ref("");
 const newReason = ref("");
 const dialogVisible = ref(false);
+const allUsers = ref({});
+
+UserDataInterface.getUsersAsync().then((users) => {
+    allUsers.value = users;
+});
 
 watch(() => PermissionInfo.permissions.value, () => {
     hasManagePermission.value = PermissionInfo.hasPermission('blacklist.manage');
@@ -28,7 +36,6 @@ const getBlacklist = () => {
     WebSocketConnector.send({
         type: "getBlacklist"
     }).then((response) => {
-        console.log("getBlacklist response:", response);
         blacklist.value = response.data.blacklist || [];
         loading.value = false;
     }, (err) => {
@@ -116,20 +123,30 @@ const formatTime = (timeStr) => {
     try {
         let date;
         if (Array.isArray(timeStr) && timeStr.length >= 6) {
-            date = new Date(timeStr[0], timeStr[1] - 1, timeStr[2], timeStr[3], timeStr[4], timeStr[5], timeStr[6] || 0);
+            // 数组格式: [年, 月, 日, 时, 分, 秒, 纳秒]
+            const year = timeStr[0];
+            const month = timeStr[1] - 1;
+            const day = timeStr[2];
+            const hours = timeStr[3];
+            const minutes = timeStr[4];
+            const seconds = timeStr[5];
+            const nanos = timeStr[6] || 0;
+            const milliseconds = Math.floor(nanos / 1000000);
+
+            date = new Date(year, month, day, hours, minutes, seconds, milliseconds);
         } else {
             return timeStr;
         }
-        
+
         if (isNaN(date.getTime())) return timeStr;
-        
+
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         const hours = String(date.getHours()).padStart(2, '0');
         const minutes = String(date.getMinutes()).padStart(2, '0');
         const seconds = String(date.getSeconds()).padStart(2, '0');
-        
+
         return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     } catch (error) {
         return timeStr;
@@ -171,9 +188,24 @@ onMounted(() => {
                                     {{ formatTime(row.createdAt) }}
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="createdBy" label="操作人" width="120">
+                            <el-table-column prop="createdByQQ" label="操作人" width="220">
                                 <template #default="{row}">
-                                    {{ row.createdBy || '系统' }}
+                                    <div v-if="row.createdByQQ" class="panel-1 clickable disable-init-animate" 
+                                         style="display: flex; flex-direction: row; padding: 4px 8px; margin-right: 4px;"
+                                         @click="router.push({name: 'user-detail', params: {id: row.createdByQQ}})">
+                                        <el-avatar shape="circle" :size="24" fit="cover" 
+                                                   :src="getAvatarUrlOf(row.createdByQQ)"/>
+                                        <el-text v-if="allUsers[row.createdByQQ]" 
+                                                 style="margin-right: 4px; margin-left: 8px; align-self: center">
+                                            {{ allUsers[row.createdByQQ].name }}
+                                        </el-text>
+                                        <el-text type="info" style="margin-right: 4px; align-self: center">
+                                            {{ row.createdByQQ }}
+                                        </el-text>
+                                    </div>
+                                    <el-text v-else>
+                                        系统
+                                    </el-text>
                                 </template>
                             </el-table-column>
                             <el-table-column label="操作" width="100" v-if="hasManagePermission">

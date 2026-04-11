@@ -30,8 +30,8 @@ public class AddToBlacklistAction extends BaseAction<AddToBlacklistAction.Input,
             return;
         }
         
-        String operator = Optional.ofNullable(context.getCurrentUser()).map(User::getName).orElse("system");
-        Blacklist blacklist = blacklistService.addToBlacklist(input.targetId, input.reason, operator);
+        Long operatorQQ = Optional.ofNullable(context.getCurrentUser()).map(User::getQQNumber).orElse(null);
+        Blacklist blacklist = blacklistService.addToBlacklist(input.targetId, input.reason, operatorQQ);
         
         context.resolve(new SuccessOutput(blacklist));
     }

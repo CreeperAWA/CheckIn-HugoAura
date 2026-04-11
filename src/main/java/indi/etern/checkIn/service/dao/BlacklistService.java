@@ -40,38 +40,38 @@ public class BlacklistService {
     }
     
     @Transactional
-    public Blacklist addToBlacklist(String targetId, String reason, String operator) {
+    public Blacklist addToBlacklist(String targetId, String reason, Long operatorQQ) {
         Blacklist blacklist = new Blacklist();
         blacklist.setId(UUIDv7.randomUUID().toString());
         blacklist.setTargetId(targetId);
         blacklist.setReason(reason);
         blacklist.setCreatedAt(LocalDateTime.now());
-        blacklist.setCreatedBy(operator);
-        
+        blacklist.setCreatedByQQ(operatorQQ);
+
         Blacklist saved = blacklistRepository.save(blacklist);
-        
-        logAction(BlacklistLog.ActionType.ADD, targetId, reason, operator);
-        
+
+        logAction(BlacklistLog.ActionType.ADD, targetId, reason, operatorQQ);
+
         return saved;
     }
-    
+
     @Transactional
-    public void removeFromBlacklist(String targetId, String operator) {
+    public void removeFromBlacklist(String targetId, Long operatorQQ) {
         Optional<Blacklist> blacklist = blacklistRepository.findByTargetId(targetId);
         String reason = blacklist.map(Blacklist::getReason).orElse(null);
-        
+
         blacklistRepository.deleteByTargetId(targetId);
-        
-        logAction(BlacklistLog.ActionType.REMOVE, targetId, reason, operator);
+
+        logAction(BlacklistLog.ActionType.REMOVE, targetId, reason, operatorQQ);
     }
-    
-    private void logAction(BlacklistLog.ActionType action, String targetId, String reason, String operator) {
+
+    private void logAction(BlacklistLog.ActionType action, String targetId, String reason, Long operatorQQ) {
         BlacklistLog log = new BlacklistLog();
         log.setId(UUIDv7.randomUUID().toString());
         log.setAction(action);
         log.setTargetId(targetId);
         log.setReason(reason);
-        log.setOperatedBy(operator);
+        log.setOperatedByQQ(operatorQQ);
         log.setOperatedAt(LocalDateTime.now());
         blacklistLogRepository.save(log);
     }

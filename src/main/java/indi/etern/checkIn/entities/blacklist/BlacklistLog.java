@@ -23,10 +23,10 @@ public class BlacklistLog {
     
     @Column(name = "reason", columnDefinition = "TEXT")
     private String reason;
-    
-    @Column(name = "operated_by", length = 255)
-    private String operatedBy;
-    
+
+    @Column(name = "operated_by_qq")
+    private Long operatedByQQ;
+
     @Column(name = "operated_at", nullable = false, updatable = false)
     private LocalDateTime operatedAt;
     

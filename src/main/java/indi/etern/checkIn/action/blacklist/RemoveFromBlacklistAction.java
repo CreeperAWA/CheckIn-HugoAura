@@ -29,8 +29,8 @@ public class RemoveFromBlacklistAction extends BaseAction<RemoveFromBlacklistAct
             return;
         }
         
-        String operator = Optional.ofNullable(context.getCurrentUser()).map(User::getName).orElse("system");
-        blacklistService.removeFromBlacklist(input.targetId, operator);
+        Long operatorQQ = Optional.ofNullable(context.getCurrentUser()).map(User::getQQNumber).orElse(null);
+        blacklistService.removeFromBlacklist(input.targetId, operatorQQ);
         
         context.resolve(new SuccessOutput());
     }
