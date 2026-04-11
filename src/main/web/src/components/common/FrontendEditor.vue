@@ -56,11 +56,12 @@ onMounted(() => {
         ['heading', 'bold', 'italic', 'strike'],
         ['hr', 'quote'],
         ['ul', 'ol', 'task'],
-        ['table', 'image', 'link'],
+        ['table', 'link'],
         ['code', 'codeblock'],
         ['scrollSync']
       ],
       plugins: [[katexPlugin, KATEX_CONFIG]],
+      usageStatistics: false,
       hooks: {
         addImageBlobHook: (blob, callback) => {
           // 暂时不处理图片上传
