@@ -44,7 +44,7 @@ public class ExamData implements BaseEntity<String> , Comparable<ExamData>{
     }
     
     public enum Status {
-        ONGOING, SUBMITTED, MANUAL_INVALIDED, EXPIRED, SIGN_UP_COMPLETED
+        ONGOING, SUBMITTED, MANUAL_INVALIDED, EXPIRED, SIGN_UP_COMPLETED, SCORE_INVALIDED
     }
     
     @Id

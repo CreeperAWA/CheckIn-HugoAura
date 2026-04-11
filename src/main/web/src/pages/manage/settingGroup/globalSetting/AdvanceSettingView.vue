@@ -343,7 +343,7 @@ const deleteToken = (index) => {
 <template>
     <div style="display: flex;flex-direction: column;">
         <custom-dialog v-model="showCreateNewTokenDialog"
-                       title="新建 token"
+                       title="新建 Token"
                        :buttons-option="createTokenButtonOption">
             <el-text>描述</el-text>
             <el-input style="margin-top: 8px" v-model="newTokenDescription"/>
@@ -552,11 +552,11 @@ const deleteToken = (index) => {
                         </div>
                         
                         <div style="display: flex;flex-direction: row;flex-wrap: wrap;align-items: center;margin-bottom: 8px;margin-top: 24px">
-                            <el-text size="large" style="font-weight: bold;align-self: center;margin-right: 16px">Robot tokens</el-text>
+                            <el-text size="large" style="font-weight: bold;align-self: center;margin-right: 16px">Robot Tokens</el-text>
                             <transition name="blur-scale">
                                 <el-button class="disable-init-animate" link @click="createNewToken" v-if="editing">
                                     <HarmonyOSIcon_Plus style="margin-right: 4px;"/>
-                                    新建 token
+                                    新建 Token
                                 </el-button>
                             </transition>
                         </div>

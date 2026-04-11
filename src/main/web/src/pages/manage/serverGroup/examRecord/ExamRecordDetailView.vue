@@ -21,9 +21,16 @@ const data = ref();
 const loading = ref(true);
 const showLoading = ref(true);
 const showError = ref(false);
+const hasInvalidExamPermission = ref(false);
+const hasInvalidScorePermission = ref(false);
 
 const partitionNames = ref();
 const questionInfos = ref({});
+
+watch(() => PermissionInfo.permissions.value, () => {
+    hasInvalidExamPermission.value = PermissionInfo.hasPermission('exam data', 'manual invalid exam');
+    hasInvalidScorePermission.value = PermissionInfo.hasPermission('exam data', 'manual invalid score');
+}, {immediate: true, deep: true});
 
 
 const displayLoading = () => {
@@ -149,6 +156,25 @@ const invalidExam = () => {
     });
 }
 
+const invalidScore = () => {
+    ElMessageBox.confirm("此操作不可撤销，将取消该次答题成绩", "确定无效化成绩", {
+        showClose: false,
+        draggable: true,
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+    }).then(() => {
+        WebSocketConnector.send({
+            type: "InvalidScore",
+            data: {
+                id: data.value.id
+            }
+        }).then(() => {
+        });
+    }).catch(() => {
+    });
+}
+
 const slideWay = ref(router.currentRoute.value.name === "related-requests");
 const remove = router.afterEach((to, from, failure) => {
     setTimeout(() => {
@@ -182,16 +208,21 @@ onBeforeUnmount(() => {
                             </el-text>
                             <div style="display: flex;flex-direction: row;flex-wrap: wrap">
                                 <el-tag style="align-self: center;margin-right: 8px">{{ data.status }}</el-tag>
-                                <div v-if="data.status === 'ONGOING'">
+                                <div v-if="data.status === 'ONGOING' && hasInvalidExamPermission">
                                     <el-button-group>
                                         <el-button @click="invalidExam">无效化该测试</el-button>
                                         <!--                            <el-button @click="banQQ">将该用户 QQ 加入黑名单</el-button>-->
                                     </el-button-group>
                                 </div>
+                                <div v-else-if="data.status === 'SUBMITTED' && hasInvalidScorePermission">
+                                    <el-button-group>
+                                        <el-button @click="invalidScore">无效化成绩</el-button>
+                                    </el-button-group>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <el-scrollbar v-if="data.status === 'SUBMITTED' && data.result" style="max-height: 70px">
+                    <el-scrollbar v-if="(data.status === 'SUBMITTED' || data.status === 'SCORE_INVALIDED') && data.result" style="max-height: 70px; margin-left: 65px;">
                         <div style="display: flex;flex-direction: row;align-items: stretch;height: 60px">
                             <div style="margin-right: 64px;display: flex;flex-direction: row;align-items: stretch">
                                 <div

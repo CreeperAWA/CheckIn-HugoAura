@@ -50,25 +50,30 @@ public class ExposeApi {
             final Optional<ExamData> optionalExamData = examDataService.findMaxByQQ(qualifyRequest.qq);
             if (optionalExamData.isPresent()) {
                 ExamData examData = optionalExamData.get();
-                map.put("type", "success");
-                map.put("examData", examData);
-                ExamResult examResult = examData.getExamResult();
-                if (examResult != null) {
-                    map.put("level", examResult.getLevel());
-                    map.put("levelId", examResult.getLevelId());
-                    try {
-                        final GradingLevel level = levelService.findById(examResult.getLevelId());
-                        if (level.getCreatingUserStrategy() == GradingLevel.CreatingUserStrategy.CREATE_AND_ENABLED_AFTER_VALIDATED) {
-                            userService.findByQQNumber(examData.getQqNumber()).ifPresent((user) -> {
-                                user.setEnabled(true);
-                                Message<User> message = Message.of("updateUser", user);
-                                webSocketService.sendMessageToAll(message);
-                                userService.save(user);
-                            });
-                            examResult.setSignUpCompletingType(SignUpCompletingType.COMPLETED);
+                if (examData.getStatus() == ExamData.Status.MANUAL_INVALIDED) {
+                    map.put("type", "error");
+                    map.put("result", "examData not found");
+                } else {
+                    map.put("type", "success");
+                    map.put("examData", examData);
+                    ExamResult examResult = examData.getExamResult();
+                    if (examResult != null && examData.getStatus() != ExamData.Status.SCORE_INVALIDED) {
+                        map.put("level", examResult.getLevel());
+                        map.put("levelId", examResult.getLevelId());
+                        try {
+                            final GradingLevel level = levelService.findById(examResult.getLevelId());
+                            if (level.getCreatingUserStrategy() == GradingLevel.CreatingUserStrategy.CREATE_AND_ENABLED_AFTER_VALIDATED) {
+                                userService.findByQQNumber(examData.getQqNumber()).ifPresent((user) -> {
+                                    user.setEnabled(true);
+                                    Message<User> message = Message.of("updateUser", user);
+                                    webSocketService.sendMessageToAll(message);
+                                    userService.save(user);
+                                });
+                                examResult.setSignUpCompletingType(SignUpCompletingType.COMPLETED);
+                            }
+                        } catch (Exception e) {
+                            logger.error("When load grading level:{}", e.getMessage());
                         }
-                    } catch (Exception e) {
-                        logger.error("When load grading level:{}", e.getMessage());
                     }
                 }
             } else {
