@@ -1,0 +1,229 @@
+<script setup>
+import WebSocketConnector from "@/api/websocket.js";
+import {ElMessage, ElMessageBox} from "element-plus";
+import {ref, onMounted, watch} from "vue";
+import PermissionInfo from "@/auth/PermissionInfo.js";
+
+// 检查权限
+if (!PermissionInfo.hasPermission('blacklist.view')) {
+    ElMessage({
+        type: "error",
+        message: "无权限访问黑名单管理页面"
+    });
+}
+
+const hasManagePermission = ref(false);
+const loading = ref(true);
+const blacklist = ref([]);
+const newTargetId = ref("");
+const newReason = ref("");
+const dialogVisible = ref(false);
+
+watch(() => PermissionInfo.permissions.value, () => {
+    hasManagePermission.value = PermissionInfo.hasPermission('blacklist.manage');
+}, {immediate: true, deep: true});
+
+const getBlacklist = () => {
+    loading.value = true;
+    WebSocketConnector.send({
+        type: "getBlacklist"
+    }).then((response) => {
+        console.log("getBlacklist response:", response);
+        blacklist.value = response.data.blacklist || [];
+        loading.value = false;
+    }, (err) => {
+        ElMessage({
+            type: "error",
+            message: "获取黑名单失败"
+        });
+        loading.value = false;
+    });
+};
+
+const addToBlacklist = () => {
+    if (!newTargetId.value.trim()) {
+        ElMessage({
+            type: "warning",
+            message: "请输入 QQ 号"
+        });
+        return;
+    }
+
+    if (!/^\d{5,12}$/.test(newTargetId.value.trim())) {
+        ElMessage({
+            type: "warning",
+            message: "QQ 号格式不正确，应为 5-12 位数字"
+        });
+        return;
+    }
+
+    WebSocketConnector.send({
+        type: "addToBlacklist",
+        data: {
+            targetId: newTargetId.value.trim(),
+            reason: newReason.value.trim()
+        }
+    }).then(() => {
+        ElMessage({
+            type: "success",
+            message: "添加成功"
+        });
+        newTargetId.value = "";
+        newReason.value = "";
+        dialogVisible.value = false;
+        getBlacklist();
+    }, (err) => {
+        ElMessage({
+            type: "error",
+            message: err.message || "添加失败"
+        });
+    });
+};
+
+const removeFromBlacklist = (item) => {
+    ElMessageBox.confirm(
+        `确定要将 QQ 号 ${item.targetId} 从黑名单中移除吗？`,
+        "确认移除",
+        {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "warning"
+        }
+    ).then(() => {
+        WebSocketConnector.send({
+            type: "removeFromBlacklist",
+            data: {
+                targetId: item.targetId
+            }
+        }).then(() => {
+            ElMessage({
+                type: "success",
+                message: "移除成功"
+            });
+            getBlacklist();
+        }, (err) => {
+            ElMessage({
+                type: "error",
+                message: err.message || "移除失败"
+            });
+        });
+    }).catch(() => {
+    });
+};
+
+const formatTime = (timeStr) => {
+    if (!timeStr) return "";
+    try {
+        let date;
+        if (Array.isArray(timeStr) && timeStr.length >= 6) {
+            date = new Date(timeStr[0], timeStr[1] - 1, timeStr[2], timeStr[3], timeStr[4], timeStr[5], timeStr[6] || 0);
+        } else {
+            return timeStr;
+        }
+        
+        if (isNaN(date.getTime())) return timeStr;
+        
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    } catch (error) {
+        return timeStr;
+    }
+};
+
+onMounted(() => {
+    getBlacklist();
+});
+</script>
+
+<template>
+    <div style="display: flex;flex-direction: column;height: 100%">
+        <div style="display: flex;flex-direction: row;margin-bottom: 24px;align-items: center;padding: 0 24px;margin-top: 16px">
+            <el-text style="font-size: 24px;font-weight: bold">黑名单管理</el-text>
+            <el-button style="margin-left: auto" @click="getBlacklist" :loading="loading">
+                刷新
+            </el-button>
+            <el-button v-if="hasManagePermission" type="primary" @click="dialogVisible = true">
+                添加 QQ 号
+            </el-button>
+        </div>
+
+        <el-scrollbar v-loading="loading">
+            <div style="width: 100%;display: flex;flex-direction: column;gap: 24px;padding: 0 24px 32px 24px;box-sizing: border-box">
+                <div class="panel-1" style="padding: 20px">
+                    <el-text size="large" style="font-weight: bold;margin-bottom: 16px;display: block">黑名单列表</el-text>
+                    
+                    <div v-if="blacklist.length > 0">
+                        <el-table :data="blacklist" style="width: 100%">
+                            <el-table-column prop="targetId" label="QQ 号" width="150"/>
+                            <el-table-column prop="reason" label="拉黑原因" min-width="200">
+                                <template #default="{row}">
+                                    {{ row.reason || '无' }}
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="createdAt" label="添加时间" width="180">
+                                <template #default="{row}">
+                                    {{ formatTime(row.createdAt) }}
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="createdBy" label="操作人" width="120">
+                                <template #default="{row}">
+                                    {{ row.createdBy || '系统' }}
+                                </template>
+                            </el-table-column>
+                            <el-table-column label="操作" width="100" v-if="hasManagePermission">
+                                <template #default="{row}">
+                                    <el-button type="danger" size="small" @click="removeFromBlacklist(row)">
+                                        移除
+                                    </el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                    </div>
+                    
+                    <el-empty v-else description="暂无数据" :image-size="60"/>
+                </div>
+            </div>
+        </el-scrollbar>
+
+        <el-dialog v-model="dialogVisible" title="添加到黑名单" width="400px">
+            <el-form label-position="top">
+                <el-form-item label="QQ 号">
+                    <el-input v-model="newTargetId" placeholder="请输入 QQ 号"/>
+                </el-form-item>
+                <el-form-item label="拉黑原因（可选）">
+                    <el-input v-model="newReason" type="textarea" :rows="3" placeholder="请输入拉黑原因"/>
+                </el-form-item>
+            </el-form>
+            <template #footer>
+                <el-button @click="dialogVisible = false">取消</el-button>
+                <el-button type="primary" @click="addToBlacklist">确定</el-button>
+            </template>
+        </el-dialog>
+    </div>
+</template>
+
+<style scoped>
+.panel-1 {
+    background: var(--el-bg-color);
+    border: 1px solid var(--el-border-color-light);
+    border-radius: 8px;
+}
+
+:deep(.el-button--danger) {
+    background-color: #f56c6c !important;
+    border-color: #f56c6c !important;
+    color: #ffffff !important;
+}
+
+:deep(.el-button--danger:hover) {
+    background-color: #fadddd !important;
+    border-color: #fadddd !important;
+    color: #f56c6c !important;
+}
+</style>

@@ -67,11 +67,13 @@ public class ExamController {
     private final TurnstileService turnstileService;
     private final OAuth2Service oAuth2Service;
     private final JwtTokenProvider jwtTokenProvider;
+    private final BlacklistService blacklistService;
 
     public ExamController(PartitionService partitionService, ActionExecutor actionExecutor, ExamGenerator examGenerator,
                           ExamDataService examDataService, ObjectMapper objectMapper, QuestionStatisticService questionStatisticService,
                           SettingService settingService, UserService userService, GradingLevelService gradingLevelService,
-                          TurnstileService turnstileService, OAuth2Service oAuth2Service, JwtTokenProvider jwtTokenProvider) {
+                          TurnstileService turnstileService, OAuth2Service oAuth2Service, JwtTokenProvider jwtTokenProvider,
+                          BlacklistService blacklistService) {
         this.partitionService = partitionService;
         this.actionExecutor = actionExecutor;
         this.examGenerator = examGenerator;
@@ -84,6 +86,7 @@ public class ExamController {
         this.turnstileService = turnstileService;
         this.oAuth2Service = oAuth2Service;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.blacklistService = blacklistService;
     }
 
     @PostMapping(path = "/api/generate")
@@ -124,6 +127,14 @@ public class ExamController {
             }
         }
         try {
+            // 检查黑名单
+            if (blacklistService.isBlacklisted(String.valueOf(generateRequest.qq))) {
+                Map<String, String> errorDataMap = new HashMap<>();
+                errorDataMap.put("type", "error");
+                errorDataMap.put("description", "该 QQ 号已被禁止作答");
+                return objectMapper.writeValueAsString(errorDataMap);
+            }
+            
             List<Integer> range = null;
             try {
                 SettingItem item = settingService.getItem("generating", "partitionRange");

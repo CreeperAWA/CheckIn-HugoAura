@@ -20,10 +20,12 @@ defineExpose({
 const showGeneratingSetting = ref(false);
 const showAdvanceSetting = ref(false);
 const showOAuth2Setting = ref(false);
+const showBlacklist = ref(false);
 watch(() => PermissionInfo.permissions.value, () => {
     showGeneratingSetting.value = PermissionInfo.hasPermission('setting', 'get generating setting');
     showAdvanceSetting.value = PermissionInfo.hasPermission('setting', 'get advance setting');
     showOAuth2Setting.value = PermissionInfo.hasPermission('setting', 'get OAuth2 setting');
+    showBlacklist.value = PermissionInfo.hasPermission('blacklist.view');
 }, {immediate: true, deep: true});
 
 const groups = [
@@ -63,6 +65,19 @@ const groups = [
             {
                 name: "评级设置", description: "分数线 分级 消息 判分标准", icon: Check, action: () => {
                     router.push({name: "grading-setting"});
+                }
+            }
+        ]
+    }, {
+        name: "安全管理",
+        items: [
+            {
+                name: "黑名单管理",
+                description: "管理禁止作答的 QQ 号",
+                show: showBlacklist,
+                icon: HarmonyOSIcon_PersonShield,
+                action: () => {
+                    router.push({name: "blacklist"});
                 }
             }
         ]

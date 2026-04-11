@@ -292,7 +292,7 @@ const switchBinding = (provider, index) => {
             </div>
         </template>
         <div style="display: flex;flex-direction: row;align-items: center;margin-top: 36px">
-            <el-text style="font-size: 24px;align-self: baseline;margin-right: 16px;">你的QQ号码</el-text>
+            <el-text style="font-size: 24px;align-self: baseline;margin-right: 16px;">你的 QQ 号码</el-text>
             <el-popover trigger="hover" width="250">
                 <template #reference>
                     <HarmonyOSIcon_InfoCircle :size="20"/>

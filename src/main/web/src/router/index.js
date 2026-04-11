@@ -168,6 +168,11 @@ const router = createRouter({
                                     path: "about/",
                                     name: "about",
                                     component: () => import("@/pages/manage/settingGroup/globalSetting/AboutView.vue")
+                                },
+                                {
+                                    path: "blacklist/",
+                                    name: "blacklist",
+                                    component: () => import("@/pages/manage/settingGroup/globalSetting/BlacklistView.vue")
                                 }
                             ]
                         },
