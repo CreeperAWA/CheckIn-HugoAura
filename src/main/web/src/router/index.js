@@ -173,6 +173,11 @@ const router = createRouter({
                                     path: "blacklist/",
                                     name: "blacklist",
                                     component: () => import("@/pages/manage/settingGroup/globalSetting/BlacklistView.vue")
+                                },
+                                {
+                                    path: "answer-limit/",
+                                    name: "answer-limit",
+                                    component: () => import("@/pages/manage/settingGroup/globalSetting/AnswerLimitView.vue")
                                 }
                             ]
                         },

@@ -68,12 +68,13 @@ public class ExamController {
     private final OAuth2Service oAuth2Service;
     private final JwtTokenProvider jwtTokenProvider;
     private final BlacklistService blacklistService;
+    private final AnswerLimitService answerLimitService;
 
     public ExamController(PartitionService partitionService, ActionExecutor actionExecutor, ExamGenerator examGenerator,
                           ExamDataService examDataService, ObjectMapper objectMapper, QuestionStatisticService questionStatisticService,
                           SettingService settingService, UserService userService, GradingLevelService gradingLevelService,
                           TurnstileService turnstileService, OAuth2Service oAuth2Service, JwtTokenProvider jwtTokenProvider,
-                          BlacklistService blacklistService) {
+                          BlacklistService blacklistService, AnswerLimitService answerLimitService) {
         this.partitionService = partitionService;
         this.actionExecutor = actionExecutor;
         this.examGenerator = examGenerator;
@@ -87,6 +88,7 @@ public class ExamController {
         this.oAuth2Service = oAuth2Service;
         this.jwtTokenProvider = jwtTokenProvider;
         this.blacklistService = blacklistService;
+        this.answerLimitService = answerLimitService;
     }
 
     @PostMapping(path = "/api/generate")
@@ -132,6 +134,16 @@ public class ExamController {
                 Map<String, String> errorDataMap = new HashMap<>();
                 errorDataMap.put("type", "error");
                 errorDataMap.put("description", "该 QQ 号已被禁止作答");
+                return objectMapper.writeValueAsString(errorDataMap);
+            }
+            
+            // 检查答题次数限制
+            if (answerLimitService.hasExceededLimit(String.valueOf(generateRequest.qq))) {
+                int maxCount = answerLimitService.getMaxAnswerCount();
+                int currentCount = answerLimitService.getAnswerCount(String.valueOf(generateRequest.qq));
+                Map<String, String> errorDataMap = new HashMap<>();
+                errorDataMap.put("type", "error");
+                errorDataMap.put("description", "答题次数已达上限，最多可答题 " + maxCount + " 次，您已答题 " + currentCount + " 次");
                 return objectMapper.writeValueAsString(errorDataMap);
             }
             

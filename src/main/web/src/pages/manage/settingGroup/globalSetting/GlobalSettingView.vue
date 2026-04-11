@@ -21,11 +21,15 @@ const showGeneratingSetting = ref(false);
 const showAdvanceSetting = ref(false);
 const showOAuth2Setting = ref(false);
 const showBlacklist = ref(false);
+const showAnswerLimit = ref(false);
 watch(() => PermissionInfo.permissions.value, () => {
     showGeneratingSetting.value = PermissionInfo.hasPermission('setting', 'get generating setting');
     showAdvanceSetting.value = PermissionInfo.hasPermission('setting', 'get advance setting');
     showOAuth2Setting.value = PermissionInfo.hasPermission('setting', 'get OAuth2 setting');
     showBlacklist.value = PermissionInfo.hasPermission('blacklist.view');
+    showAnswerLimit.value = PermissionInfo.hasPermission('answerLimit.view.setting') || 
+                        PermissionInfo.hasPermission('answerLimit.view.count') || 
+                        PermissionInfo.hasPermission('answerLimit.view.whitelist');
 }, {immediate: true, deep: true});
 
 const groups = [
@@ -78,6 +82,15 @@ const groups = [
                 icon: HarmonyOSIcon_PersonShield,
                 action: () => {
                     router.push({name: "blacklist"});
+                }
+            },
+            {
+                name: "答题次数限制",
+                description: "配置答题次数限制、白名单管理",
+                show: showAnswerLimit,
+                icon: HarmonyOSIcon_PersonShield,
+                action: () => {
+                    router.push({name: "answer-limit"});
                 }
             }
         ]

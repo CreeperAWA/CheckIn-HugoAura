@@ -40,6 +40,7 @@ const breadcrumbMap = {
     "oauth2-setting": "OAuth2 设置",
     "rate-limit-monitor": "限流监控",
     "blacklist": "黑名单管理",
+    "answer-limit": "答题次数限制",
 }
 
 let breadcrumbPathArray = reactive([]);
