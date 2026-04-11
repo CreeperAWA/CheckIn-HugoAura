@@ -83,7 +83,7 @@ const router = createRouter({
                         {
                             path: "rate-limit-monitor",
                             name: "rate-limit-monitor",
-                            component: () => import("@/pages/manage/settingGroup/globalSetting/RateLimitMonitorView.vue")
+                            component: () => import("@/pages/manage/serverGroup/rateLimitMonitor/RateLimitMonitorView.vue")
                         },
                         {
                             path: "manage-user/",
