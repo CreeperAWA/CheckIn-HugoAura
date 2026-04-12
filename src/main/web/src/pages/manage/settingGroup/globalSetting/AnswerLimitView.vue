@@ -180,6 +180,10 @@ const deleteExamRecord = (item) => {
     });
 };
 
+const goToExamRecordDetail = (row) => {
+    router.push({name: 'exam-record-detail', params: {id: row.id}});
+};
+
 const addToWhitelist = () => {
     if (!newWhitelistQQ.value.trim()) {
         ElMessage({
@@ -408,7 +412,7 @@ onMounted(() => {
                         </div>
                         
                         <div v-if="examRecords.length > 0">
-                            <el-table :data="examRecords" style="width: 100%">
+                            <el-table :data="examRecords" style="width: 100%; cursor: pointer" @row-click="goToExamRecordDetail">
                                 <el-table-column prop="id" label="记录 ID" min-width="200"/>
                                 <el-table-column label="提交时间" min-width="180">
                                     <template #default="{row}">
@@ -430,7 +434,7 @@ onMounted(() => {
                                 </el-table-column>
                                 <el-table-column label="操作" width="100" v-if="hasRecordManagePermission">
                                     <template #default="{row}">
-                                        <el-button type="danger" size="small" @click="deleteExamRecord(row)">
+                                        <el-button type="danger" size="small" @click.stop="deleteExamRecord(row)">
                                             删除
                                         </el-button>
                                     </template>
