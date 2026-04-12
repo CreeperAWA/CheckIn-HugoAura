@@ -340,7 +340,7 @@ onMounted(() => {
                                     {{ formatTime(row.createdAt) }}
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="createdByQQ" label="操作人" min-width="200">
+                            <el-table-column prop="createdByQQ" label="操作人" min-width="280">
                                 <template #default="{row}">
                                     <div v-if="row.createdByQQ" class="panel-1 clickable disable-init-animate" 
                                          style="display: flex; flex-direction: row; padding: 4px 8px; margin-right: 4px;"
