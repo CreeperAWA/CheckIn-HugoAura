@@ -32,6 +32,21 @@ watch(() => PermissionInfo.permissions.value, () => {
                         PermissionInfo.hasPermission('answerLimit.view.whitelist');
 }, {immediate: true, deep: true});
 
+const isGroupVisible = (group) => {
+    if (group.name === "服务状态") {
+        return true;
+    }
+    if (!group.items) {
+        return false;
+    }
+    return group.items.some(item => {
+        if (item.show === undefined) {
+            return true;
+        }
+        return item.show.value;
+    });
+};
+
 const groups = [
     {
         name: "服务状态"//占位
@@ -136,7 +151,7 @@ const groups = [
                     <el-text style="font-size: 20px;align-self: baseline;margin-bottom: 8px">服务状态</el-text>
                     <server-status-info :display-statuses="['UNAVAILABLE', 'MAY_FAIL', 'FULLY_AVAILABLE']"/>
                 </div>
-                <div v-else style="display: flex;flex-direction: column;margin-bottom: 16px;margin-left: 8px;margin-right: 8px">
+                <div v-else-if="isGroupVisible(group)" style="display: flex;flex-direction: column;margin-bottom: 16px;margin-left: 8px;margin-right: 8px">
                     <el-text style="font-size: 20px;align-self: baseline;margin-bottom: 8px">{{ group.name }}</el-text>
                     <template v-for="item of group.items">
                         <link-panel @click="item.action()" :key="item.name"
