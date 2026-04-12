@@ -23,7 +23,7 @@ model.value.type = "QuestionGroup"
 </script>
 
 <template>
-    <div style="margin: 16px;padding-top: 32px">
+    <div style="margin: 16px;padding-top: 32px;max-height: 600px;overflow-y: auto;">
         <question-card v-for="(subQuestionLink,index) of question.questionLinks" style="margin-bottom: 32px" :question="subQuestionLink.source" v-model="model.questions[index]" :force-mobile="true">
             <el-tag type="info" size="large" style="margin-right: 12px;">{{ index + 1 }}</el-tag>
         </question-card>
