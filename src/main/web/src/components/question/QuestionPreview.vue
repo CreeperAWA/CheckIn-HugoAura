@@ -19,6 +19,10 @@ const props = defineProps({
     forceMobile: {
         type: Boolean,
         default: false
+    },
+    hideStatus: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -76,13 +80,26 @@ const onPreview = (file) => {
             </div>
         </el-scrollbar>
         <div class="content" style="flex:1;margin-top: 16px">
-            <div style="display: flex;flex-direction: row;flex: 1;margin-left: 32px">
+            <div style="display: flex;flex-direction: row;flex: 1;margin-left: 32px" v-if="!hideStatus">
                 <div class="point"
                      :style="questionInfo.question.enabled?'background: var(--el-color-primary);':'background: var(--el-color-info);'"></div>
                 <el-text size="small" style="align-self: center;margin-right: 24px;" type="info">
                     {{ questionInfo.question.enabled ? "已启用" : "未启用" }}
                 </el-text>
 
+                <template v-if="questionInfo.question.authorQQ">
+                    <el-text type="info" size="small">作者</el-text>
+                    <el-button
+                            @click.stop="router.push({name:'user-detail', params: {id: questionInfo.question.authorQQ}})"
+                            link class="disable-init-animate"
+                            style="margin-right: 6px;padding: 4px;transition: 200ms var(--ease-in-out-quint)">
+                        <el-avatar shape="circle" :size="20" :src="getAvatarUrlOf(questionInfo.question.authorQQ)"
+                                   style="margin-right: 4px;"></el-avatar>
+                        <el-text style="margin-left: 4px;">{{ questionInfo.question.authorQQ }}</el-text>
+                    </el-button>
+                </template>
+            </div>
+            <div style="display: flex;flex-direction: row;flex: 1;margin-left: 32px" v-else>
                 <template v-if="questionInfo.question.authorQQ">
                     <el-text type="info" size="small">作者</el-text>
                     <el-button

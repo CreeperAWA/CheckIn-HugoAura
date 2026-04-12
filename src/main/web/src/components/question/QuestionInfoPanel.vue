@@ -138,7 +138,8 @@ const getTypeName = (type) => {
                                         <QuestionInfoPanel v-for="subQuestionInfo of questionInfo.questionInfos"
                                                            :key="subQuestionInfo.question.id"
                                                            :disable-error-and-warning="disableErrorAndWarning"
-                                                           :question-info="subQuestionInfo" :clickable="false"/>
+                                                           :question-info="subQuestionInfo" :clickable="false"
+                                                           :hide-status="true"/>
                                     </transition-group>
                                 </template>
                             </collapse>

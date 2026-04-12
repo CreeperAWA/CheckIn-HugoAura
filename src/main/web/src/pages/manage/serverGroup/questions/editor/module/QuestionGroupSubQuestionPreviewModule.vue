@@ -11,7 +11,7 @@ defineProps({
 
 <template>
     <div class="panel-1" style="margin: 16px;padding-top: 32px" v-for="subQuestionInfo of questionInfo.questionInfos">
-        <question-preview :question-info="subQuestionInfo" :force-mobile="true"/>
+        <question-preview :question-info="subQuestionInfo" :force-mobile="true" :hide-status="true"/>
     </div>
 </template>
 
