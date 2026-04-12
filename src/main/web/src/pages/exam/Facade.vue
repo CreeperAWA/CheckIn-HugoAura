@@ -2,7 +2,6 @@
 import ToastMarkdownViewer from "@/components/common/ToastMarkdownViewer.vue";
 import UIMeta from "@/utils/UI_Meta.js";
 import router from "@/router/index.js";
-import {Close} from "@element-plus/icons-vue";
 
 const {proxy} = getCurrentInstance();
 
