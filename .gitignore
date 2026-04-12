@@ -43,3 +43,4 @@ build/
 
 ### Web ###
 /src/main/resources/static/view
+/src/main/web/dev-dist/
