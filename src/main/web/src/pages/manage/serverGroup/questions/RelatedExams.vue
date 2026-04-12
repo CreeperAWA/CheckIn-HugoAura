@@ -79,8 +79,8 @@ const getTagType = (checkedResultType) => {
 
 <template>
     <div v-loading="loading" style="height: 100%;display: flex;flex-direction: column">
-        <div style="display: flex;flex-direction: column;padding: 16px;flex: 1;height: 0">
-            <div style="display: flex;flex-direction: row">
+        <div style="display: flex;flex-direction: column;padding: 16px;height: 100%;overflow: hidden">
+            <div style="display: flex;flex-direction: row;flex-shrink: 0">
                 <el-button @click="back" style="margin-right: 16px">
                     <el-icon>
                         <ArrowLeftBold/>
@@ -89,11 +89,11 @@ const getTagType = (checkedResultType) => {
                 </el-button>
                 <el-text size="large">使用到该题的测试</el-text>
             </div>
-            <question-info-panel v-if="currentQuestionInfo" :question-info="currentQuestionInfo" sub-question-expanded
-                                 disable-error-and-warning/>
-            <el-scrollbar style="flex:1">
+            <el-scrollbar style="flex: 1;margin-top: 16px;">
                 <div style="width: calc(100% - 4px);">
-                    <div style="display:flex;flex-direction: column;margin: 32px -4px -4px;">
+                    <question-info-panel v-if="currentQuestionInfo" :question-info="currentQuestionInfo" sub-question-expanded
+                                 disable-error-and-warning style="margin-bottom: 32px;"/>
+                    <div style="display:flex;flex-direction: column;margin: 0 -4px -4px;">
                         <div style="display:flex;flex-direction: row">
                             <el-text size="large"
                                      style="align-self: center;margin-left: 4px;margin-bottom: 8px;">
