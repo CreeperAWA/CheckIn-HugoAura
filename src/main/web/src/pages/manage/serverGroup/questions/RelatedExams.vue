@@ -128,7 +128,7 @@ const getTagType = (checkedResultType) => {
                                                                 style="display: flex;flex-direction: row;margin-bottom: 8px;margin-right: 32px;">
                                                                 <el-tag type="info" size="large"
                                                                         style="align-self: center;border-radius: 4px 0 0 4px;">
-                                                                    {{ index }}
+                                                                    {{ index + 1 }}
                                                                 </el-tag>
                                                                 <el-tag
                                                                     style="margin-right: 12px;align-self: center;border-radius: 0 4px 4px 0;"
