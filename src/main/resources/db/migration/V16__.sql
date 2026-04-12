@@ -1,7 +1,7 @@
 -- 答题次数限制功能相关表
 
 -- 1. 答题次数限制白名单表
-CREATE TABLE IF NOT EXISTS answer_limit_whitelist (
+CREATE TABLE answer_limit_whitelist (
     id VARCHAR(36) PRIMARY KEY,
     qq VARCHAR(255) NOT NULL COMMENT 'QQ号',
     reason TEXT COMMENT '白名单原因（可选）',
@@ -10,12 +10,12 @@ CREATE TABLE IF NOT EXISTS answer_limit_whitelist (
     UNIQUE KEY uk_whitelist_qq (qq)
 ) COMMENT '答题次数限制白名单表';
 
-CREATE INDEX IF NOT EXISTS idx_whitelist_qq ON answer_limit_whitelist (qq);
-CREATE INDEX IF NOT EXISTS idx_whitelist_created_at ON answer_limit_whitelist (created_at);
+CREATE INDEX idx_whitelist_qq ON answer_limit_whitelist (qq);
+CREATE INDEX idx_whitelist_created_at ON answer_limit_whitelist (created_at);
 
--- 3. 答题次数限制设置表（使用现有 SERVER_SETTING_ITEMS 表）
+-- 3. 答题次数限制设置表（使用现有 server_setting_items 表）
 -- 添加默认答题次数限制设置
-INSERT IGNORE INTO SERVER_SETTING_ITEMS (SETTING_KEY, SETTING_VALUE, CLAZZ)
+INSERT IGNORE INTO server_setting_items (setting_key, setting_value, clazz)
 VALUES 
     ('answerLimit.maxCount', '5', 'java.lang.Integer');
 

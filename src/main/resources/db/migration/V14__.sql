@@ -1,7 +1,7 @@
 -- 黑名单功能相关表
 
 -- 1. 黑名单表
-CREATE TABLE IF NOT EXISTS blacklist (
+CREATE TABLE blacklist (
     id VARCHAR(36) PRIMARY KEY,
     target_id VARCHAR(255) NOT NULL COMMENT '被拉黑的ID，通常为QQ号',
     reason TEXT COMMENT '拉黑原因（可选）',
@@ -10,11 +10,11 @@ CREATE TABLE IF NOT EXISTS blacklist (
     UNIQUE KEY uk_target_id (target_id)
 ) COMMENT '黑名单表';
 
-CREATE INDEX IF NOT EXISTS idx_target_id ON blacklist (target_id);
-CREATE INDEX IF NOT EXISTS idx_created_at ON blacklist (created_at);
+CREATE INDEX idx_blacklist_target_id ON blacklist (target_id);
+CREATE INDEX idx_blacklist_created_at ON blacklist (created_at);
 
 -- 2. 黑名单操作日志表
-CREATE TABLE IF NOT EXISTS blacklist_logs (
+CREATE TABLE blacklist_logs (
     id VARCHAR(36) PRIMARY KEY,
     action VARCHAR(20) NOT NULL COMMENT '操作类型: ADD, REMOVE',
     target_id VARCHAR(255) NOT NULL COMMENT '被操作的ID',
@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS blacklist_logs (
     operated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间'
 ) COMMENT '黑名单操作日志表';
 
-CREATE INDEX IF NOT EXISTS idx_target_id_log ON blacklist_logs (target_id);
-CREATE INDEX IF NOT EXISTS idx_operated_at ON blacklist_logs (operated_at);
+CREATE INDEX idx_blacklist_logs_target_id ON blacklist_logs (target_id);
+CREATE INDEX idx_blacklist_logs_operated_at ON blacklist_logs (operated_at);
 
 -- 3. 添加黑名单权限组
 INSERT IGNORE INTO permission_groups (name, description)
