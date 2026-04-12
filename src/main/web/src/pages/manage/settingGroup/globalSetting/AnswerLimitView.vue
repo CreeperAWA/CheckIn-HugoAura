@@ -255,13 +255,13 @@ const formatTime = (timeStr) => {
     if (!timeStr) return "";
     try {
         let date;
-        if (Array.isArray(timeStr) && timeStr.length >= 6) {
+        if (Array.isArray(timeStr) && timeStr.length >= 5) {
             const year = timeStr[0];
             const month = timeStr[1] - 1;
             const day = timeStr[2];
             const hours = timeStr[3];
             const minutes = timeStr[4];
-            const seconds = timeStr[5];
+            const seconds = timeStr[5] || 0;
             const nanos = timeStr[6] || 0;
             const milliseconds = Math.floor(nanos / 1000000);
             date = new Date(year, month, day, hours, minutes, seconds, milliseconds);
@@ -360,7 +360,7 @@ onMounted(() => {
                                     </el-text>
                                 </template>
                             </el-table-column>
-                            <el-table-column label="操作" width="100" fixed="right" v-if="hasWhitelistManagePermission">
+                            <el-table-column label="操作" width="100" v-if="hasWhitelistManagePermission">
                                 <template #default="{row}">
                                     <el-button type="danger" size="small" @click="removeFromWhitelist(row)">
                                         移除
@@ -428,7 +428,7 @@ onMounted(() => {
                                         </el-tag>
                                     </template>
                                 </el-table-column>
-                                <el-table-column label="操作" width="100" fixed="right" v-if="hasRecordManagePermission">
+                                <el-table-column label="操作" width="100" v-if="hasRecordManagePermission">
                                     <template #default="{row}">
                                         <el-button type="danger" size="small" @click="deleteExamRecord(row)">
                                             删除

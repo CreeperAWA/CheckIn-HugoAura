@@ -122,14 +122,14 @@ const formatTime = (timeStr) => {
     if (!timeStr) return "";
     try {
         let date;
-        if (Array.isArray(timeStr) && timeStr.length >= 6) {
+        if (Array.isArray(timeStr) && timeStr.length >= 5) {
             // 数组格式: [年, 月, 日, 时, 分, 秒, 纳秒]
             const year = timeStr[0];
             const month = timeStr[1] - 1;
             const day = timeStr[2];
             const hours = timeStr[3];
             const minutes = timeStr[4];
-            const seconds = timeStr[5];
+            const seconds = timeStr[5] || 0;
             const nanos = timeStr[6] || 0;
             const milliseconds = Math.floor(nanos / 1000000);
 
