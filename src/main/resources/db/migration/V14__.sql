@@ -1,27 +1,33 @@
 -- 黑名单功能相关表
 
 -- 1. 黑名单表
-CREATE TABLE blacklist (
-    id VARCHAR(36) PRIMARY KEY,
-    target_id VARCHAR(255) NOT NULL COMMENT '被拉黑的ID，通常为QQ号',
-    reason TEXT COMMENT '拉黑原因（可选）',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    created_by_qq BIGINT COMMENT '操作人QQ号',
-    UNIQUE KEY uk_target_id (target_id)
-) COMMENT '黑名单表';
+CREATE TABLE blacklist
+(
+    id VARCHAR(36) NOT NULL,
+    target_id VARCHAR(255) NOT NULL,
+    reason TEXT NULL,
+    created_at datetime NULL,
+    created_by_qq BIGINT NULL,
+    PRIMARY KEY (id)
+);
+
+ALTER TABLE blacklist
+    ADD CONSTRAINT uk_target_id UNIQUE (target_id);
 
 CREATE INDEX idx_blacklist_target_id ON blacklist (target_id);
 CREATE INDEX idx_blacklist_created_at ON blacklist (created_at);
 
 -- 2. 黑名单操作日志表
-CREATE TABLE blacklist_logs (
-    id VARCHAR(36) PRIMARY KEY,
-    action VARCHAR(20) NOT NULL COMMENT '操作类型: ADD, REMOVE',
-    target_id VARCHAR(255) NOT NULL COMMENT '被操作的ID',
-    reason TEXT COMMENT '操作原因',
-    operated_by_qq BIGINT COMMENT '操作人QQ号',
-    operated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间'
-) COMMENT '黑名单操作日志表';
+CREATE TABLE blacklist_logs
+(
+    id VARCHAR(36) NOT NULL,
+    action VARCHAR(20) NOT NULL,
+    target_id VARCHAR(255) NOT NULL,
+    reason TEXT NULL,
+    operated_by_qq BIGINT NULL,
+    operated_at datetime NULL,
+    PRIMARY KEY (id)
+);
 
 CREATE INDEX idx_blacklist_logs_target_id ON blacklist_logs (target_id);
 CREATE INDEX idx_blacklist_logs_operated_at ON blacklist_logs (operated_at);

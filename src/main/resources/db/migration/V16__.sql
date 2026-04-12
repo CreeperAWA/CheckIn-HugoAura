@@ -1,14 +1,18 @@
 -- 答题次数限制功能相关表
 
 -- 1. 答题次数限制白名单表
-CREATE TABLE answer_limit_whitelist (
-    id VARCHAR(36) PRIMARY KEY,
-    qq VARCHAR(255) NOT NULL COMMENT 'QQ号',
-    reason TEXT COMMENT '白名单原因（可选）',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    created_by_qq BIGINT COMMENT '操作人QQ号',
-    UNIQUE KEY uk_whitelist_qq (qq)
-) COMMENT '答题次数限制白名单表';
+CREATE TABLE answer_limit_whitelist
+(
+    id VARCHAR(36) NOT NULL,
+    qq VARCHAR(255) NOT NULL,
+    reason TEXT NULL,
+    created_at datetime NULL,
+    created_by_qq BIGINT NULL,
+    PRIMARY KEY (id)
+);
+
+ALTER TABLE answer_limit_whitelist
+    ADD CONSTRAINT uk_whitelist_qq UNIQUE (qq);
 
 CREATE INDEX idx_whitelist_qq ON answer_limit_whitelist (qq);
 CREATE INDEX idx_whitelist_created_at ON answer_limit_whitelist (created_at);

@@ -1,44 +1,52 @@
 -- 请求频率限流功能相关表
 
 -- 1. 限流规则配置表
-CREATE TABLE rate_limit_rules (
-    id VARCHAR(36) PRIMARY KEY,
-    dimension VARCHAR(20) NOT NULL COMMENT '限流维度: IP, COOKIE, QQ, OAUTH',
-    enabled TINYINT(1) NOT NULL DEFAULT 1 COMMENT '是否启用',
-    time_window_seconds INT NOT NULL DEFAULT 60 COMMENT '时间窗口（秒）',
-    max_requests INT NOT NULL DEFAULT 100 COMMENT '时间窗口内最大请求数',
-    response_strategy VARCHAR(20) NOT NULL DEFAULT 'RETURN_429' COMMENT '响应策略: RETURN_429, CUSTOM_MESSAGE, PROGRESSIVE_DELAY',
-    custom_message TEXT COMMENT '自定义提示信息（response_strategy为CUSTOM_MESSAGE时使用）',
-    base_delay_ms INT NOT NULL DEFAULT 1000 COMMENT '基础延迟毫秒数（PROGRESSIVE_DELAY策略使用）',
-    priority INT NOT NULL DEFAULT 0 COMMENT '规则优先级，数字越大优先级越高',
-    limit_duration_seconds INT NOT NULL DEFAULT 300 COMMENT '限流持续时间（秒）',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE rate_limit_rules
+(
+    id VARCHAR(36) NOT NULL,
+    dimension VARCHAR(20) NOT NULL,
+    enabled TINYINT NOT NULL,
+    time_window_seconds INT NOT NULL,
+    max_requests INT NOT NULL,
+    response_strategy VARCHAR(20) NOT NULL,
+    custom_message TEXT NULL,
+    base_delay_ms INT NOT NULL,
+    priority INT NOT NULL,
+    limit_duration_seconds INT NOT NULL,
+    created_at datetime NULL,
+    updated_at datetime NULL,
+    PRIMARY KEY (id)
 );
 
 -- 2. 限流白名单表
-CREATE TABLE rate_limit_whitelist (
-    id VARCHAR(36) PRIMARY KEY,
-    dimension VARCHAR(20) NOT NULL COMMENT '白名单维度: IP, COOKIE, OAUTH',
-    whitelist_value VARCHAR(255) NOT NULL COMMENT '白名单值',
-    description VARCHAR(255) COMMENT '描述说明',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (dimension, whitelist_value)
+CREATE TABLE rate_limit_whitelist
+(
+    id VARCHAR(36) NOT NULL,
+    dimension VARCHAR(20) NOT NULL,
+    whitelist_value VARCHAR(255) NOT NULL,
+    description VARCHAR(255) NULL,
+    created_at datetime NULL,
+    PRIMARY KEY (id)
 );
 
+ALTER TABLE rate_limit_whitelist
+    ADD CONSTRAINT UK_rate_limit_whitelist_dimension_value UNIQUE (dimension, whitelist_value);
+
 -- 3. 限流日志表
-CREATE TABLE rate_limit_logs (
-    id VARCHAR(36) PRIMARY KEY,
-    ip_address VARCHAR(45) COMMENT 'IP 地址',
-    cookie_value VARCHAR(255) COMMENT 'Cookie 值',
-    qq_number BIGINT COMMENT 'QQ 号',
-    oauth_info VARCHAR(255) COMMENT 'OAuth 信息',
-    request_path VARCHAR(500) NOT NULL COMMENT '请求路径',
-    request_method VARCHAR(10) NOT NULL COMMENT '请求方法',
-    triggered_rule_id VARCHAR(36) COMMENT '触发的规则 ID',
-    triggered_dimension VARCHAR(20) COMMENT '触发的维度',
-    response_action VARCHAR(50) NOT NULL COMMENT '执行的响应动作',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE rate_limit_logs
+(
+    id VARCHAR(36) NOT NULL,
+    ip_address VARCHAR(45) NULL,
+    cookie_value VARCHAR(255) NULL,
+    qq_number BIGINT NULL,
+    oauth_info VARCHAR(255) NULL,
+    request_path VARCHAR(500) NOT NULL,
+    request_method VARCHAR(10) NOT NULL,
+    triggered_rule_id VARCHAR(36) NULL,
+    triggered_dimension VARCHAR(20) NULL,
+    response_action VARCHAR(50) NOT NULL,
+    created_at datetime NULL,
+    PRIMARY KEY (id)
 );
 
 CREATE INDEX idx_ip ON rate_limit_logs (ip_address);
