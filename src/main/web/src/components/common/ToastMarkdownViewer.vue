@@ -90,7 +90,7 @@ watch(() => props.theme, () => {
 
 :deep(.toastui-editor-contents) {
     padding: 20px !important;
-    background: #F0F5F5 !important;
+    background: transparent !important;
     word-wrap: break-word !important;
     word-break: break-word !important;
     overflow-wrap: break-word !important;
