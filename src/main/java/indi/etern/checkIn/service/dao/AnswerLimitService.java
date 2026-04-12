@@ -77,7 +77,7 @@ public class AnswerLimitService {
             List<ExamData> examDataList = examDataRepository.findAllByQqNumberIs(qqNumber);
             return examDataList.stream()
                     .filter(examData -> examData.getExamResult() != null)
-                    .map(ExamData::getGenerateTime)
+                    .map(ExamData::getSubmitTime)
                     .min(Comparator.naturalOrder())
                     .orElse(null);
         } catch (NumberFormatException e) {
