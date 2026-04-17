@@ -178,6 +178,16 @@ const router = createRouter({
                                     path: "answer-limit/",
                                     name: "answer-limit",
                                     component: () => import("@/pages/manage/settingGroup/globalSetting/AnswerLimitView.vue")
+                                },
+                                {
+                                    path: "whitelist/",
+                                    name: "whitelist",
+                                    component: () => import("@/pages/manage/settingGroup/globalSetting/WhitelistView.vue")
+                                },
+                                {
+                                    path: "robot-api-setting/",
+                                    name: "robot-api-setting",
+                                    component: () => import("@/pages/manage/settingGroup/globalSetting/RobotApiSettingView.vue")
                                 }
                             ]
                         },

@@ -22,6 +22,8 @@ const showAdvanceSetting = ref(false);
 const showOAuth2Setting = ref(false);
 const showBlacklist = ref(false);
 const showAnswerLimit = ref(false);
+const showWhitelist = ref(false);
+const showRobotApiSetting = ref(false);
 watch(() => PermissionInfo.permissions.value, () => {
     showGeneratingSetting.value = PermissionInfo.hasPermission('setting', 'get generating setting');
     showAdvanceSetting.value = PermissionInfo.hasPermission('setting', 'get advance setting');
@@ -30,6 +32,8 @@ watch(() => PermissionInfo.permissions.value, () => {
     showAnswerLimit.value = PermissionInfo.hasPermission('answerLimit.view.setting') || 
                         PermissionInfo.hasPermission('answerLimit.view.count') || 
                         PermissionInfo.hasPermission('answerLimit.view.whitelist');
+    showWhitelist.value = PermissionInfo.hasPermission('robotApi.view.whitelist');
+    showRobotApiSetting.value = PermissionInfo.hasPermission('robotApi.view.setting');
 }, {immediate: true, deep: true});
 
 const isGroupVisible = (group) => {
@@ -100,6 +104,15 @@ const groups = [
                 }
             },
             {
+                name: "白名单管理",
+                description: "管理跳过验证的 QQ 号",
+                show: showWhitelist,
+                icon: HarmonyOSIcon_PersonShield,
+                action: () => {
+                    router.push({name: "whitelist"});
+                }
+            },
+            {
                 name: "答题次数限制",
                 description: "配置答题次数限制、白名单管理",
                 show: showAnswerLimit,
@@ -128,6 +141,15 @@ const groups = [
                 icon: MoreFilled,
                 action: () => {
                     router.push({name: "advance-setting"});
+                }
+            },
+            {
+                name: "机器人API设置",
+                description: "配置机器人WebSocket API、QQ验证和通知",
+                show: showRobotApiSetting,
+                icon: MoreFilled,
+                action: () => {
+                    router.push({name: "robot-api-setting"});
                 }
             },
             {

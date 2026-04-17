@@ -4,6 +4,7 @@ import indi.etern.checkIn.entities.blacklist.Blacklist;
 import indi.etern.checkIn.entities.blacklist.BlacklistLog;
 import indi.etern.checkIn.repositories.BlacklistLogRepository;
 import indi.etern.checkIn.repositories.BlacklistRepository;
+import indi.etern.checkIn.service.web.RobotWebSocketService;
 import indi.etern.checkIn.utils.UUIDv7;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,9 @@ public class BlacklistService {
     
     @Resource
     private BlacklistLogRepository blacklistLogRepository;
+    
+    @Resource
+    private RobotWebSocketService robotWebSocketService;
     
     protected BlacklistService() {
         singletonInstance = this;
@@ -51,6 +55,11 @@ public class BlacklistService {
         Blacklist saved = blacklistRepository.save(blacklist);
 
         logAction(BlacklistLog.ActionType.ADD, targetId, reason, operatorQQ);
+        
+        // 通知所有机器人
+        if (robotWebSocketService != null) {
+            robotWebSocketService.sendBlacklistAdd(saved);
+        }
 
         return saved;
     }
@@ -58,11 +67,17 @@ public class BlacklistService {
     @Transactional
     public void removeFromBlacklist(String targetId, Long operatorQQ) {
         Optional<Blacklist> blacklist = blacklistRepository.findByTargetId(targetId);
+        String id = blacklist.map(Blacklist::getId).orElse(null);
         String reason = blacklist.map(Blacklist::getReason).orElse(null);
 
         blacklistRepository.deleteByTargetId(targetId);
 
         logAction(BlacklistLog.ActionType.REMOVE, targetId, reason, operatorQQ);
+        
+        // 通知所有机器人
+        if (robotWebSocketService != null && id != null) {
+            robotWebSocketService.sendBlacklistRemove(id, targetId);
+        }
     }
 
     private void logAction(BlacklistLog.ActionType action, String targetId, String reason, Long operatorQQ) {
