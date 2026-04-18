@@ -198,7 +198,7 @@ const formatTime = (timeStr) => {
   "messageId": "550e8400-e29b-41d4-a716-446655440000",
   "data": {
     "qq": "123456789",
-    "status": "success", // success, failed, no_need, timeout, cannot_verify
+    "status": "success", // success, failed, no_need, cannot_verify
     "message": "验证成功"
   }
 }

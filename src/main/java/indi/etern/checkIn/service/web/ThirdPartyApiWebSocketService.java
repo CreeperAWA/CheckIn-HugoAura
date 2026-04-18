@@ -98,11 +98,12 @@ public class ThirdPartyApiWebSocketService {
     }
 
     @SneakyThrows
-    public void sendQQVerifyRequest(String qq, String verifyContent, VerifyRequest.VerifyCallback callback) {
+    public void sendQQVerifyRequest(String qq, String verifyContent, String guideMessage, VerifyRequest.VerifyCallback callback) {
         String messageId = UUIDv7.randomUUID().toString();
         Map<String, Object> data = new HashMap<>();
         data.put("qq", qq);
         data.put("verify_content", verifyContent);
+        data.put("guide_message", guideMessage);
         Message<Map<String, Object>> message = Message.of("qq_verify_request", messageId, data);
         
         VerifyRequest request = new VerifyRequest(messageId, qq, callback);

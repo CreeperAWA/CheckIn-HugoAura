@@ -302,6 +302,15 @@ onMounted(() => {
                                     <el-empty v-else description="No data" style="align-self: stretch"/>
                                 </div>
                             </el-form-item>
+                            <el-form-item label="验证引导提示">
+                                <el-input
+                                    v-model="settings['qqVerify.guideMessage']"
+                                    type="textarea"
+                                    :rows="4"
+                                    placeholder="验证页面显示的引导提示内容，支持换行"
+                                    :disabled="!hasManagePermission || !editing"
+                                />
+                            </el-form-item>
                         </template>
                     </el-form>
                 </div>

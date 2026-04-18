@@ -8,6 +8,7 @@ import _Loading_ from "@/components/common/_Loading_.vue";
 import VueTurnstile from "vue-turnstile";
 import WebSocketConnector from "@/api/websocket.js";
 import {jwtDecode} from "jwt-decode";
+import {ref, computed, onErrorCaptured, onBeforeUnmount, watchEffect, getCurrentInstance} from "vue";
 
 const {proxy} = getCurrentInstance();
 const props = defineProps({
@@ -44,6 +45,79 @@ const qqNumber = ref();
 
 const loadingExam = ref(false);
 const startExam = () => {
+    // 先检查是否需要QQ验证
+    proxy.$http.post("check-qq-verify", {
+        qq: qqNumber.value
+    }).then((verifyResponse) => {
+        if (verifyResponse.needVerify) {
+            // 需要验证，显示验证对话框
+            verifyGuideMessage.value = verifyResponse.guideMessage;
+            showVerifyDialog.value = true;
+            verifyLoading.value = true;
+            
+            // 注册WebSocket验证结果回调
+            const handleVerifyResponse = (message) => {
+                const data = message.data;
+                if (data.qq === qqNumber.value.toString()) {
+                    verifyLoading.value = false;
+                    showVerifyDialog.value = false;
+                    
+                    // 根据验证结果处理
+                    if (data.status === "success" || data.status === "no_need") {
+                        // 验证成功或无需验证，继续生成题目
+                        generateExam();
+                    } else {
+                        // 验证失败，显示错误信息
+                        ElMessageBox.alert(
+                            data.message || "未能通过 QQ 号验证",
+                            "验证失败", {
+                                type: "error",
+                                draggable: true,
+                                showClose: false,
+                                confirmButtonText: "返回修改生成选项"
+                            }
+                        );
+                    }
+                    
+                    // 移除事件监听器
+                    unregister();
+                }
+            };
+            
+            // 监听验证响应
+            const { unregister } = WebSocketConnector.registerAction("qq_verify_response", handleVerifyResponse);
+            
+            // 设置2分钟超时
+            setTimeout(() => {
+                verifyLoading.value = false;
+                showVerifyDialog.value = false;
+                ElMessageBox.alert(
+                    "QQ号验证超时",
+                    "验证失败", {
+                        type: "error",
+                        draggable: true,
+                        showClose: false,
+                        confirmButtonText: "返回修改生成选项"
+                    }
+                );
+                // 移除事件监听器
+                unregister();
+            }, 2 * 60 * 1000);
+        } else {
+            // 不需要验证，直接生成题目
+            generateExam();
+        }
+    }, (err) => {
+        ElMessage({
+            type: "error",
+            message: "检查验证状态失败" + ((err && err.message) ? err.message : "")
+        });
+        // 失败时直接生成题目
+        generateExam();
+    });
+};
+
+const generateExam = () => {
     loadingExam.value = true;
     proxy.$http.post("generate", {
         qq: qqNumber.value,
@@ -75,8 +149,8 @@ const startExam = () => {
             type: "error",
             message: "生成题目时出错" + ((err && err.message) ? err.message : "")
         })
-    })
-}
+    });
+};
 
 const validate1 = computed(() => selectedPartitionIds.value.length >= props.extraData.partitionRange[0] && selectedPartitionIds.value.length <= props.extraData.partitionRange[1]);
 const validate2 = computed(() => qqNumber.value > 10000 && qqNumber.value < 100000000000);
@@ -111,6 +185,11 @@ onErrorCaptured((e) => {
         return false;
     }
 })
+
+// QQ验证相关
+const showVerifyDialog = ref(false);
+const verifyGuideMessage = ref("");
+const verifyLoading = ref(false);
 
 const loadingIconIndex = ref(-1);
 
@@ -322,6 +401,28 @@ const switchBinding = (provider, index) => {
             }}
         </el-button>
     </div>
+
+    <!-- QQ验证对话框 -->
+    <el-dialog
+        v-model="showVerifyDialog"
+        title="QQ号验证"
+        :close-on-click-modal="false"
+        :close-on-press-escape="false"
+        :show-close="false"
+        width="500px"
+    >
+        <div style="padding: 20px;">
+            <div v-if="verifyLoading" style="display: flex; align-items: center; justify-content: center; padding: 40px 0;">
+                <el-icon class="is-loading" style="font-size: 32px; margin-right: 16px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="currentColor"><path d="M512 0a48 48 0 0 1 48 48v160a48 48 0 0 1-96 0V48a48 48 0 0 1 48-48zM272 192a48 48 0 0 1 48-48h160a48 48 0 0 1 0 96H320a48 48 0 0 1-48-48zm0 256a48 48 0 0 1 48-48h160a48 48 0 0 1 0 96H320a48 48 0 0 1-48-48zm256 0a48 48 0 0 1 48-48h160a48 48 0 0 1 0 96H576a48 48 0 0 1-48-48zm-256 256a48 48 0 0 1 48-48h160a48 48 0 0 1 0 96H320a48 48 0 0 1-48-48zm256 0a48 48 0 0 1 48-48h160a48 48 0 0 1 0 96H576a48 48 0 0 1-48-48zM464 0a48 48 0 0 1 48 48v160a48 48 0 0 1-96 0V48a48 48 0 0 1 48-48z" /></svg>
+                </el-icon>
+                <el-text size="large">等待验证……</el-text>
+            </div>
+            <div v-else style="padding: 20px 0;">
+                <el-text style="white-space: pre-line;">{{ verifyGuideMessage }}</el-text>
+            </div>
+        </div>
+    </el-dialog>
 </template>
 
 <style scoped>
