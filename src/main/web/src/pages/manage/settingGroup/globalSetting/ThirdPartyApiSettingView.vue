@@ -9,10 +9,10 @@ import HarmonyOSIcon_Handle from "@/components/icons/HarmonyOSIcon_Handle.vue";
 import HarmonyOSIcon_Plus from "@/components/icons/HarmonyOSIcon_Plus.vue";
 import {uuidv7} from "uuidv7";
 
-if (!PermissionInfo.hasPermission('robotApi.view.setting')) {
+if (!PermissionInfo.hasPermission('thirdPartyApi.view.setting')) {
     ElMessage({
         type: "error",
-        message: "无权限访问机器人API设置页面"
+        message: "无权限访问第三方 API 设置页面"
     });
 }
 
@@ -64,10 +64,10 @@ const timeoutOptionNames = {
     allow: "允许答题"
 };
 
-const cannotVerifyOptionValues = ["skip", "fail"];
+const cannotVerifyOptionValues = ["fail", "skip"];
 const cannotVerifyOptionNames = {
-    skip: "跳过验证（生成试题）",
-    fail: "验证失败（不生成试题）"
+    fail: "验证失败（不生成试题）",
+    skip: "跳过验证（生成试题）"
 };
 
 const removeCustomString = (index) => {
@@ -103,7 +103,7 @@ const finishEditing = () => {
     if (backupJSON !== JSON.stringify(settings.value)) {
         saving.value = true;
         WebSocketConnector.send({
-            type: "saveRobotApiSetting",
+            type: "saveThirdPartyApiSetting",
             data: {
                 data: settings.value
             }
@@ -124,7 +124,7 @@ const finishEditing = () => {
 };
 
 watch(() => PermissionInfo.permissions.value, () => {
-    hasManagePermission.value = PermissionInfo.hasPermission('robotApi.manage.setting');
+    hasManagePermission.value = PermissionInfo.hasPermission('thirdPartyApi.manage.setting');
 }, {immediate: true, deep: true});
 
 const getSettings = () => {
@@ -152,7 +152,7 @@ onMounted(() => {
 <template>
     <div style="display: flex;flex-direction: column;height: 100%">
         <div style="display: flex;flex-direction: row;flex-wrap: wrap;margin-bottom: 24px;align-items: center;padding: 0 24px;margin-top: 16px">
-            <el-text style="font-size: 24px;font-weight: bold;margin-right: 32px">机器人API设置</el-text>
+            <el-text style="font-size: 24px;font-weight: bold;margin-right: 32px">第三方 API 设置</el-text>
             <div v-if="hasManagePermission" style="display: flex;">
                 <transition-group name="blur-scale">
                     <el-button-group key="button-group" style="margin: 2px 24px 2px 0;">
@@ -174,7 +174,7 @@ onMounted(() => {
                 <div class="panel-1" style="padding: 20px">
                     <el-text size="large" style="font-weight: bold;margin-bottom: 16px;display: block">QQ验证设置</el-text>
                     <el-form label-position="top">
-                        <el-form-item label="启用QQ号验证">
+                        <el-form-item label="启用 QQ 号验证">
                             <el-switch v-model="settings['qqVerify.enabled']" :disabled="!hasManagePermission || !editing"/>
                         </el-form-item>
                         <template v-if="settings['qqVerify.enabled']">

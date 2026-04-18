@@ -23,7 +23,7 @@ const showOAuth2Setting = ref(false);
 const showBlacklist = ref(false);
 const showAnswerLimit = ref(false);
 const showWhitelist = ref(false);
-const showRobotApiSetting = ref(false);
+const showThirdPartyApiSetting = ref(false);
 watch(() => PermissionInfo.permissions.value, () => {
     showGeneratingSetting.value = PermissionInfo.hasPermission('setting', 'get generating setting');
     showAdvanceSetting.value = PermissionInfo.hasPermission('setting', 'get advance setting');
@@ -32,8 +32,8 @@ watch(() => PermissionInfo.permissions.value, () => {
     showAnswerLimit.value = PermissionInfo.hasPermission('answerLimit.view.setting') || 
                         PermissionInfo.hasPermission('answerLimit.view.count') || 
                         PermissionInfo.hasPermission('answerLimit.view.whitelist');
-    showWhitelist.value = PermissionInfo.hasPermission('robotApi.view.whitelist');
-    showRobotApiSetting.value = PermissionInfo.hasPermission('robotApi.view.setting');
+    showWhitelist.value = PermissionInfo.hasPermission('thirdPartyApi.view.whitelist');
+    showThirdPartyApiSetting.value = PermissionInfo.hasPermission('thirdPartyApi.view.setting');
 }, {immediate: true, deep: true});
 
 const isGroupVisible = (group) => {
@@ -144,12 +144,12 @@ const groups = [
                 }
             },
             {
-                name: "机器人API设置",
-                description: "配置机器人WebSocket API、QQ验证和通知",
-                show: showRobotApiSetting,
+                name: "第三方API设置",
+                description: "配置第三方WebSocket API、QQ验证和通知",
+                show: showThirdPartyApiSetting,
                 icon: MoreFilled,
                 action: () => {
-                    router.push({name: "robot-api-setting"});
+                    router.push({name: "third-party-api-setting"});
                 }
             },
             {

@@ -7,7 +7,7 @@ import getAvatarUrlOf from "@/utils/Avatar.js";
 import router from "@/router/index.js";
 import WebSocketConnector from "@/api/websocket.js";
 
-if (!PermissionInfo.hasPermission('robotApi.view.whitelist')) {
+if (!PermissionInfo.hasPermission('thirdPartyApi.view.whitelist')) {
     ElMessage({
         type: "error",
         message: "无权限访问白名单管理页面"
@@ -27,7 +27,7 @@ UserDataInterface.getUsersAsync().then((users) => {
 });
 
 watch(() => PermissionInfo.permissions.value, () => {
-    hasManagePermission.value = PermissionInfo.hasPermission('robotApi.manage.whitelist');
+    hasManagePermission.value = PermissionInfo.hasPermission('thirdPartyApi.manage.whitelist');
 }, {immediate: true, deep: true});
 
 const getWhitelist = () => {

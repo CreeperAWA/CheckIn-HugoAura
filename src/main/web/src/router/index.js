@@ -185,9 +185,9 @@ const router = createRouter({
                                     component: () => import("@/pages/manage/settingGroup/globalSetting/WhitelistView.vue")
                                 },
                                 {
-                                    path: "robot-api-setting/",
-                                    name: "robot-api-setting",
-                                    component: () => import("@/pages/manage/settingGroup/globalSetting/RobotApiSettingView.vue")
+                                    path: "third-party-api-setting/",
+                                    name: "third-party-api-setting",
+                                    component: () => import("@/pages/manage/settingGroup/globalSetting/ThirdPartyApiSettingView.vue")
                                 }
                             ]
                         },

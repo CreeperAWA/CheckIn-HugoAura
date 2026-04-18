@@ -37,13 +37,13 @@ VALUES ('qqVerify.enabled', 'false', 'java.lang.Boolean'),
        ('notification.examStart.enabled', 'false', 'java.lang.Boolean');
 
 INSERT IGNORE INTO permission_groups (name, description)
-VALUES ('robotApi', '机器人API管理');
+VALUES ('thirdPartyApi', '第三方API管理');
 
 INSERT IGNORE INTO permissions (id, description, name, group_name)
-VALUES ('ra-view-001', '查看机器人API设置', 'robotApi.view.setting', 'robotApi'),
-       ('ra-manage-001', '修改机器人API设置', 'robotApi.manage.setting', 'robotApi'),
-       ('ra-view-002', '查看白名单', 'robotApi.view.whitelist', 'robotApi'),
-       ('ra-manage-002', '管理白名单（增删）', 'robotApi.manage.whitelist', 'robotApi');
+VALUES ('ra-view-001', '查看第三方API设置', 'thirdPartyApi.view.setting', 'thirdPartyApi'),
+       ('ra-manage-001', '修改第三方API设置', 'thirdPartyApi.manage.setting', 'thirdPartyApi'),
+       ('ra-view-002', '查看白名单', 'thirdPartyApi.view.whitelist', 'thirdPartyApi'),
+       ('ra-manage-002', '管理白名单（增删）', 'thirdPartyApi.manage.whitelist', 'thirdPartyApi');
 
 INSERT IGNORE INTO role_permission_mapping (role_type, permission_id)
 VALUES ('super admin', 'ra-view-001'),

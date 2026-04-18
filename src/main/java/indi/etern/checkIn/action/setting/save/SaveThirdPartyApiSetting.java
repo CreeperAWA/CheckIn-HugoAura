@@ -11,10 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
-@Action("saveRobotApiSetting")
-public class SaveRobotApiSetting extends BaseAction<SaveRobotApiSetting.Input, OutputData> {
+@Action("saveThirdPartyApiSetting")
+public class SaveThirdPartyApiSetting extends BaseAction<SaveThirdPartyApiSetting.Input, MessageOutput> {
     public record Input(Map<String, Object> data) implements InputData {}
-    
+
     public static final String[] KEYS = {
             "qqVerify.enabled",
             "qqVerify.validDays",
@@ -32,15 +32,13 @@ public class SaveRobotApiSetting extends BaseAction<SaveRobotApiSetting.Input, O
             "notification.paperSubmit.enabled",
             "notification.examStart.enabled"
     };
-    SaveSettingCommon saveSettingCommon;
-    
+
     @Transactional
     @Override
-    public void execute(ExecuteContext<Input, OutputData> context) {
-        context.requirePermission("robotApi.manage.setting");
-        final Input input = context.getInput();
-        saveSettingCommon = new SaveSettingCommon(input.data,
-                KEYS, "robotApi");
+    public void execute(ExecuteContext<Input, MessageOutput> context) {
+        context.requirePermission("thirdPartyApi.manage.setting");
+        SaveSettingCommon saveSettingCommon = new SaveSettingCommon(context.getInput().data,
+                KEYS, "thirdPartyApi");
         try {
             saveSettingCommon.doSave();
             context.resolve(MessageOutput.success("设置保存成功"));

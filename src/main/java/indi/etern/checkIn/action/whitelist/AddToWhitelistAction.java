@@ -22,7 +22,7 @@ public class AddToWhitelistAction extends BaseAction<AddToWhitelistAction.Input,
     
     @Override
     public void execute(ExecuteContext<Input, OutputData> context) {
-        context.requirePermission("robotApi.manage.whitelist");
+        context.requirePermission("thirdPartyApi.manage.whitelist");
         final Input input = context.getInput();
         
         if (whitelistService.isWhitelisted(input.targetId)) {
