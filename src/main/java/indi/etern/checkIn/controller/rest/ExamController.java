@@ -153,10 +153,10 @@ public class ExamController {
             
             // QQ号验证
             try {
-                SettingItem qqVerifyEnabled = settingService.getItem("qqVerify", "enabled");
+                SettingItem qqVerifyEnabled = settingService.getItem("thirdPartyApi.qqVerify", "enabled");
                 if (qqVerifyEnabled.getValue(Boolean.class)) {
                     // 检查是否在白名单中
-                    SettingItem whitelistSetting = settingService.getItem("qqVerify", "whitelist");
+                    SettingItem whitelistSetting = settingService.getItem("thirdPartyApi.qqVerify", "whitelist");
                     List<String> whitelist = (List<String>) whitelistSetting.getValue(List.class);
                     if (whitelist == null) {
                         whitelist = Collections.emptyList();
@@ -165,7 +165,7 @@ public class ExamController {
                     if (!whitelist.contains(qqStr)) {
                         // 生成验证内容
                         String verifyContent;
-                        SettingItem verifyContentSetting = settingService.getItem("qqVerify", "customStrings");
+                        SettingItem verifyContentSetting = settingService.getItem("thirdPartyApi.qqVerify", "customStrings");
                         List<String> customVerifyList = (List<String>) verifyContentSetting.getValue(List.class);
                         if (customVerifyList != null && !customVerifyList.isEmpty()) {
                             // 从自定义列表中随机选择
@@ -184,7 +184,7 @@ public class ExamController {
                         // 获取引导提示信息
                         String guideMessage = "请按照以下步骤进行验证：\n1. 打开验证页面\n2. 输入验证内容\n3. 点击验证按钮";
                         try {
-                            SettingItem guideMessageSetting = settingService.getItem("qqVerify", "guideMessage");
+                            SettingItem guideMessageSetting = settingService.getItem("thirdPartyApi.qqVerify", "guideMessage");
                             guideMessage = guideMessageSetting.getValue(String.class);
                         } catch (Exception e) {
                             logger.warn("Failed to get guide message setting", e);
@@ -234,42 +234,42 @@ public class ExamController {
                                 // 验证成功，继续生成试题
                                 break;
                             case "failed":
-                                Map<String, String> errorDataMap = new HashMap<>();
-                                errorDataMap.put("type", "error");
-                                errorDataMap.put("description", "未能通过 QQ 号验证");
-                                return objectMapper.writeValueAsString(errorDataMap);
+                                Map<String, String> errorDataMap1 = new HashMap<>();
+                                errorDataMap1.put("type", "error");
+                                errorDataMap1.put("description", "未能通过 QQ 号验证");
+                                return objectMapper.writeValueAsString(errorDataMap1);
                             case "no_need":
                                 // 无需验证，继续生成试题
                                 break;
                             case "cannot_verify":
                                 // 无法验证，根据配置决定是否继续
-                                SettingItem cannotVerifySetting = settingService.getItem("qqVerify", "cannotVerifyAction");
+                                SettingItem cannotVerifySetting = settingService.getItem("thirdPartyApi.qqVerify", "cannotVerifyAction");
                                 String cannotVerifyAction = cannotVerifySetting.getValue(String.class);
                                 if ("fail".equals(cannotVerifyAction)) {
-                                    Map<String, String> errorDataMap = new HashMap<>();
-                                    errorDataMap.put("type", "error");
-                                    errorDataMap.put("description", "无法进行QQ号验证");
-                                    return objectMapper.writeValueAsString(errorDataMap);
+                                    Map<String, String> errorDataMap2 = new HashMap<>();
+                                    errorDataMap2.put("type", "error");
+                                    errorDataMap2.put("description", "无法进行QQ号验证");
+                                    return objectMapper.writeValueAsString(errorDataMap2);
                                 }
                                 // 否则继续生成试题
                                 break;
                             case "timeout":
                                 // 超时，根据配置决定是否继续
-                                SettingItem timeoutSetting = settingService.getItem("qqVerify", "timeoutAction");
+                                SettingItem timeoutSetting = settingService.getItem("thirdPartyApi.qqVerify", "timeoutAction");
                                 String timeoutAction = timeoutSetting.getValue(String.class);
                                 if ("fail".equals(timeoutAction)) {
-                                    Map<String, String> errorDataMap = new HashMap<>();
-                                    errorDataMap.put("type", "error");
-                                    errorDataMap.put("description", "QQ号验证超时");
-                                    return objectMapper.writeValueAsString(errorDataMap);
+                                    Map<String, String> errorDataMap3 = new HashMap<>();
+                                    errorDataMap3.put("type", "error");
+                                    errorDataMap3.put("description", "QQ号验证超时");
+                                    return objectMapper.writeValueAsString(errorDataMap3);
                                 }
                                 // 否则继续生成试题
                                 break;
                             default:
-                                Map<String, String> errorDataMap = new HashMap<>();
-                                errorDataMap.put("type", "error");
-                                errorDataMap.put("description", "QQ号验证失败");
-                                return objectMapper.writeValueAsString(errorDataMap);
+                                Map<String, String> errorDataMap4 = new HashMap<>();
+                                errorDataMap4.put("type", "error");
+                                errorDataMap4.put("description", "QQ号验证失败");
+                                return objectMapper.writeValueAsString(errorDataMap4);
                         }
                     }
                 }
@@ -277,7 +277,7 @@ public class ExamController {
                 logger.error("QQ verification failed", e);
                 // 验证失败时，根据配置决定是否继续
                 try {
-                    SettingItem failActionSetting = settingService.getItem("qqVerify", "failAction");
+                    SettingItem failActionSetting = settingService.getItem("thirdPartyApi.qqVerify", "failAction");
                     String failAction = failActionSetting.getValue(String.class);
                     if ("fail".equals(failAction)) {
                         Map<String, String> errorDataMap = new HashMap<>();
@@ -565,10 +565,10 @@ public class ExamController {
             String qqStr = String.valueOf(qq);
             
             // 检查验证功能是否启用
-            SettingItem qqVerifyEnabled = settingService.getItem("qqVerify", "enabled");
+            SettingItem qqVerifyEnabled = settingService.getItem("thirdPartyApi.qqVerify", "enabled");
             if (qqVerifyEnabled.getValue(Boolean.class)) {
                 // 检查是否在白名单中
-                SettingItem whitelistSetting = settingService.getItem("qqVerify", "whitelist");
+                SettingItem whitelistSetting = settingService.getItem("thirdPartyApi.qqVerify", "whitelist");
                 List<String> whitelist = (List<String>) whitelistSetting.getValue(List.class);
                 if (whitelist == null) {
                     whitelist = Collections.emptyList();
@@ -577,7 +577,7 @@ public class ExamController {
                     // 需要验证，返回引导提示信息
                     String guideMessage = "请按照以下步骤进行验证：\n1. 打开验证页面\n2. 输入验证内容\n3. 点击验证按钮";
                     try {
-                        SettingItem guideMessageSetting = settingService.getItem("qqVerify", "guideMessage");
+                        SettingItem guideMessageSetting = settingService.getItem("thirdPartyApi.qqVerify", "guideMessage");
                         guideMessage = guideMessageSetting.getValue(String.class);
                     } catch (Exception e) {
                         logger.warn("Failed to get guide message setting", e);

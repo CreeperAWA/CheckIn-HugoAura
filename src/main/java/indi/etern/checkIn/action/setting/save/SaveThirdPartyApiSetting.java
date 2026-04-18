@@ -26,11 +26,11 @@ public class SaveThirdPartyApiSetting extends BaseAction<SaveThirdPartyApiSettin
     }
 
     public static final String[] KEYS = {
-            "qqVerify.enabled",
-            "qqVerify.validDays",
-            "qqVerify.timeoutAction",
-            "qqVerify.cannotVerifyAction",
-            "qqVerify.customStrings",
+            "thirdPartyApi.qqVerify.enabled",
+            "thirdPartyApi.qqVerify.validDays",
+            "thirdPartyApi.qqVerify.timeoutAction",
+            "thirdPartyApi.qqVerify.cannotVerifyAction",
+            "thirdPartyApi.qqVerify.customStrings",
             "notification.submitFrequency.enabled",
             "notification.submitFrequency.timeWindow",
             "notification.submitFrequency.threshold",

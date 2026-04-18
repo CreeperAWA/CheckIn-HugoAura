@@ -38,21 +38,21 @@ ALTER TABLE rate_limit_rules DROP COLUMN created_at;
 ALTER TABLE rate_limit_rules DROP COLUMN updated_at;
 
 INSERT IGNORE INTO server_setting_items (setting_key, setting_value, clazz)
-VALUES ('qqVerify.enabled', 'false', 'java.lang.Boolean'),
-       ('qqVerify.validDays', '3', 'java.lang.Integer'),
-       ('qqVerify.timeoutAction', 'fail', 'java.lang.String'),
-       ('qqVerify.cannotVerifyAction', 'skip', 'java.lang.String'),
-       ('qqVerify.customStrings', '[]', 'java.util.List'),
-       ('qqVerify.guideMessage', '请按照以下步骤进行验证……', 'java.lang.String'),
-       ('notification.submitFrequency.enabled', 'false', 'java.lang.Boolean'),
-       ('notification.submitFrequency.timeWindow', '5', 'java.lang.Integer'),
-       ('notification.submitFrequency.threshold', '3', 'java.lang.Integer'),
-       ('notification.loginFailure.enabled', 'false', 'java.lang.Boolean'),
-       ('notification.loginSuccess.enabled', 'false', 'java.lang.Boolean'),
-       ('notification.quickSubmit.enabled', 'false', 'java.lang.Boolean'),
-       ('notification.quickSubmit.threshold', '1', 'java.lang.Integer'),
-       ('notification.paperSubmit.enabled', 'false', 'java.lang.Boolean'),
-       ('notification.examStart.enabled', 'false', 'java.lang.Boolean');
+VALUES ('thirdPartyApi.qqVerify.enabled', 'false', 'java.lang.Boolean'),
+       ('thirdPartyApi.qqVerify.validDays', '3', 'java.lang.Integer'),
+       ('thirdPartyApi.qqVerify.timeoutAction', '"fail"', 'java.lang.String'),
+       ('thirdPartyApi.qqVerify.cannotVerifyAction', '"skip"', 'java.lang.String'),
+       ('thirdPartyApi.qqVerify.customStrings', '[]', 'java.util.List'),
+       ('thirdPartyApi.qqVerify.guideMessage', '"请按照以下步骤进行验证：\n1. 打开验证页面\n2. 输入验证内容\n3. 点击验证按钮"', 'java.lang.String'),
+       ('thirdPartyApi.notification.submitFrequency.enabled', 'false', 'java.lang.Boolean'),
+       ('thirdPartyApi.notification.submitFrequency.timeWindow', '5', 'java.lang.Integer'),
+       ('thirdPartyApi.notification.submitFrequency.threshold', '3', 'java.lang.Integer'),
+       ('thirdPartyApi.notification.loginFailure.enabled', 'false', 'java.lang.Boolean'),
+       ('thirdPartyApi.notification.loginSuccess.enabled', 'false', 'java.lang.Boolean'),
+       ('thirdPartyApi.notification.quickSubmit.enabled', 'false', 'java.lang.Boolean'),
+       ('thirdPartyApi.notification.quickSubmit.threshold', '1', 'java.lang.Integer'),
+       ('thirdPartyApi.notification.paperSubmit.enabled', 'false', 'java.lang.Boolean'),
+       ('thirdPartyApi.notification.examStart.enabled', 'false', 'java.lang.Boolean');
 
 INSERT IGNORE INTO permission_groups (name, description)
 VALUES ('thirdPartyApi', '第三方API管理');

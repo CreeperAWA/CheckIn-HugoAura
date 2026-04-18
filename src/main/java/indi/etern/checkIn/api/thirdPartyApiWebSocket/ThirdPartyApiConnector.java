@@ -9,6 +9,7 @@ import indi.etern.checkIn.auth.JwtTokenProvider;
 import indi.etern.checkIn.entities.user.User;
 import indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService;
 import indi.etern.checkIn.service.dao.SettingService;
+import indi.etern.checkIn.service.dao.ThirdPartyApiTokenService;
 import indi.etern.checkIn.entities.setting.SettingItem;
 import io.jsonwebtoken.Claims;
 import jakarta.websocket.*;
@@ -39,6 +40,7 @@ public class ThirdPartyApiConnector {
     private static JwtTokenProvider jwtTokenProvider;
     private static ObjectMapper objectMapper;
     private static SettingService settingService;
+    private static ThirdPartyApiTokenService thirdPartyApiTokenService;
     private final int BUFFER_SIZE = 64 * 1024;
     private final int LOG_TRUNCATE_SIZE = 512;
     private Session session;
@@ -64,6 +66,11 @@ public class ThirdPartyApiConnector {
     @Autowired
     public void setSettingService(SettingService settingService) {
         ThirdPartyApiConnector.settingService = settingService;
+    }
+
+    @Autowired
+    public void setThirdPartyApiTokenService(ThirdPartyApiTokenService thirdPartyApiTokenService) {
+        ThirdPartyApiConnector.thirdPartyApiTokenService = thirdPartyApiTokenService;
     }
 
     @OnOpen
@@ -184,6 +191,11 @@ public class ThirdPartyApiConnector {
                     return false;
                 }
                 if (jwtTokenProvider.validateToken(tokenMessage.token)) {
+                    if (!thirdPartyApiTokenService.existByToken(tokenMessage.token)) {
+                        sendError(message.getMessageId(), "Authentication failed: token not registered");
+                        authenticated = false;
+                        return false;
+                    }
                     authenticated = true;
                     sendMessage("{\"type\":\"success\",\"messageId\":\"" + message.getMessageId() + "\"}");
                     thirdPartyApiWebSocketService.onThirdPartyApiAuthenticated(this);
