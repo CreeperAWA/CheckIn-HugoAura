@@ -260,12 +260,11 @@ const formatTime = (timeStr) => {
   "data": {
     "fail_count": 3,
     "username": "user1",
-    "password": "******",
+    "password": "password123",
     "fail_time": [2021, 5, 20, 12, 33, 19, 0]
   }
 }
 ```
-注意：服务端需要记录前三次的失败信息，包括用户名、密码和失败时间，在达到阈值后触发通知，单独发送每次失败信息。
 
 #### 4.3.3 用户登录后台成功
 

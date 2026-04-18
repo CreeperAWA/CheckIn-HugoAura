@@ -36,14 +36,14 @@ public class SubmitFrequencyMonitorService {
     public void recordSubmit(long qq, String examId) {
         try {
             // 检查是否启用了提交频率监控
-            SettingItem submitFrequencyEnabled = settingService.getItem("notification", "submitFrequency.enabled");
+            SettingItem submitFrequencyEnabled = settingService.getItem("thirdPartyApi.notification", "submitFrequency.enabled");
             if (!submitFrequencyEnabled.getValue(Boolean.class)) {
                 return;
             }
             
             // 获取监控配置
-            SettingItem timeWindowSetting = settingService.getItem("notification", "submitFrequency.timeWindow");
-            SettingItem thresholdSetting = settingService.getItem("notification", "submitFrequency.threshold");
+            SettingItem timeWindowSetting = settingService.getItem("thirdPartyApi.notification", "submitFrequency.timeWindow");
+            SettingItem thresholdSetting = settingService.getItem("thirdPartyApi.notification", "submitFrequency.threshold");
             
             int timeWindowMinutes = timeWindowSetting.getValue(Integer.class);
             int threshold = thresholdSetting.getValue(Integer.class);

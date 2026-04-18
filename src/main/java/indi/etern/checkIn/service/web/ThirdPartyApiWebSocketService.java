@@ -140,6 +140,24 @@ public class ThirdPartyApiWebSocketService {
         Message<Map<String, Object>> message = Message.of(type, UUIDv7.randomUUID().toString(), data);
         sendToAllThirdPartyApis(message);
     }
+    
+    public void sendLoginSuccessNotification(String username, long qq, String permissionGroup) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("username", username);
+        data.put("qq", String.valueOf(qq));
+        data.put("login_time", toTimeArray(LocalDateTime.now()));
+        data.put("permission_group", permissionGroup);
+        sendNotification("notification_login_success", data);
+    }
+    
+    public void sendLoginFailureNotification(int failCount, String username, String password) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("fail_count", failCount);
+        data.put("username", username);
+        data.put("password", password);
+        data.put("fail_time", toTimeArray(LocalDateTime.now()));
+        sendNotification("notification_login_failure", data);
+    }
 
     @SneakyThrows
     private void sendToAllThirdPartyApis(Message<?> message) {

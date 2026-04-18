@@ -157,7 +157,7 @@ public class ExamGenerator {
             
             // 发送开始考试通知
             try {
-                SettingItem examStartEnabled = settingService.getItem("notification", "examStart.enabled");
+                SettingItem examStartEnabled = settingService.getItem("thirdPartyApi.notification", "examStart.enabled");
                 if (examStartEnabled.getValue(Boolean.class)) {
                     Map<String, Object> data = new HashMap<>();
                     data.put("qq", String.valueOf(qq));

@@ -108,7 +108,7 @@ public class ExamDataService {
         
         // 发送提交考试结果通知
         try {
-            SettingItem paperSubmitEnabled = settingService.getItem("notification", "paperSubmit.enabled");
+            SettingItem paperSubmitEnabled = settingService.getItem("thirdPartyApi.notification", "paperSubmit.enabled");
             if (paperSubmitEnabled.getValue(Boolean.class)) {
                 Map<String, Object> data = new HashMap<>();
                 data.put("qq", String.valueOf(examData.getQqNumber()));
@@ -128,9 +128,9 @@ public class ExamDataService {
         
         // 检查是否需要发送短时间提交试题的通知
         try {
-            SettingItem quickSubmitEnabled = settingService.getItem("notification", "quickSubmit.enabled");
+            SettingItem quickSubmitEnabled = settingService.getItem("thirdPartyApi.notification", "quickSubmit.enabled");
             if (quickSubmitEnabled.getValue(Boolean.class)) {
-                SettingItem quickSubmitThreshold = settingService.getItem("notification", "quickSubmit.threshold");
+                SettingItem quickSubmitThreshold = settingService.getItem("thirdPartyApi.notification", "quickSubmit.threshold");
                 int thresholdMinutes = quickSubmitThreshold.getValue(Integer.class);
                 long intervalSeconds = java.time.Duration.between(examData.getGenerateTime(), now).getSeconds();
                 if (intervalSeconds <= thresholdMinutes * 60) {

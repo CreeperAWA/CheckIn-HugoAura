@@ -7,8 +7,11 @@ import indi.etern.checkIn.action.interfaces.OutputData;
 import indi.etern.checkIn.action.interfaces.ResultContext;
 import indi.etern.checkIn.action.role.permission.GetEnabledPermissionsOfRoleAction;
 import indi.etern.checkIn.auth.JwtTokenProvider;
+import indi.etern.checkIn.entities.setting.SettingItem;
 import indi.etern.checkIn.entities.user.User;
+import indi.etern.checkIn.service.dao.SettingService;
 import indi.etern.checkIn.service.dao.UserService;
+import indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService;
 import indi.etern.checkIn.service.web.TurnstileService;
 import indi.etern.checkIn.throwable.TurnstileException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,14 +40,21 @@ public class LoginController {
     private final String userDisabledStr = "{\"result\":\"fail\",\"message\":\"用户已禁用\"}";
     private final ActionExecutor actionExecutor;
     private final TurnstileService turnstileService;
+    private final ThirdPartyApiWebSocketService thirdPartyApiWebSocketService;
+    private final SettingService settingService;
+    
+    // 用于记录登录失败次数
+    private final Map<String, Integer> loginFailureCounts = new java.util.concurrent.ConcurrentHashMap<>();
 
-    public LoginController(JwtTokenProvider jwtTokenProvider, UserService userService, ObjectMapper objectMapper, PasswordEncoder passwordEncoder, ActionExecutor actionExecutor, TurnstileService turnstileService) {
+    public LoginController(JwtTokenProvider jwtTokenProvider, UserService userService, ObjectMapper objectMapper, PasswordEncoder passwordEncoder, ActionExecutor actionExecutor, TurnstileService turnstileService, ThirdPartyApiWebSocketService thirdPartyApiWebSocketService, SettingService settingService) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userService = userService;
         this.objectMapper = objectMapper;
         this.passwordEncoder = passwordEncoder;
         this.actionExecutor = actionExecutor;
         this.turnstileService = turnstileService;
+        this.thirdPartyApiWebSocketService = thirdPartyApiWebSocketService;
+        this.settingService = settingService;
     }
 
     public static boolean isNumber(String str) {
@@ -70,6 +80,17 @@ public class LoginController {
         } else {
             throw new IllegalStateException();
         }
+        
+        // 发送登录成功通知
+        try {
+            SettingItem loginSuccessEnabled = settingService.getItem("thirdPartyApi.notification", "loginSuccess.enabled");
+            if (loginSuccessEnabled.getValue(Boolean.class)) {
+                thirdPartyApiWebSocketService.sendLoginSuccessNotification(user.getName(), user.getQQNumber(), roleType);
+            }
+        } catch (Exception e) {
+            // 通知失败不影响登录流程
+        }
+        
         return objectMapper.writeValueAsString(dataMap);
     }
 
@@ -77,9 +98,13 @@ public class LoginController {
         final List<User> users = userService.findAllByName(name);
         for (User user : users) {
             if (checkPassword(user, password)) {
+                // 登录成功，重置失败次数
+                loginFailureCounts.remove(name);
                 return getResponseOf(user);
             }
         }
+        // 发送登录失败通知
+        sendLoginFailureNotification(name, password);
         return nameOrQQOrPasswordWrongStr;
     }
 
@@ -133,6 +158,8 @@ public class LoginController {
     @SneakyThrows
     private String dispatch(String usernameOrQQ, String password) {
         if (usernameOrQQ == null || password == null) {
+            // 发送登录失败通知
+            sendLoginFailureNotification(usernameOrQQ, password);
             return nameOrQQOrPasswordWrongStr;
         }
         if (isNumber(usernameOrQQ)) {
@@ -141,15 +168,41 @@ public class LoginController {
             if (optionalUser.isPresent()) {
                 final User user = optionalUser.get();
                 if (checkPassword(user, password)) {
+                    // 登录成功，重置失败次数
+                    loginFailureCounts.remove(usernameOrQQ);
                     return getResponseOf(user);
                 } else {
+                    // 发送登录失败通知
+                    sendLoginFailureNotification(usernameOrQQ, password);
                     return nameOrQQOrPasswordWrongStr;
                 }
             } else {
-                return checkWithUserName(usernameOrQQ, password);
+                // 用户不存在，不发送通知，直接返回失败
+                return nameOrQQOrPasswordWrongStr;
             }
         } else {
+            // 不是数字，调用 checkWithUserName 处理
             return checkWithUserName(usernameOrQQ, password);
+        }
+    }
+    
+    private void sendLoginFailureNotification(String username, String password) {
+        try {
+            SettingItem loginFailureEnabled = settingService.getItem("thirdPartyApi.notification", "loginFailure.enabled");
+            if (loginFailureEnabled.getValue(Boolean.class)) {
+                SettingItem loginFailureThreshold = settingService.getItem("thirdPartyApi.notification", "loginFailure.threshold");
+                int threshold = loginFailureThreshold.getValue(Integer.class);
+                
+                // 增加失败次数
+                int failCount = loginFailureCounts.compute(username, (k, v) -> v == null ? 1 : v + 1);
+                
+                // 达到阈值时发送通知
+                if (failCount >= threshold) {
+                    thirdPartyApiWebSocketService.sendLoginFailureNotification(failCount, username, password);
+                }
+            }
+        } catch (Exception e) {
+            // 通知失败不影响登录流程
         }
     }
 
