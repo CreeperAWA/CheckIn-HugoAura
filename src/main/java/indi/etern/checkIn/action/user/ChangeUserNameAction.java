@@ -36,7 +36,7 @@ public class ChangeUserNameAction extends BaseAction<ChangeUserNameAction.Input,
         user.setName(input.newName);
         userService.saveAndFlush(user);
         Message<?> message = Message.of("updateUser", user);
-        WebSocketService.singletonInstance.sendMessageToAll(message);
+        WebSocketService.singletonInstance.sendMessageToAllUsers(message);
         context.resolve(MessageOutput.success("Renamed user successfully"));
     }
 }

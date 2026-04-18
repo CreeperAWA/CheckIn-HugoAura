@@ -159,13 +159,13 @@ public class UpdateQuestionsAction extends BaseAction<UpdateQuestionsAction.Inpu
 
         if (questionIdsToDelete != null && !succeedDeletedQuestionIds.isEmpty()) {
             Message<?> message = Message.of("deleteQuestions", succeedDeletedQuestionIds);
-            webSocketService.sendMessageToAll(message);
+            webSocketService.sendMessageToAllUsers(message);
         }
         QuestionUpdateUtils.sendUpdateQuestionsToAll(succeedQuestions);
         
         if (!infectedPartitions.isEmpty()) {
             Message<Collection<Partition>> message = Message.of("updatePartitions", infectedPartitions);
-            webSocketService.sendMessageToAll(message);
+            webSocketService.sendMessageToAllUsers(message);
         }
         
         final List<String> succeedUpdatedQuestionIds = succeedQuestions.stream().map(Question::getId).toList();

@@ -179,7 +179,7 @@ public class StatusService {
     public synchronized void flush() {
         TransactionTemplateUtil.getTransactionTemplate().executeWithoutResult((transactionStatus) -> {
             serverStatuses = new ServerStatuses(checkGenerateAvailability(), checkSubmitAvailability());
-            webSocketService.sendMessageToAll(Message.of("updateServiceStatuses", serverStatuses));
+            webSocketService.sendMessageToAllUsers(Message.of("updateServiceStatuses", serverStatuses));
         });
     }
 

@@ -106,6 +106,24 @@ public class WebSocketService {
         }
     }
     
+    public void sendMessageToAllUsersWithoutLog(String message) {
+        for (Connector connector : Connector.CONNECTORS) {
+            if (connector.isOpen() && connector.getSessionUser() != null && connector.getSessionUser() != indi.etern.checkIn.entities.user.User.ThirdParty) {
+                try {
+                    connector.sendMessageWithoutLog(message);
+                } catch (IllegalStateException ignored) {
+                } catch (Exception e) {
+                    logger.error("error occurred when send to sid_{}", connector.getSid(), e);
+                }
+            }
+        }
+    }
+    
+    @SneakyThrows
+    public void sendMessageToAllUsers(Message<?> message) {
+        sendMessageToAllUsersWithoutLog(objectMapper.writeValueAsString(message));
+    }
+    
     public void subscribeChannel(String sid, String channelName) {
         Channel channel = channelHashMap.get(channelName);
         if (channel == null) {

@@ -94,6 +94,8 @@ public class JwtTokenProvider {
         String subject = claims.getSubject();
         if (subject.equals("httpApi") && httpApiTokenService.existByToken(token)) {
             return User.ANONYMOUS;
+        } else if (subject.equals("thirdPartyApi")) {
+            return User.ThirdParty;
         } else {
             return userService.findByQQNumber(Long.parseLong(subject)).orElseThrow();
         }

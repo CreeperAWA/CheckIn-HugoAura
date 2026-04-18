@@ -147,7 +147,7 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
                 }
                 save(user);
                 Message<User> message = Message.of("addUser", user);
-                webSocketService.sendMessageToAll(message);
+                webSocketService.sendMessageToAllUsers(message);
             }
         } else {
             throw new ExamInvalidException();

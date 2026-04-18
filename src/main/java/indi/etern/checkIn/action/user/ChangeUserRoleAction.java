@@ -42,7 +42,7 @@ public class ChangeUserRoleAction extends BaseAction<ChangeUserRoleAction.Input,
         user.setRole(role);
         userService.save(user);
         Message<?> message = Message.of("updateUser", user);
-        WebSocketService.singletonInstance.sendMessageToAll(message);
+        WebSocketService.singletonInstance.sendMessageToAllUsers(message);
         context.resolve(MessageOutput.success("Role of user changed successfully"));
     }
 }

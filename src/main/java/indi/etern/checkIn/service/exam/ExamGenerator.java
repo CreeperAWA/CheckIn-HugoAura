@@ -34,12 +34,14 @@ public class ExamGenerator {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final QuestionService questionService;
     private final SpecialPartitionLimitService specialPartitionLimitService;
+    private final indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService;
     
-    public ExamGenerator(PartitionService partitionService, SettingService settingService, QuestionService questionService, QuestionStatisticService questionStatisticService, SpecialPartitionLimitService specialPartitionLimitService) {
+    public ExamGenerator(PartitionService partitionService, SettingService settingService, QuestionService questionService, QuestionStatisticService questionStatisticService, SpecialPartitionLimitService specialPartitionLimitService, indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService) {
         this.partitionService = partitionService;
         this.settingService = settingService;
         this.questionService = questionService;
         this.specialPartitionLimitService = specialPartitionLimitService;
+        this.thirdPartyApiWebSocketService = thirdPartyApiWebSocketService;
     }
     
     private void sampleQuestions(Set<Question> drewQuestions, List<Partition> partitions, int questionAmount, Random random, SamplingStrategy samplingStrategy, CompletingStrategy completingStrategy) throws NotEnoughQuestionsForExamException, MinQuestionLimitOutOfBoundsException {
@@ -140,7 +142,8 @@ public class ExamGenerator {
             LinkedHashSet<Question> questions = new LinkedHashSet<>();
             sampleQuestions(questions, partitions, questionAmount, new Random(), samplingStrategy, completingStrategy);
             
-            return ExamData.builder()
+            LocalDateTime now = LocalDateTime.now();
+            ExamData examData = ExamData.builder()
                     .id(UUIDv7.randomUUID().toString())
                     .qqNumber(qq)
                     .status(ExamData.Status.ONGOING)
@@ -148,9 +151,28 @@ public class ExamGenerator {
                     .questionAmount(questionAmount)
                     .selectedPartitionIds(selectedPartitionIds)
                     .requiredPartitionIds(requiredPartitionIds)
-                    .generateTime(LocalDateTime.now())
-                    .expireTime(LocalDateTime.now().plus(expiredPeriod))
+                    .generateTime(now)
+                    .expireTime(now.plus(expiredPeriod))
                     .build();
+            
+            // 发送开始考试通知
+            try {
+                SettingItem examStartEnabled = settingService.getItem("notification", "examStart.enabled");
+                if (examStartEnabled.getValue(Boolean.class)) {
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("qq", String.valueOf(qq));
+                    data.put("paper_id", examData.getId());
+                    data.put("generate_time", new int[]{now.getYear(), now.getMonthValue(), now.getDayOfMonth(), now.getHour(), now.getMinute(), now.getSecond(), now.getNano()});
+                    thirdPartyApiWebSocketService.sendNotification("notification_exam_start", data);
+                    logger.info("Sent exam_start notification for qq {} exam {}", qq, examData.getId());
+                } else {
+                    logger.debug("examStart notification is disabled");
+                }
+            } catch (Exception e) {
+                logger.error("Failed to send exam start notification", e);
+            }
+            
+            return examData;
         } catch (Exception e) {
             logger.error("generate exam failed", e);
             throw e;

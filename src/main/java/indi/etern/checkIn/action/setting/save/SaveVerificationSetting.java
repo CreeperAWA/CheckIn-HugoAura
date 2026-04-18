@@ -60,7 +60,7 @@ public class SaveVerificationSetting extends BaseAction<SaveVerificationSetting.
         }
         verificationRuleService.saveAll(verificationRuleList);
         final List<Object> ruleList = actionExecutor.execute(GetVerificationSettingAction.class).getOutput().data();
-        webSocketService.sendMessageToAll(Message.of("updateVerificationRules", ruleList));
+        webSocketService.sendMessageToAllUsers(Message.of("updateVerificationRules", ruleList));
         context.resolve(MessageOutput.success("Verification setting saved"));
     }
 }

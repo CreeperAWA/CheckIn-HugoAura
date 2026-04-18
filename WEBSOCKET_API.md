@@ -9,14 +9,15 @@
 ### 2.1 连接URL
 
 ```
-wss://{host}:{port}/checkIn/api/websocket/{sid}
+{protocol}://{host}:{port}/api/websocket/thirdParty/{sid}
 ```
 
+- `protocol`: 协议，根据服务器配置选择 `ws` 或 `wss`
 - `host`: 服务器主机地址
 - `port`: 服务器端口
 - `sid`: 机器人唯一标识符（UUID格式）
 
-**注意**：连接时应使用WSS协议，确保数据传输安全
+**注意**：在生产环境中建议使用WSS协议确保数据传输安全，测试环境或无SSL证书的环境可使用WS协议
 
 ### 2.2 认证流程
 
@@ -352,7 +353,7 @@ const formatTime = (timeStr) => {
 
 ### 6.1 完整连接认证流程
 
-1. 客户端连接：`wss://example.com:8080/checkIn/api/websocket/550e8400-e29b-41d4-a716-446655440000`
+1. 客户端连接：`{protocol}://example.com:8080/api/websocket/thirdParty/550e8400-e29b-41d4-a716-446655440000`
 2. 客户端发送认证消息（包含JWT Token）
 3. 服务端发送认证成功结果
 4. 服务端推送完整黑名单列表
@@ -371,4 +372,4 @@ const formatTime = (timeStr) => {
 2. 客户端应实现消息超时处理，特别是QQ号验证的2分钟超时
 3. 服务端应支持多机器人同时连接，通过`sid`区分不同机器人
 4. 所有消息应采用JSON格式，确保数据结构的一致性
-5. 服务端应定期发送心跳消息，确保连接活跃
+5. 客户端在连接异常断开后应当进行重试，第一次间隔 5 秒后重试，第二次间隔 10 秒后进行重试，第三次间隔 1 分钟后进行重试，后续每间隔 5 分钟进行 1 次重试

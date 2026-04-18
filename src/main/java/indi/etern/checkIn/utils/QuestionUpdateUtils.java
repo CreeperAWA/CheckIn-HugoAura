@@ -17,6 +17,6 @@ public class QuestionUpdateUtils {
         }
         
         Message<?> message = Message.of("updateQuestions",list);
-        WebSocketService.singletonInstance.sendMessageToAll(message);
+        WebSocketService.singletonInstance.sendMessageToAllUsers(message);
     }
 }

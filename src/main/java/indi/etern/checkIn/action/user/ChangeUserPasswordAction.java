@@ -34,7 +34,7 @@ public class ChangeUserPasswordAction extends BaseAction<ChangeUserPasswordActio
             user.setPassword(passwordEncoder.encode(input.newPassword));
             userService.saveAndFlush(user);
             Message<?> message = Message.of("updateUser", user);
-            WebSocketService.singletonInstance.sendMessageToAll(message);
+            WebSocketService.singletonInstance.sendMessageToAllUsers(message);
             context.resolve(MessageOutput.success("Password changed successfully"));
         }
     }

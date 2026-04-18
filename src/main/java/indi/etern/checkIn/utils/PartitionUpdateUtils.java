@@ -19,7 +19,7 @@ public class PartitionUpdateUtils {
     
     private static void sendPartitionActionToAll(String type, Partition partition) {
         Message<Partition> message = Message.of(type,partition);
-        WebSocketService.singletonInstance.sendMessageToAll(message);
+        WebSocketService.singletonInstance.sendMessageToAllUsers(message);
     }
     
 }

@@ -78,7 +78,7 @@ public class DeletePartitionAction extends BaseAction<DeletePartitionAction.Inpu
                 questionService.deleteAll(deleteQuestions);
                 partitionService.delete(optionalPartition.orElse(null));
                 Message<?> message = Message.of("deleteQuestions", deletedQuestionIds);
-                webSocketService.sendMessageToAll(message);
+                webSocketService.sendMessageToAllUsers(message);
                 QuestionUpdateUtils.sendUpdateQuestionsToAll(updatedQuestions);
 //            return getOptionalErrorMap("partition \"" + partition.getName() + "\" is not empty");
             }

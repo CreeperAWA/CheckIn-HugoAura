@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 @Component
-@ServerEndpoint("/checkIn/api/websocket/{sid}")
+@ServerEndpoint("/api/websocket/thirdParty/{sid}")
 @ConditionalOnWebApplication
 public class ThirdPartyApiConnector {
     public static final CopyOnWriteArraySet<ThirdPartyApiConnector> CONNECTORS = new CopyOnWriteArraySet<>();

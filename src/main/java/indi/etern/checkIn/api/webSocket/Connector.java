@@ -204,6 +204,11 @@ public class Connector {
         if (message.getType().equals(Message.Type.of("token"))) {
             final TokenMessage tokenMessage = objectMapper.readValue(message.getData(), TokenMessage.class);
             sessionUser = jwtTokenProvider.getUser(tokenMessage.token);
+            // 拒绝第三方 API 连接
+            if (sessionUser == User.ThirdParty) {
+                sendError(message.getMessageId(), "Third party API connections should use /api/websocket/thirdParty/{sid} endpoint");
+                return false;
+            }
             JwtAuthenticationFilter.setUserToSecurityContextHolder(sessionUser);
             if (!sid.equals(String.valueOf(sessionUser.getQQNumber()))) {
                 sendError(message.getMessageId(), "sid is not equal to qq");
@@ -246,5 +251,9 @@ public class Connector {
     
     public boolean isOpen() {
         return session.isOpen();
+    }
+    
+    public User getSessionUser() {
+        return sessionUser;
     }
 }

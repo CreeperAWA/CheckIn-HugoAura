@@ -66,7 +66,7 @@ public class ExposeApi {
                                 userService.findByQQNumber(examData.getQqNumber()).ifPresent((user) -> {
                                     user.setEnabled(true);
                                     Message<User> message = Message.of("updateUser", user);
-                                    webSocketService.sendMessageToAll(message);
+                                    webSocketService.sendMessageToAllUsers(message);
                                     userService.save(user);
                                 });
                                 examResult.setSignUpCompletingType(SignUpCompletingType.COMPLETED);

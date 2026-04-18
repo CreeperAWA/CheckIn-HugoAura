@@ -43,7 +43,7 @@ public class RoleService {
 //            permissionRepository.save(permission);
             roleRepository.save(role);
             
-            webSocketService.sendMessageToAll(Message.of("addPermission", permission));
+            webSocketService.sendMessageToAllUsers(Message.of("addPermission", permission));
             return permission;
         } else {
             roleRepository.save(role);
@@ -100,7 +100,7 @@ public class RoleService {
         }
         
         record PermissionInfo(String name, String group) {}
-        webSocketService.sendMessageToAll(Message.of("deletePermission", new PermissionInfo(permissionName, "role")));
+        webSocketService.sendMessageToAllUsers(Message.of("deletePermission", new PermissionInfo(permissionName, "role")));
         
         roleRepository.delete(role);
     }

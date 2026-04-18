@@ -23,12 +23,18 @@ import java.util.Set;
 @Table(name = "Users")
 public class User implements UserDetails, OAuth2User {
     public static final User ANONYMOUS;
+    public static final User ThirdParty;
 
     static {
         ANONYMOUS = new User();
         ANONYMOUS.name = "anonymous";
         ANONYMOUS.QQNumber = 0;
         ANONYMOUS.role = Role.ANONYMOUS;
+        
+        ThirdParty = new User();
+        ThirdParty.name = "thirdParty";
+        ThirdParty.QQNumber = 0;
+        ThirdParty.role = Role.ANONYMOUS;
     }
 
     @Setter

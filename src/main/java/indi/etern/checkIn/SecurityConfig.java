@@ -50,7 +50,6 @@ public class SecurityConfig {
         http.authorizeHttpRequests(authorizeHttpRequests ->
                         authorizeHttpRequests
                                 .requestMatchers("/manage/**").authenticated()
-                                .requestMatchers("/api/websocket/**").authenticated()
                                 .requestMatchers("/api/qualify").authenticated()
                                 .requestMatchers("/api/generate").authenticated()
                                 .anyRequest().permitAll())

@@ -49,7 +49,7 @@ public class CreateUserAction extends BaseAction<CreateUserAction.Input, OutputD
             context.resolve(new SuccessOutput(initPassword));
 
             Message<User> message = Message.of("addUser", newUser);
-            webSocketService.sendMessageToAll(message);
+            webSocketService.sendMessageToAllUsers(message);
         }
     }
 

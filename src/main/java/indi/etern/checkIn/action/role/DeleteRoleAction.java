@@ -34,7 +34,7 @@ public class DeleteRoleAction extends BaseAction<DeleteRoleAction.Input, Message
         } else {
             roleService.delete(role);
             
-            webSocketService.sendMessageToAll(Message.of("deleteRole", role));
+            webSocketService.sendMessageToAllUsers(Message.of("deleteRole", role));
             
             context.resolve(MessageOutput.success("Role deleted"));
         }

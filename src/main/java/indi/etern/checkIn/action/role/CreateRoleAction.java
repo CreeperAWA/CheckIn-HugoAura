@@ -42,7 +42,7 @@ public class CreateRoleAction extends BaseAction<CreateRoleAction.Input, Message
             
             Permission createdPermission = roleService.save(role);
             
-            webSocketService.sendMessageToAll(Message.of("addRole", role));
+            webSocketService.sendMessageToAllUsers(Message.of("addRole", role));
             
             if (createdPermission != null) {
 //                roleService.savePermission(createdPermission);

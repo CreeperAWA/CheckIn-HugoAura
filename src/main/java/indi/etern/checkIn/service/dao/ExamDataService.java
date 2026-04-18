@@ -7,6 +7,7 @@ import indi.etern.checkIn.entities.setting.grading.GradingLevel;
 import indi.etern.checkIn.repositories.ExamDataRepository;
 import indi.etern.checkIn.service.exam.ExamGenerator;
 import indi.etern.checkIn.service.exam.ExamResult;
+import indi.etern.checkIn.service.web.SubmitFrequencyMonitorService;
 import indi.etern.checkIn.throwable.entity.SettingInvalidException;
 import indi.etern.checkIn.throwable.exam.ExamException;
 import indi.etern.checkIn.throwable.exam.ExamSubmittedException;
@@ -33,14 +34,18 @@ public class ExamDataService {
     private final Logger logger = LoggerFactory.getLogger(ExamDataService.class);
     private final ExamGenerator examGenerator;
     private final QuestionStatisticService questionStatisticService;
+    private final indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService;
+    private final SubmitFrequencyMonitorService submitFrequencyMonitorService;
     
-    protected ExamDataService(SettingService settingService, GradingLevelService gradingLevelService, QuestionService questionService, ExamGenerator examGenerator, QuestionStatisticService questionStatisticService) {
+    protected ExamDataService(SettingService settingService, GradingLevelService gradingLevelService, QuestionService questionService, ExamGenerator examGenerator, QuestionStatisticService questionStatisticService, indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService, SubmitFrequencyMonitorService submitFrequencyMonitorService) {
         singletonInstance = this;
         this.settingService = settingService;
         this.gradingLevelService = gradingLevelService;
         this.questionService = questionService;
         this.examGenerator = examGenerator;
         this.questionStatisticService = questionStatisticService;
+        this.thirdPartyApiWebSocketService = thirdPartyApiWebSocketService;
+        this.submitFrequencyMonitorService = submitFrequencyMonitorService;
     }
     
     public void save(ExamData examData) {
@@ -92,10 +97,60 @@ public class ExamDataService {
         examResult.setColorHex(gradingLevel.getColorHex());
         examResult.setShowCreatingAccountGuide(gradingLevel.getCreatingUserStrategy() != GradingLevel.CreatingUserStrategy.NOT_CREATE);
         
+        LocalDateTime now = LocalDateTime.now();
         examData.setExamResult(examResult);
-        examData.setSubmitTime(LocalDateTime.now());
+        examData.setSubmitTime(now);
         examData.setStatus(ExamData.Status.SUBMITTED);
         examDataRepository.save(examData);
+        
+        // 记录提交行为，用于监控短时间内多次提交
+        submitFrequencyMonitorService.recordSubmit(examData.getQqNumber(), examData.getId());
+        
+        // 发送提交考试结果通知
+        try {
+            SettingItem paperSubmitEnabled = settingService.getItem("notification", "paperSubmit.enabled");
+            if (paperSubmitEnabled.getValue(Boolean.class)) {
+                Map<String, Object> data = new HashMap<>();
+                data.put("qq", String.valueOf(examData.getQqNumber()));
+                data.put("paper_id", examData.getId());
+                data.put("rating_id", examResult.getLevelId());
+                data.put("score", examResult.getScore());
+                data.put("generate_time", new int[]{examData.getGenerateTime().getYear(), examData.getGenerateTime().getMonthValue(), examData.getGenerateTime().getDayOfMonth(), examData.getGenerateTime().getHour(), examData.getGenerateTime().getMinute(), examData.getGenerateTime().getSecond(), examData.getGenerateTime().getNano()});
+                data.put("submit_time", new int[]{now.getYear(), now.getMonthValue(), now.getDayOfMonth(), now.getHour(), now.getMinute(), now.getSecond(), now.getNano()});
+                thirdPartyApiWebSocketService.sendNotification("notification_paper_submit", data);
+                logger.info("Sent paper_submit notification for exam {}", examData.getId());
+            } else {
+                logger.debug("paperSubmit notification is disabled");
+            }
+        } catch (Exception e) {
+            logger.error("Failed to send paper submit notification", e);
+        }
+        
+        // 检查是否需要发送短时间提交试题的通知
+        try {
+            SettingItem quickSubmitEnabled = settingService.getItem("notification", "quickSubmit.enabled");
+            if (quickSubmitEnabled.getValue(Boolean.class)) {
+                SettingItem quickSubmitThreshold = settingService.getItem("notification", "quickSubmit.threshold");
+                int thresholdMinutes = quickSubmitThreshold.getValue(Integer.class);
+                long intervalSeconds = java.time.Duration.between(examData.getGenerateTime(), now).getSeconds();
+                if (intervalSeconds <= thresholdMinutes * 60) {
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("qq", String.valueOf(examData.getQqNumber()));
+                    data.put("generate_time", new int[]{examData.getGenerateTime().getYear(), examData.getGenerateTime().getMonthValue(), examData.getGenerateTime().getDayOfMonth(), examData.getGenerateTime().getHour(), examData.getGenerateTime().getMinute(), examData.getGenerateTime().getSecond(), examData.getGenerateTime().getNano()});
+                    data.put("submit_time", new int[]{now.getYear(), now.getMonthValue(), now.getDayOfMonth(), now.getHour(), now.getMinute(), now.getSecond(), now.getNano()});
+                    data.put("interval", intervalSeconds);
+                    thirdPartyApiWebSocketService.sendNotification("notification_quick_submit", data);
+                    logger.info("Sent quick_submit notification for exam {} (interval: {} seconds)", examData.getId(), intervalSeconds);
+                } else {
+                    logger.debug("quickSubmit notification not sent: interval {} seconds > threshold {} minutes", intervalSeconds, thresholdMinutes);
+                }
+            } else {
+                logger.debug("quickSubmit notification is disabled");
+            }
+        } catch (Exception e) {
+            logger.error("Failed to send quick submit notification", e);
+        }
+        
         return examResult;
     }
     
