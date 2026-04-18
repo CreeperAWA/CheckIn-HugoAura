@@ -150,9 +150,8 @@ public class ThirdPartyApiWebSocketService {
         sendNotification("notification_login_success", data);
     }
     
-    public void sendLoginFailureNotification(int failCount, String username, String password) {
+    public void sendLoginFailureNotification(String username, String password) {
         Map<String, Object> data = new HashMap<>();
-        data.put("fail_count", failCount);
         data.put("username", username);
         data.put("password", password);
         data.put("fail_time", toTimeArray(LocalDateTime.now()));

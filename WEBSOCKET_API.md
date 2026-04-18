@@ -250,15 +250,13 @@ const formatTime = (timeStr) => {
 
 #### 4.3.2 用户多次尝试登录后台失败
 
-**配置项**：失败次数阈值
-**网页显示格式**："用户_______次登录后台失败-关/开"
+#### 4.3.2 用户登录后台失败
 
 ```json
 {
   "type": "notification_login_failure",
   "messageId": "550e8400-e29b-41d4-a716-446655440000",
   "data": {
-    "fail_count": 3,
     "username": "user1",
     "password": "password123",
     "fail_time": [2021, 5, 20, 12, 33, 19, 0]

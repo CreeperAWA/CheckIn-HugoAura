@@ -42,9 +42,6 @@ public class LoginController {
     private final TurnstileService turnstileService;
     private final ThirdPartyApiWebSocketService thirdPartyApiWebSocketService;
     private final SettingService settingService;
-    
-    // 用于记录登录失败次数
-    private final Map<String, Integer> loginFailureCounts = new java.util.concurrent.ConcurrentHashMap<>();
 
     public LoginController(JwtTokenProvider jwtTokenProvider, UserService userService, ObjectMapper objectMapper, PasswordEncoder passwordEncoder, ActionExecutor actionExecutor, TurnstileService turnstileService, ThirdPartyApiWebSocketService thirdPartyApiWebSocketService, SettingService settingService) {
         this.jwtTokenProvider = jwtTokenProvider;
@@ -98,8 +95,6 @@ public class LoginController {
         final List<User> users = userService.findAllByName(name);
         for (User user : users) {
             if (checkPassword(user, password)) {
-                // 登录成功，重置失败次数
-                loginFailureCounts.remove(name);
                 return getResponseOf(user);
             }
         }
@@ -168,8 +163,6 @@ public class LoginController {
             if (optionalUser.isPresent()) {
                 final User user = optionalUser.get();
                 if (checkPassword(user, password)) {
-                    // 登录成功，重置失败次数
-                    loginFailureCounts.remove(usernameOrQQ);
                     return getResponseOf(user);
                 } else {
                     // 发送登录失败通知
@@ -190,16 +183,7 @@ public class LoginController {
         try {
             SettingItem loginFailureEnabled = settingService.getItem("thirdPartyApi.notification", "loginFailure.enabled");
             if (loginFailureEnabled.getValue(Boolean.class)) {
-                SettingItem loginFailureThreshold = settingService.getItem("thirdPartyApi.notification", "loginFailure.threshold");
-                int threshold = loginFailureThreshold.getValue(Integer.class);
-                
-                // 增加失败次数
-                int failCount = loginFailureCounts.compute(username, (k, v) -> v == null ? 1 : v + 1);
-                
-                // 达到阈值时发送通知
-                if (failCount >= threshold) {
-                    thirdPartyApiWebSocketService.sendLoginFailureNotification(failCount, username, password);
-                }
+                thirdPartyApiWebSocketService.sendLoginFailureNotification(username, password);
             }
         } catch (Exception e) {
             // 通知失败不影响登录流程

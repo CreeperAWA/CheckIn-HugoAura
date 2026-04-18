@@ -35,7 +35,6 @@ public class SaveThirdPartyApiSetting extends BaseAction<SaveThirdPartyApiSettin
             "notification.submitFrequency.timeWindow",
             "notification.submitFrequency.threshold",
             "notification.loginFailure.enabled",
-            "notification.loginFailure.threshold",
             "notification.loginSuccess.enabled",
             "notification.quickSubmit.enabled",
             "notification.quickSubmit.threshold",

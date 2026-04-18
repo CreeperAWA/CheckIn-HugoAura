@@ -322,9 +322,7 @@ onMounted(() => {
 
                         <div class="notification-item">
                             <div class="notification-content">
-                                <span class="notification-text">用户多次尝试登录后台失败达</span>
-                                <el-input-number v-model="settings['notification.loginFailure.threshold']" :min="1" :max="10" :controls="false" :disabled="!hasManagePermission || !editing || !settings['notification.loginFailure.enabled']" class="notification-input"/>
-                                <span class="notification-text">次</span>
+                                <span class="notification-text">用户登录后台失败</span>
                             </div>
                             <el-switch v-model="settings['notification.loginFailure.enabled']" :disabled="!hasManagePermission || !editing" class="notification-switch"/>
                         </div>
