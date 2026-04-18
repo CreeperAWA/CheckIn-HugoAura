@@ -16,7 +16,7 @@ wss://{host}:{port}/checkIn/api/websocket/{sid}
 - `port`: 服务器端口
 - `sid`: 机器人唯一标识符（UUID格式）
 
-**注意**：连接时应使用HTTPS/WSS协议，确保数据传输安全
+**注意**：连接时应使用WSS协议，确保数据传输安全
 
 ### 2.2 认证流程
 

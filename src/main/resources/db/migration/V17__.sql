@@ -19,9 +19,27 @@ CREATE TABLE qq_verify_record
     PRIMARY KEY (id)
 );
 
+-- 创建 third_party_api_sid_tokens 表
+CREATE TABLE third_party_api_sid_tokens
+(
+    id                 CHAR(36)      NOT NULL PRIMARY KEY,
+    sid                CHAR(36)      NULL,
+    `description`      VARCHAR(1024) NULL,
+    generate_by_userqq BIGINT        NULL,
+    generate_time      datetime      NULL,
+    token              VARCHAR(512)  NULL
+);
+
+-- Rename robot_tokens table to http_api_tokens
+ALTER TABLE robot_tokens RENAME TO http_api_tokens;
+
+-- Remove created_at and updated_at columns from rate_limit_rules table
+ALTER TABLE rate_limit_rules DROP COLUMN IF EXISTS created_at;
+ALTER TABLE rate_limit_rules DROP COLUMN IF EXISTS updated_at;
+
 INSERT IGNORE INTO server_setting_items (setting_key, setting_value, clazz)
 VALUES ('qqVerify.enabled', 'false', 'java.lang.Boolean'),
-       ('qqVerify.validDays', '7', 'java.lang.Integer'),
+       ('qqVerify.validDays', '3', 'java.lang.Integer'),
        ('qqVerify.timeoutAction', 'fail', 'java.lang.String'),
        ('qqVerify.cannotVerifyAction', 'skip', 'java.lang.String'),
        ('qqVerify.customStrings', '[]', 'java.util.List'),

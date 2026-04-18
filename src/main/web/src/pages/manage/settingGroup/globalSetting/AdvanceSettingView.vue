@@ -323,8 +323,8 @@ UserDataInterface.getUsersAsync().then((users) => {
 const deleteToken = (index) => {
     if (Boolean(data.value.httpApiTokenItems[index].token)) {
         ElMessageBox.confirm(
-                "该 token 将无法再被使用",
-                "确定删除 token",
+                "该 Token 将无法再被使用",
+                "确定删除 Token",
                 {
                     showClose: false,
                     draggable: true,
@@ -575,7 +575,7 @@ const deleteToken = (index) => {
                                             <div style="display:flex;margin-bottom: 8px;flex-direction: column">
                                                 <div class="panel-1 disable-init-animate"
                                                      style="padding: 4px 8px;display: flex;align-items: center;margin-bottom: 4px">
-                                                    <el-text type="info" style="margin-right: 8px;">token</el-text>
+                                                    <el-text type="info" style="margin-right: 8px;">Token</el-text>
                                                     <transition name="blur-scale" mode="out-in">
                                                         <el-text v-if="tokenItem.generateTime" type="primary"
                                                                  style="margin-left: 8px;margin-right: 8px;word-break: break-all">

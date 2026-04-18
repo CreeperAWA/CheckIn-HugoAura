@@ -1,13 +1,14 @@
 <script setup>
-import {ElMessage} from "element-plus";
-import {ref, onMounted, watch, nextTick} from "vue";
+import {ElMessage, ElMessageBox} from "element-plus";
+import {ref, onMounted, watch} from "vue";
 import PermissionInfo from "@/auth/PermissionInfo.js";
 import WebSocketConnector from "@/api/websocket.js";
-import {VueDraggable} from "vue-draggable-plus";
 import HarmonyOSIcon_Remove from "@/components/icons/HarmonyOSIcon_Remove.vue";
-import HarmonyOSIcon_Handle from "@/components/icons/HarmonyOSIcon_Handle.vue";
 import HarmonyOSIcon_Plus from "@/components/icons/HarmonyOSIcon_Plus.vue";
 import {uuidv7} from "uuidv7";
+import UserDataInterface from "@/data/UserDataInterface.js";
+import getAvatarUrlOf from "@/utils/Avatar.js";
+import router from "@/router/index.js";
 
 if (!PermissionInfo.hasPermission('thirdPartyApi.view.setting')) {
     ElMessage({
@@ -23,120 +24,9 @@ const editing = ref(false);
 const settings = ref({});
 const customStringsDragging = ref(false);
 const customStringsList = ref([]);
-const sidTokensList = ref([]);
+const thirdPartyApiTokenItems = ref([]);
 let backup = {};
 let backupJSON;
-
-const parseSidTokens = () => {
-    try {
-        const val = settings.value['robot.sidTokens'];
-        if (typeof val === 'string') {
-            return JSON.parse(val || '[]');
-        }
-        if (Array.isArray(val)) {
-            return val;
-        }
-        return [];
-    } catch {
-        return [];
-    }
-};
-
-const syncSidTokens = () => {
-    settings.value['robot.sidTokens'] = JSON.stringify(sidTokensList.value);
-};
-
-const addSidToken = () => {
-    sidTokensList.value.push({ id: uuidv7(), sid: "", token: "" });
-};
-
-const removeSidToken = (index) => {
-    sidTokensList.value.splice(index, 1);
-};
-
-const generateTokenForSid = (item) => {
-    if (!item.sid || item.sid.trim() === '') {
-        ElMessage({
-            type: "error",
-            message: "请先输入 SID"
-        });
-        return;
-    }
-    const sid = item.sid.trim();
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sid)) {
-        ElMessage({
-            type: "error",
-            message: "SID 格式不正确，应为 UUID 格式"
-        });
-        return;
-    }
-    WebSocketConnector.send({
-        type: "generateThirdPartyApiSidToken",
-        data: { sid }
-    }).then((response) => {
-        item.token = response.data.token;
-        syncSidTokens();
-        ElMessage({
-            type: "success",
-            message: "Token 生成成功"
-        });
-    }, (err) => {
-        ElMessage({
-            type: "error",
-            message: err.message || "Token 生成失败"
-        });
-    });
-};
-
-const generatingAll = ref(false);
-
-const generateAllTokens = () => {
-    const itemsWithoutToken = sidTokensList.value.filter(item => item.sid && item.sid.trim() !== '' && (!item.token || item.token.trim() === ''));
-    if (itemsWithoutToken.length === 0) {
-        ElMessage({
-            type: "warning",
-            message: "所有 SID 都已生成 Token"
-        });
-        return;
-    }
-    generatingAll.value = true;
-    let completed = 0;
-    let failed = 0;
-    const promises = itemsWithoutToken.map(item => {
-        const sid = item.sid.trim();
-        return WebSocketConnector.send({
-            type: "generateThirdPartyApiSidToken",
-            data: { sid }
-        }).then((response) => {
-            item.token = response.data.token;
-            completed++;
-        }, (err) => {
-            failed++;
-        });
-    });
-    Promise.all(promises).then(() => {
-        syncSidTokens();
-        generatingAll.value = false;
-        ElMessage({
-            type: "success",
-            message: `批量生成完成：成功 ${completed} 个，失败 ${failed} 个`
-        });
-    });
-};
-
-const copyToken = (token) => {
-    navigator.clipboard.writeText(token).then(() => {
-        ElMessage({
-            type: "success",
-            message: "Token 已复制到剪贴板"
-        });
-    }, () => {
-        ElMessage({
-            type: "error",
-            message: "复制失败"
-        });
-    });
-};
 
 const parseCustomStrings = () => {
     try {
@@ -186,34 +76,97 @@ const removeCustomString = (index) => {
     customStringsList.value.splice(index, 1);
 };
 
-const onStartDrag = () => {
-    customStringsDragging.value = true;
-};
+const showCreateNewTokenDialog = ref(false);
+const newTokenSid = ref("");
+const newTokenDescription = ref("");
+const onClose = () => {
+    showCreateNewTokenDialog.value = false;
+    newTokenSid.value = "";
+    newTokenDescription.value = "";
+}
+const createTokenButtonOption = ref([{
+    content: "确定",
+    type: "primary",
+    onclick: () => {
+        let sid = newTokenSid.value ? newTokenSid.value.trim() : '';
+        if (sid === '') {
+            sid = uuidv7();
+        } else if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sid)) {
+            ElMessage({type: 'error', message: 'SID 格式不正确，应为 UUID 格式'});
+            return;
+        }
+        if (!(thirdPartyApiTokenItems.value instanceof Array)) {
+            thirdPartyApiTokenItems.value = [];
+        }
+        const token = {
+            id: uuidv7(),
+            sid: sid,
+            token: null,
+            description: newTokenDescription.value,
+            generateTime: null,
+            generateByUserQQ: UserDataInterface.getCurrentUser().value.qq
+        };
+        thirdPartyApiTokenItems.value.push(token);
+        settings.value.createdThirdPartyApiTokens = settings.value.createdThirdPartyApiTokens || [];
+        settings.value.createdThirdPartyApiTokens.push(token);
+        onClose();
+    }
+}, {
+    content: "取消",
+    type: "info",
+    onclick: onClose
+}]);
+const createNewToken = () => {
+    showCreateNewTokenDialog.value = true;
+}
 
-const onEndDrag = () => {
-    nextTick(() => {
-        customStringsDragging.value = false;
-    });
-};
+const allUsers = ref({});
+UserDataInterface.getUsersAsync().then((users) => {
+    allUsers.value = users;
+});
+
+const deleteToken = (index) => {
+    if (Boolean(thirdPartyApiTokenItems.value[index].token)) {
+        ElMessageBox.confirm(
+                "该 Token 将无法再被使用",
+                "确定删除 Token",
+                {
+                    showClose: false,
+                    draggable: true,
+                    confirmButtonText: "确定",
+                    cancelButtonText: "取消",
+                    type: "warning",
+                }
+        ).then(() => {
+            console.log(thirdPartyApiTokenItems.value[index]);
+            settings.value.deletedThirdPartyApiTokenIds = settings.value.deletedThirdPartyApiTokenIds || [];
+            settings.value.deletedThirdPartyApiTokenIds.push(thirdPartyApiTokenItems.value[index].id);
+            thirdPartyApiTokenItems.value.splice(index, 1);
+        }, () => {
+        });
+    } else {
+        thirdPartyApiTokenItems.value.splice(index, 1);
+    }
+}
 
 const startEditing = () => {
     syncCustomStrings();
-    syncSidTokens();
     backupJSON = JSON.stringify(settings.value);
     backup = JSON.parse(backupJSON);
+    settings.value.createdThirdPartyApiTokens = [];
+    settings.value.deletedThirdPartyApiTokenIds = [];
     editing.value = true;
 };
 
 const cancel = () => {
     settings.value = backup;
     customStringsList.value = parseCustomStrings();
-    sidTokensList.value = parseSidTokens();
+    thirdPartyApiTokenItems.value = backup.thirdPartyApiTokenItems || [];
     editing.value = false;
 };
 
 const finishEditing = () => {
     syncCustomStrings();
-    syncSidTokens();
     editing.value = false;
     if (backupJSON !== JSON.stringify(settings.value)) {
         saving.value = true;
@@ -222,7 +175,12 @@ const finishEditing = () => {
             data: {
                 data: settings.value
             }
-        }).then(() => {
+        }).then((response) => {
+            if (response.data.currentTokens) {
+                thirdPartyApiTokenItems.value = response.data.currentTokens;
+            }
+            settings.value.deletedThirdPartyApiTokenIds = [];
+            settings.value.createdThirdPartyApiTokens = [];
             ElMessage({
                 type: "success",
                 message: "保存成功"
@@ -248,8 +206,11 @@ const getSettings = () => {
         type: "getThirdPartyApiSetting"
     }).then((response) => {
         settings.value = response.data.data || {};
+        if (settings.value['qqVerify.validDays'] === undefined || settings.value['qqVerify.validDays'] === null) {
+            settings.value['qqVerify.validDays'] = 3;
+        }
         customStringsList.value = parseCustomStrings();
-        sidTokensList.value = parseSidTokens();
+        thirdPartyApiTokenItems.value = settings.value.thirdPartyApiTokenItems || [];
         loading.value = false;
     }, (err) => {
         ElMessage({
@@ -328,33 +289,15 @@ onMounted(() => {
                                         <el-text>添加字符串</el-text>
                                     </el-button>
                                     <template v-if="customStringsList.length > 0">
-                                        <VueDraggable
-                                            ref="draggable"
-                                            v-model="customStringsList"
-                                            :animation="150"
-                                            :disabled="!hasManagePermission || !editing"
-                                            ghostClass="ghost"
-                                            handle=".handle"
-                                            @start="onStartDrag"
-                                            @end="onEndDrag"
-                                        >
-                                            <transition-group :name="customStringsDragging ? null : 'drag'">
-                                                <div class="custom-string-item" v-for="(str, index) of customStringsList" :key="str.id">
-                                                    <div class="handle" :style="{ cursor: editing ? 'grab' : 'not-allowed' }">
-                                                        <HarmonyOSIcon_Handle/>
-                                                    </div>
-                                                    <el-input class="disable-init-animate" type="text" size="large" placeholder="请输入验证字符串"
-                                                              v-model="str.content" :disabled="!hasManagePermission || !editing"/>
-                                                    <transition name="delete-string-button">
-                                                        <el-button class="remove-string-button"
-                                                                   v-show="editing && customStringsList.length > 0" text
-                                                                   @click="removeCustomString(index)" :disabled="!hasManagePermission || !editing">
-                                                            <HarmonyOSIcon_Remove/>
-                                                        </el-button>
-                                                    </transition>
-                                                </div>
-                                            </transition-group>
-                                        </VueDraggable>
+                                        <div class="custom-string-item" v-for="(str, index) of customStringsList" :key="str.id">
+                                            <el-input class="disable-init-animate" type="text" size="large" placeholder="请输入验证字符串"
+                                                      v-model="str.content" :disabled="!hasManagePermission || !editing"/>
+                                            <el-button class="remove-string-button"
+                                                       v-show="editing && customStringsList.length > 0" text
+                                                       @click="removeCustomString(index)" :disabled="!hasManagePermission || !editing">
+                                                <HarmonyOSIcon_Remove/>
+                                            </el-button>
+                                        </div>
                                     </template>
                                     <el-empty v-else description="No data" style="align-self: stretch"/>
                                 </div>
@@ -419,60 +362,109 @@ onMounted(() => {
                 </div>
 
                 <div class="panel-1" style="padding: 20px">
-                    <el-text size="large" style="font-weight: bold;margin-bottom: 16px;display: block">Token 管理</el-text>
-                    <el-text type="info" style="margin-bottom: 16px;display: block;font-size: 12px">
-                        每个 SID 对应一个 Token，用于 WebSocket 机器人连接认证。SID 为机器人唯一标识（UUID 格式）。
-                    </el-text>
-                    <div class="sid-token-list">
-                        <div class="sid-token-actions-bar">
-                            <el-button v-if="editing" @click="addSidToken" size="large" text :disabled="!hasManagePermission || !editing">
-                                <HarmonyOSIcon_Plus/>
-                                <el-text>添加 Token</el-text>
+                    <div style="display: flex;flex-direction: row;flex-wrap: wrap;align-items: center;margin-bottom: 8px">
+                        <el-text size="large" style="font-weight: bold;align-self: center;margin-right: 16px">第三方 API Tokens</el-text>
+                        <transition name="blur-scale">
+                            <el-button class="disable-init-animate" link @click="createNewToken" v-if="editing">
+                                <HarmonyOSIcon_Plus style="margin-right: 4px;"/>
+                                新建 Token
                             </el-button>
-                            <el-button v-if="editing" @click="generateAllTokens" size="large" text :disabled="!hasManagePermission || !editing" :loading="generatingAll">
-                                <el-text>批量生成（无 Token 的 SID）</el-text>
-                            </el-button>
-                        </div>
-                        <template v-if="sidTokensList.length > 0">
-                            <div class="sid-token-item" v-for="(item, index) of sidTokensList" :key="item.id">
-                                <div class="sid-token-row">
-                                    <div class="sid-token-field">
-                                        <span class="sid-token-label">SID</span>
-                                        <el-input class="disable-init-animate" type="text" size="large" placeholder="请输入 SID (UUID 格式)"
-                                                  v-model="item.sid" :disabled="!hasManagePermission || !editing"/>
-                                    </div>
-                                    <div class="sid-token-field sid-token-actions">
-                                        <el-button size="large" @click="generateTokenForSid(item)" :disabled="!hasManagePermission || !editing">
-                                            生成 Token
-                                        </el-button>
-                                        <transition name="delete-token-button">
-                                            <el-button class="remove-token-button"
-                                                       v-show="editing && sidTokensList.length > 0" text
-                                                       @click="removeSidToken(index)" :disabled="!hasManagePermission || !editing">
-                                                <HarmonyOSIcon_Remove/>
-                                            </el-button>
-                                        </transition>
-                                    </div>
-                                </div>
-                                <div class="sid-token-row" v-if="item.token">
-                                    <div class="sid-token-field sid-token-field-full">
-                                        <span class="sid-token-label">Token</span>
-                                        <div class="token-display">
-                                            <el-input class="disable-init-animate" type="text" size="large" readonly
-                                                      v-model="item.token" :disabled="!hasManagePermission || !editing"/>
-                                            <el-button size="large" @click="copyToken(item.token)" :disabled="!hasManagePermission || !editing">
-                                                复制
-                                            </el-button>
+                        </transition>
+                    </div>
+                    <transition name="blur-scale" mode="out-in">
+                        <div style="display: flex;flex-direction: column"
+                             v-if="thirdPartyApiTokenItems && thirdPartyApiTokenItems.length > 0">
+                            <transition-group name="smooth-height">
+                                <div class="smooth-height-base"
+                                     v-for="(tokenItem,index) of thirdPartyApiTokenItems"
+                                     :key="tokenItem.id">
+                                    <div>
+                                        <div style="display:flex;margin-bottom: 8px;flex-direction: column">
+                                            <div class="panel-1 disable-init-animate"
+                                                 style="padding: 4px 8px;display: flex;align-items: center;margin-bottom: 4px">
+                                                <el-text type="info" style="margin-right: 8px;">SID</el-text>
+                                                <transition name="blur-scale" mode="out-in">
+                                                    <el-text v-if="tokenItem.generateTime" type="primary"
+                                                             style="margin-left: 8px;margin-right: 8px;word-break: break-all">
+                                                        {{ tokenItem.sid }}
+                                                    </el-text>
+                                                    <el-text v-else type="info">{{ tokenItem.sid }}</el-text>
+                                                </transition>
+                                            </div>
+                                            <div class="panel-1 disable-init-animate"
+                                                 style="padding: 4px 8px;display: flex;align-items: center;margin-bottom: 4px">
+                                                <el-text type="info" style="margin-right: 8px;">Token</el-text>
+                                                <transition name="blur-scale" mode="out-in">
+                                                    <el-text v-if="tokenItem.generateTime" type="primary"
+                                                             style="margin-left: 8px;margin-right: 8px;word-break: break-all">
+                                                        {{ tokenItem.token }}
+                                                    </el-text>
+                                                    <el-text v-else type="info">等待保存后生成</el-text>
+                                                </transition>
+                                            </div>
+                                            <div style="display: flex;flex-wrap: wrap">
+                                                <div class="panel-1 disable-init-animate"
+                                                     style="min-width: 200px;padding: 4px 8px;display: flex;align-items: center;margin-right: 4px">
+                                                    <el-text type="info" style="margin-right: 8px;">生成时间
+                                                    </el-text>
+                                                    <transition name="blur-scale" mode="out-in">
+                                                        <el-text v-if="tokenItem.generateTime"
+                                                                 style="margin-left: 8px;margin-right: 8px;">
+                                                            {{ tokenItem.generateTime }}
+                                                        </el-text>
+                                                        <el-text v-else type="info">等待保存后生成</el-text>
+                                                    </transition>
+                                                </div>
+                                                <div class="panel-1 disable-init-animate"
+                                                     style="min-width: 30px;flex: 1;padding: 4px 8px;display: flex;align-items: center;margin-right: 4px;">
+                                                    <el-text type="info" style="margin-right: 8px;">描述</el-text>
+                                                    <el-text v-if="tokenItem.description">{{
+                                                            tokenItem.description
+                                                        }}
+                                                    </el-text>
+                                                    <el-text v-else type="info">无</el-text>
+                                                </div>
+                                                <div class="panel-1 clickable disable-init-animate"
+                                                     style="display: flex;flex-direction: row;padding: 4px 8px;margin-right: 4px;"
+                                                     @click="router.push({name: 'user-detail',params: {id: tokenItem.generateByUserQQ}})">
+                                                    <el-text type="info" style="margin-right: 8px;">创建用户
+                                                    </el-text>
+                                                    <el-avatar shape="circle" :size="24" fit="cover"
+                                                               :src="getAvatarUrlOf(tokenItem.generateByUserQQ)"/>
+                                                    <el-text v-if="allUsers[tokenItem.generateByUserQQ]"
+                                                             style="margin-right: 4px;margin-left: 8px;align-self: center">
+                                                        {{ allUsers[tokenItem.generateByUserQQ].name }}
+                                                    </el-text>
+                                                    <el-text type="info"
+                                                             style="margin-right: 4px;align-self: center">
+                                                        {{ tokenItem.generateByUserQQ }}
+                                                    </el-text>
+                                                </div>
+                                                <el-button @click="deleteToken(index)" :disabled="!editing"
+                                                           style="height: 34px">
+                                                    <HarmonyOSIcon_Remove/>
+                                                    删除
+                                                </el-button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </template>
-                        <el-empty v-else description="No data" style="align-self: stretch"/>
-                    </div>
+                            </transition-group>
+                        </div>
+                        <el-text style="align-self: baseline" type="info" v-else>无数据</el-text>
+                    </transition>
                 </div>
             </div>
         </el-scrollbar>
+
+        <custom-dialog v-model="showCreateNewTokenDialog"
+                       title="新建 Token"
+                       :buttons-option="createTokenButtonOption">
+            <el-text style="display: block;margin-bottom: 4px;">SID（可选，不填则自动生成）</el-text>
+            <el-input style="margin-bottom: 16px" v-model="newTokenSid" placeholder="留空将自动生成 UUID 格式的 SID"/>
+            <el-text style="display: block;margin-bottom: 4px;">描述</el-text>
+            <el-input style="margin-top: 8px" v-model="newTokenDescription"/>
+        </custom-dialog>
     </div>
 </template>
 
@@ -542,18 +534,6 @@ onMounted(() => {
     overflow: hidden;
 }
 
-.custom-string-item .handle {
-    width: 30px;
-    aspect-ratio: 1;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-items: center;
-    align-content: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
 .custom-string-item .el-input {
     flex: 1;
     min-width: 0;
@@ -566,128 +546,5 @@ onMounted(() => {
     height: 100%;
     margin: 0;
     flex-shrink: 0;
-}
-
-.ghost {
-    opacity: 0.5;
-    background: var(--el-fill-color-light);
-}
-
-.delete-string-button-enter-active,
-.delete-string-button-leave-active {
-    transition: 300ms var(--ease-in-out-quint);
-}
-
-.delete-string-button-enter-from,
-.delete-string-button-leave-to {
-    opacity: 0;
-    width: 0;
-    max-width: 0;
-    transform: scale(0.8);
-}
-
-.drag-move, .drag-enter-active, .drag-leave-active {
-    transition: 0.4s;
-    overflow: hidden;
-}
-
-.drag-enter-from, .drag-leave-to {
-    opacity: 0;
-    height: 0;
-    margin-bottom: 0;
-}
-
-.sid-token-list {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    border: 1px solid var(--el-border-color-light);
-    border-radius: 6px;
-    padding: 8px;
-    background: var(--el-fill-color-blank);
-    box-sizing: border-box;
-}
-
-.sid-token-actions-bar {
-    display: flex;
-    flex-direction: row;
-    gap: 4px;
-    margin-bottom: 8px;
-}
-
-.sid-token-item {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    margin-bottom: 12px;
-    padding: 12px;
-    background: var(--el-fill-color-light);
-    border-radius: 6px;
-    gap: 8px;
-}
-
-.sid-token-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    width: 100%;
-    gap: 12px;
-}
-
-.sid-token-field {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
-}
-
-.sid-token-field-full {
-    flex: 1;
-    min-width: 0;
-}
-
-.sid-token-actions {
-    flex-shrink: 0;
-    align-items: flex-end;
-}
-
-.sid-token-label {
-    font-size: 12px;
-    color: var(--el-text-color-secondary);
-}
-
-.token-display {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-}
-
-.token-display .el-input {
-    flex: 1;
-    min-width: 0;
-}
-
-.remove-token-button {
-    overflow: hidden;
-    padding: 0 !important;
-    width: 45px;
-    height: 100%;
-    margin: 0;
-    flex-shrink: 0;
-}
-
-.delete-token-button-enter-active,
-.delete-token-button-leave-active {
-    transition: 300ms var(--ease-in-out-quint);
-}
-
-.delete-token-button-enter-from,
-.delete-token-button-leave-to {
-    opacity: 0;
-    width: 0;
-    max-width: 0;
-    transform: scale(0.8);
 }
 </style>
