@@ -30,7 +30,8 @@ public class SaveThirdPartyApiSetting extends BaseAction<SaveThirdPartyApiSettin
             "notification.quickSubmit.enabled",
             "notification.quickSubmit.threshold",
             "notification.paperSubmit.enabled",
-            "notification.examStart.enabled"
+            "notification.examStart.enabled",
+            "robot.sidTokens"
     };
 
     @Transactional

@@ -1,4 +1,4 @@
-package indi.etern.checkIn.api.robotWebSocket;
+package indi.etern.checkIn.api.thirdPartyApiWebSocket;
 
 import java.util.LinkedHashMap;
 import java.util.List;

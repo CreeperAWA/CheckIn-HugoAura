@@ -1,7 +1,7 @@
 package indi.etern.checkIn.service.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import indi.etern.checkIn.api.robotWebSocket.RobotConnector;
+import indi.etern.checkIn.api.thirdPartyApiWebSocket.ThirdPartyApiConnector;
 import indi.etern.checkIn.api.webSocket.JsonRawMessage;
 import indi.etern.checkIn.api.webSocket.Message;
 import indi.etern.checkIn.entities.blacklist.Blacklist;
@@ -19,9 +19,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-public class RobotWebSocketService {
-    private static final Logger logger = LoggerFactory.getLogger(RobotWebSocketService.class);
-    public static RobotWebSocketService singletonInstance;
+public class ThirdPartyApiWebSocketService {
+    private static final Logger logger = LoggerFactory.getLogger(ThirdPartyApiWebSocketService.class);
+    public static ThirdPartyApiWebSocketService singletonInstance;
     private final ObjectMapper objectMapper;
     private final BlacklistRepository blacklistRepository;
 
@@ -49,20 +49,20 @@ public class RobotWebSocketService {
     // 存储等待验证响应的请求
     private final Map<String, VerifyRequest> pendingVerifyRequests = new ConcurrentHashMap<>();
 
-    protected RobotWebSocketService(ObjectMapper objectMapper, BlacklistRepository blacklistRepository) {
+    protected ThirdPartyApiWebSocketService(ObjectMapper objectMapper, BlacklistRepository blacklistRepository) {
         singletonInstance = this;
         this.objectMapper = objectMapper;
         this.blacklistRepository = blacklistRepository;
     }
 
     @SneakyThrows
-    public void onRobotAuthenticated(RobotConnector connector) {
+    public void onThirdPartyApiAuthenticated(ThirdPartyApiConnector connector) {
         // 推送完整黑名单列表
         sendBlacklistFull(connector);
     }
 
     @SneakyThrows
-    private void sendBlacklistFull(RobotConnector connector) {
+    private void sendBlacklistFull(ThirdPartyApiConnector connector) {
         List<Blacklist> blacklists = blacklistRepository.findAll();
         List<Map<String, Object>> list = new ArrayList<>();
         for (Blacklist blacklist : blacklists) {
@@ -86,7 +86,7 @@ public class RobotWebSocketService {
         data.put("reason", blacklist.getReason());
         data.put("created_at", toTimeArray(blacklist.getCreatedAt()));
         Message<Map<String, Object>> message = Message.of("blacklist_add", UUIDv7.randomUUID().toString(), data);
-        sendToAllRobots(message);
+        sendToAllThirdPartyApis(message);
     }
 
     public void sendBlacklistRemove(String id, String qq) {
@@ -94,7 +94,7 @@ public class RobotWebSocketService {
         data.put("id", id);
         data.put("qq", qq);
         Message<Map<String, Object>> message = Message.of("blacklist_remove", UUIDv7.randomUUID().toString(), data);
-        sendToAllRobots(message);
+        sendToAllThirdPartyApis(message);
     }
 
     @SneakyThrows
@@ -108,7 +108,7 @@ public class RobotWebSocketService {
         VerifyRequest request = new VerifyRequest(messageId, qq, callback);
         pendingVerifyRequests.put(messageId, request);
         
-        sendToAllRobots(message);
+        sendToAllThirdPartyApis(message);
         
         // 设置2分钟超时
         new Timer().schedule(new TimerTask() {
@@ -123,7 +123,7 @@ public class RobotWebSocketService {
     }
 
     @SneakyThrows
-    public void handleQQVerifyResponse(RobotConnector connector, JsonRawMessage message) {
+    public void handleQQVerifyResponse(ThirdPartyApiConnector connector, JsonRawMessage message) {
         Map<String, Object> data = objectMapper.readValue(message.getData(), Map.class);
         String messageId = message.getMessageId();
         String qq = (String) data.get("qq");
@@ -138,19 +138,19 @@ public class RobotWebSocketService {
 
     public void sendNotification(String type, Map<String, Object> data) {
         Message<Map<String, Object>> message = Message.of(type, UUIDv7.randomUUID().toString(), data);
-        sendToAllRobots(message);
+        sendToAllThirdPartyApis(message);
     }
 
     @SneakyThrows
-    private void sendToAllRobots(Message<?> message) {
+    private void sendToAllThirdPartyApis(Message<?> message) {
         String messageStr = objectMapper.writeValueAsString(message);
-        logger.debug("Robot webSocket to all, msg:{}", messageStr);
-        for (RobotConnector connector : RobotConnector.CONNECTORS) {
+        logger.debug("ThirdPartyApi webSocket to all, msg:{}", messageStr);
+        for (ThirdPartyApiConnector connector : ThirdPartyApiConnector.CONNECTORS) {
             if (connector.isOpen()) {
                 try {
                     connector.sendMessageWithoutLog(messageStr);
                 } catch (IOException e) {
-                    logger.error("Error sending message to robot sid_{}", connector.getSid(), e);
+                    logger.error("Error sending message to ThirdPartyApi sid_{}", connector.getSid(), e);
                 }
             }
         }

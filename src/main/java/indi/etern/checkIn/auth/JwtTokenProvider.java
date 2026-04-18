@@ -155,6 +155,21 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public String generateThirdPartyApiSidToken(String sid) {
+        Date expireDate = new Date(Long.MAX_VALUE);
+        return Jwts.builder()
+                .subject("thirdPartyApi")
+                .issuer(sid)
+                .issuedAt(new Date())
+                .header()
+                .add("generateTime", String.valueOf(System.currentTimeMillis()))
+                .add("sid", sid)
+                .and()
+                .expiration(expireDate)
+                .signWith(key())
+                .compact();
+    }
+
     public Jws<Claims> parseToken(String token) {
         return Jwts.parser()
                 .verifyWith(key())

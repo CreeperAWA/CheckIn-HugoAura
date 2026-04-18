@@ -23,8 +23,120 @@ const editing = ref(false);
 const settings = ref({});
 const customStringsDragging = ref(false);
 const customStringsList = ref([]);
+const sidTokensList = ref([]);
 let backup = {};
 let backupJSON;
+
+const parseSidTokens = () => {
+    try {
+        const val = settings.value['robot.sidTokens'];
+        if (typeof val === 'string') {
+            return JSON.parse(val || '[]');
+        }
+        if (Array.isArray(val)) {
+            return val;
+        }
+        return [];
+    } catch {
+        return [];
+    }
+};
+
+const syncSidTokens = () => {
+    settings.value['robot.sidTokens'] = JSON.stringify(sidTokensList.value);
+};
+
+const addSidToken = () => {
+    sidTokensList.value.push({ id: uuidv7(), sid: "", token: "" });
+};
+
+const removeSidToken = (index) => {
+    sidTokensList.value.splice(index, 1);
+};
+
+const generateTokenForSid = (item) => {
+    if (!item.sid || item.sid.trim() === '') {
+        ElMessage({
+            type: "error",
+            message: "请先输入 SID"
+        });
+        return;
+    }
+    const sid = item.sid.trim();
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sid)) {
+        ElMessage({
+            type: "error",
+            message: "SID 格式不正确，应为 UUID 格式"
+        });
+        return;
+    }
+    WebSocketConnector.send({
+        type: "generateThirdPartyApiSidToken",
+        data: { sid }
+    }).then((response) => {
+        item.token = response.data.token;
+        syncSidTokens();
+        ElMessage({
+            type: "success",
+            message: "Token 生成成功"
+        });
+    }, (err) => {
+        ElMessage({
+            type: "error",
+            message: err.message || "Token 生成失败"
+        });
+    });
+};
+
+const generatingAll = ref(false);
+
+const generateAllTokens = () => {
+    const itemsWithoutToken = sidTokensList.value.filter(item => item.sid && item.sid.trim() !== '' && (!item.token || item.token.trim() === ''));
+    if (itemsWithoutToken.length === 0) {
+        ElMessage({
+            type: "warning",
+            message: "所有 SID 都已生成 Token"
+        });
+        return;
+    }
+    generatingAll.value = true;
+    let completed = 0;
+    let failed = 0;
+    const promises = itemsWithoutToken.map(item => {
+        const sid = item.sid.trim();
+        return WebSocketConnector.send({
+            type: "generateThirdPartyApiSidToken",
+            data: { sid }
+        }).then((response) => {
+            item.token = response.data.token;
+            completed++;
+        }, (err) => {
+            failed++;
+        });
+    });
+    Promise.all(promises).then(() => {
+        syncSidTokens();
+        generatingAll.value = false;
+        ElMessage({
+            type: "success",
+            message: `批量生成完成：成功 ${completed} 个，失败 ${failed} 个`
+        });
+    });
+};
+
+const copyToken = (token) => {
+    navigator.clipboard.writeText(token).then(() => {
+        ElMessage({
+            type: "success",
+            message: "Token 已复制到剪贴板"
+        });
+    }, () => {
+        ElMessage({
+            type: "error",
+            message: "复制失败"
+        });
+    });
+};
 
 const parseCustomStrings = () => {
     try {
@@ -86,6 +198,7 @@ const onEndDrag = () => {
 
 const startEditing = () => {
     syncCustomStrings();
+    syncSidTokens();
     backupJSON = JSON.stringify(settings.value);
     backup = JSON.parse(backupJSON);
     editing.value = true;
@@ -94,11 +207,13 @@ const startEditing = () => {
 const cancel = () => {
     settings.value = backup;
     customStringsList.value = parseCustomStrings();
+    sidTokensList.value = parseSidTokens();
     editing.value = false;
 };
 
 const finishEditing = () => {
     syncCustomStrings();
+    syncSidTokens();
     editing.value = false;
     if (backupJSON !== JSON.stringify(settings.value)) {
         saving.value = true;
@@ -134,6 +249,7 @@ const getSettings = () => {
     }).then((response) => {
         settings.value = response.data.data || {};
         customStringsList.value = parseCustomStrings();
+        sidTokensList.value = parseSidTokens();
         loading.value = false;
     }, (err) => {
         ElMessage({
@@ -301,6 +417,60 @@ onMounted(() => {
                         </div>
                     </div>
                 </div>
+
+                <div class="panel-1" style="padding: 20px">
+                    <el-text size="large" style="font-weight: bold;margin-bottom: 16px;display: block">Token 管理</el-text>
+                    <el-text type="info" style="margin-bottom: 16px;display: block;font-size: 12px">
+                        每个 SID 对应一个 Token，用于 WebSocket 机器人连接认证。SID 为机器人唯一标识（UUID 格式）。
+                    </el-text>
+                    <div class="sid-token-list">
+                        <div class="sid-token-actions-bar">
+                            <el-button v-if="editing" @click="addSidToken" size="large" text :disabled="!hasManagePermission || !editing">
+                                <HarmonyOSIcon_Plus/>
+                                <el-text>添加 Token</el-text>
+                            </el-button>
+                            <el-button v-if="editing" @click="generateAllTokens" size="large" text :disabled="!hasManagePermission || !editing" :loading="generatingAll">
+                                <el-text>批量生成（无 Token 的 SID）</el-text>
+                            </el-button>
+                        </div>
+                        <template v-if="sidTokensList.length > 0">
+                            <div class="sid-token-item" v-for="(item, index) of sidTokensList" :key="item.id">
+                                <div class="sid-token-row">
+                                    <div class="sid-token-field">
+                                        <span class="sid-token-label">SID</span>
+                                        <el-input class="disable-init-animate" type="text" size="large" placeholder="请输入 SID (UUID 格式)"
+                                                  v-model="item.sid" :disabled="!hasManagePermission || !editing"/>
+                                    </div>
+                                    <div class="sid-token-field sid-token-actions">
+                                        <el-button size="large" @click="generateTokenForSid(item)" :disabled="!hasManagePermission || !editing">
+                                            生成 Token
+                                        </el-button>
+                                        <transition name="delete-token-button">
+                                            <el-button class="remove-token-button"
+                                                       v-show="editing && sidTokensList.length > 0" text
+                                                       @click="removeSidToken(index)" :disabled="!hasManagePermission || !editing">
+                                                <HarmonyOSIcon_Remove/>
+                                            </el-button>
+                                        </transition>
+                                    </div>
+                                </div>
+                                <div class="sid-token-row" v-if="item.token">
+                                    <div class="sid-token-field sid-token-field-full">
+                                        <span class="sid-token-label">Token</span>
+                                        <div class="token-display">
+                                            <el-input class="disable-init-animate" type="text" size="large" readonly
+                                                      v-model="item.token" :disabled="!hasManagePermission || !editing"/>
+                                            <el-button size="large" @click="copyToken(item.token)" :disabled="!hasManagePermission || !editing">
+                                                复制
+                                            </el-button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <el-empty v-else description="No data" style="align-self: stretch"/>
+                    </div>
+                </div>
             </div>
         </el-scrollbar>
     </div>
@@ -425,5 +595,99 @@ onMounted(() => {
     opacity: 0;
     height: 0;
     margin-bottom: 0;
+}
+
+.sid-token-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    border: 1px solid var(--el-border-color-light);
+    border-radius: 6px;
+    padding: 8px;
+    background: var(--el-fill-color-blank);
+    box-sizing: border-box;
+}
+
+.sid-token-actions-bar {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.sid-token-item {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 12px;
+    padding: 12px;
+    background: var(--el-fill-color-light);
+    border-radius: 6px;
+    gap: 8px;
+}
+
+.sid-token-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    gap: 12px;
+}
+
+.sid-token-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.sid-token-field-full {
+    flex: 1;
+    min-width: 0;
+}
+
+.sid-token-actions {
+    flex-shrink: 0;
+    align-items: flex-end;
+}
+
+.sid-token-label {
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+}
+
+.token-display {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.token-display .el-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.remove-token-button {
+    overflow: hidden;
+    padding: 0 !important;
+    width: 45px;
+    height: 100%;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.delete-token-button-enter-active,
+.delete-token-button-leave-active {
+    transition: 300ms var(--ease-in-out-quint);
+}
+
+.delete-token-button-enter-from,
+.delete-token-button-leave-to {
+    opacity: 0;
+    width: 0;
+    max-width: 0;
+    transform: scale(0.8);
 }
 </style>

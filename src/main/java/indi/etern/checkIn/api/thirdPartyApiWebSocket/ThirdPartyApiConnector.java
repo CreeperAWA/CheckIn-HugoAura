@@ -1,4 +1,4 @@
-package indi.etern.checkIn.api.robotWebSocket;
+package indi.etern.checkIn.api.thirdPartyApiWebSocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import indi.etern.checkIn.api.webSocket.JsonRawMessage;
@@ -6,7 +6,10 @@ import indi.etern.checkIn.api.webSocket.Message;
 import indi.etern.checkIn.api.webSocket.interfaces.IMessage;
 import indi.etern.checkIn.auth.JwtTokenProvider;
 import indi.etern.checkIn.entities.user.User;
-import indi.etern.checkIn.service.web.RobotWebSocketService;
+import indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService;
+import indi.etern.checkIn.service.dao.SettingService;
+import indi.etern.checkIn.entities.setting.SettingItem;
+import io.jsonwebtoken.Claims;
 import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
@@ -28,12 +31,13 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @Component
 @ServerEndpoint("/checkIn/api/websocket/{sid}")
 @ConditionalOnWebApplication
-public class RobotConnector {
-    public static final CopyOnWriteArraySet<RobotConnector> CONNECTORS = new CopyOnWriteArraySet<>();
-    public static final Logger logger = LoggerFactory.getLogger(RobotConnector.class);
-    private static RobotWebSocketService robotWebSocketService;
+public class ThirdPartyApiConnector {
+    public static final CopyOnWriteArraySet<ThirdPartyApiConnector> CONNECTORS = new CopyOnWriteArraySet<>();
+    public static final Logger logger = LoggerFactory.getLogger(ThirdPartyApiConnector.class);
+    private static ThirdPartyApiWebSocketService thirdPartyApiWebSocketService;
     private static JwtTokenProvider jwtTokenProvider;
     private static ObjectMapper objectMapper;
+    private static SettingService settingService;
     private final int BUFFER_SIZE = 64 * 1024;
     private final int LOG_TRUNCATE_SIZE = 512;
     private Session session;
@@ -42,18 +46,23 @@ public class RobotConnector {
     private boolean authenticated = false;
 
     @Autowired
-    public void setRobotWebSocketService(RobotWebSocketService robotWebSocketService) {
-        RobotConnector.robotWebSocketService = robotWebSocketService;
+    public void setThirdPartyApiWebSocketService(ThirdPartyApiWebSocketService thirdPartyApiWebSocketService) {
+        ThirdPartyApiConnector.thirdPartyApiWebSocketService = thirdPartyApiWebSocketService;
     }
 
     @Autowired
     public void setJwtTokenProvider(JwtTokenProvider jwtTokenProvider) {
-        RobotConnector.jwtTokenProvider = jwtTokenProvider;
+        ThirdPartyApiConnector.jwtTokenProvider = jwtTokenProvider;
     }
 
     @Autowired
     public void setObjectMapper(ObjectMapper objectMapper) {
-        RobotConnector.objectMapper = objectMapper;
+        ThirdPartyApiConnector.objectMapper = objectMapper;
+    }
+
+    @Autowired
+    public void setSettingService(SettingService settingService) {
+        ThirdPartyApiConnector.settingService = settingService;
     }
 
     @OnOpen
@@ -63,15 +72,15 @@ public class RobotConnector {
         session.setMaxBinaryMessageBufferSize(0);
         CONNECTORS.add(this);
         this.sid = sid;
-        logger.info("Robot sid_{}:connected", sid);
+        logger.info("ThirdPartyApi sid_{}:connected", sid);
     }
 
     @OnError
     public void onError(Throwable throwable) {
         if (throwable instanceof IOException) {
-            logger.trace("Robot websocket connector error, may cause by normal disconnection", throwable);
+            logger.trace("ThirdPartyApi websocket connector error, may cause by normal disconnection", throwable);
         } else {
-            logger.error("Robot websocket connector error", throwable);
+            logger.error("ThirdPartyApi websocket connector error", throwable);
         }
     }
 
@@ -79,7 +88,7 @@ public class RobotConnector {
     @OnClose
     public void onClose() {
         CONNECTORS.remove(this);
-        logger.info("Robot sid_{}:close", sid);
+        logger.info("ThirdPartyApi sid_{}:close", sid);
     }
 
     private final Map<String, PartRawMessageProcessor> partMessageMap = new HashMap<>();
@@ -125,14 +134,14 @@ public class RobotConnector {
                     }
                 }
                 case "qq_verify_response" -> {
-                    robotWebSocketService.handleQQVerifyResponse(this, contextJsonMessage);
+                    thirdPartyApiWebSocketService.handleQQVerifyResponse(this, contextJsonMessage);
                 }
                 default -> {
                     String logMessage = message;
                     if (logMessage.length() > LOG_TRUNCATE_SIZE) {
                         logMessage = logMessage.substring(0, LOG_TRUNCATE_SIZE) + "\n=========(truncated)=========";
                     }
-                    logger.debug("Robot sid_{}:{}", sid, logMessage);
+                    logger.debug("ThirdPartyApi sid_{}:{}", sid, logMessage);
                 }
             }
         } catch (Exception e) {
@@ -141,7 +150,7 @@ public class RobotConnector {
                 String messageId = objectMapper.readValue(message, HashMap.class).get("messageId").toString();
                 sendError(messageId, e.getClass().getSimpleName() + ":" + e.getMessage());
             } catch (IOException exception) {
-                logger.error("while sending error message (caused by \"{}\") to robot sid_{}:{}", message, sid, exception.getMessage());
+                logger.error("while sending error message (caused by \"{}\") to ThirdPartyApi sid_{}:{}", message, sid, exception.getMessage());
                 exception.printStackTrace();
             }
             e.printStackTrace();
@@ -160,11 +169,29 @@ public class RobotConnector {
         if (message.getType().equals(Message.Type.of("token"))) {
             final TokenMessage tokenMessage = objectMapper.readValue(message.getData(), TokenMessage.class);
             try {
-                User user = jwtTokenProvider.getUser(tokenMessage.token);
-                authenticated = true;
-                sendMessage("{\"type\":\"success\",\"messageId\":\"" + message.getMessageId() + "\"}");
-                robotWebSocketService.onRobotAuthenticated(this);
-                return true;
+                Claims claims = jwtTokenProvider.parseToken(tokenMessage.token).getPayload();
+                String subject = claims.getSubject();
+                String issuer = claims.getIssuer();
+                if (!"thirdPartyApi".equals(subject)) {
+                    sendError(message.getMessageId(), "Authentication failed: invalid token type");
+                    authenticated = false;
+                    return false;
+                }
+                if (!sid.equals(issuer)) {
+                    sendError(message.getMessageId(), "Authentication failed: token SID mismatch");
+                    authenticated = false;
+                    return false;
+                }
+                if (jwtTokenProvider.validateToken(tokenMessage.token)) {
+                    authenticated = true;
+                    sendMessage("{\"type\":\"success\",\"messageId\":\"" + message.getMessageId() + "\"}");
+                    thirdPartyApiWebSocketService.onThirdPartyApiAuthenticated(this);
+                    return true;
+                } else {
+                    sendError(message.getMessageId(), "Authentication failed: invalid token");
+                    authenticated = false;
+                    return false;
+                }
             } catch (Exception e) {
                 sendError(message.getMessageId(), "Authentication failed: " + e.getMessage());
                 authenticated = false;
@@ -197,7 +224,7 @@ public class RobotConnector {
         if (logger.isDebugEnabled()) {
             if (messageString.length() > LOG_TRUNCATE_SIZE)
                 messageString = messageString.substring(0, LOG_TRUNCATE_SIZE) + "\n=========(truncated)=========";
-            logger.debug("Robot webSocket to sid_{}:{}", sid, messageString);
+            logger.debug("ThirdPartyApi webSocket to sid_{}:{}", sid, messageString);
         }
     }
 
