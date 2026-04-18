@@ -1,4 +1,4 @@
-package indi.etern.checkIn.entities.robotToken;
+package indi.etern.checkIn.entities.httpApiToken;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import indi.etern.checkIn.auth.JwtTokenProvider;
@@ -18,8 +18,8 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "robot_tokens")
-public class RobotTokenItem implements BaseEntity<String> {
+@Table(name = "http_api_tokens")
+public class HttpApiTokenItem implements BaseEntity<String> {
     @Id
     @Column(columnDefinition = "char(36)")
     String id;
@@ -35,8 +35,8 @@ public class RobotTokenItem implements BaseEntity<String> {
     
     Long generateByUserQQ;
     
-    public static RobotTokenItem generateNewToken(String id, String description, User applicant) {
-        final String token = JwtTokenProvider.singletonInstance.generateRobotToken(applicant, id);
-        return new RobotTokenItem(id,token,LocalDateTime.now(),description,applicant.getQQNumber());
+    public static HttpApiTokenItem generateNewToken(String id, String description, User applicant) {
+        final String token = JwtTokenProvider.singletonInstance.generateHttpApiToken(applicant, id);
+        return new HttpApiTokenItem(id,token,LocalDateTime.now(),description,applicant.getQQNumber());
     }
 }

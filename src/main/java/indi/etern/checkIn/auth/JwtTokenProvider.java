@@ -4,7 +4,7 @@ import indi.etern.checkIn.entities.setting.SettingItem;
 import indi.etern.checkIn.entities.user.Permission;
 import indi.etern.checkIn.entities.user.Role;
 import indi.etern.checkIn.entities.user.User;
-import indi.etern.checkIn.service.dao.RobotTokenService;
+import indi.etern.checkIn.service.dao.HttpApiTokenService;
 import indi.etern.checkIn.service.dao.RoleService;
 import indi.etern.checkIn.service.dao.SettingService;
 import indi.etern.checkIn.service.dao.UserService;
@@ -28,7 +28,6 @@ import java.util.function.Consumer;
 public class JwtTokenProvider {
     private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
     public static JwtTokenProvider singletonInstance;
-    private final RobotTokenService robotTokenService;
     
     /*@Value("${jwt-secret}")*/
     private String jwtSecret;
@@ -36,15 +35,15 @@ public class JwtTokenProvider {
     @Value("${jwt-expiration-milliseconds}")
     private long jwtExpirationDate;
 
+    private final HttpApiTokenService httpApiTokenService;
     private final UserService userService;
-    
-    final RoleService roleService;
+    private final RoleService roleService;
 
-    public JwtTokenProvider(UserService userService, RoleService roleService, RobotTokenService robotTokenService, SettingService settingService) {
+    public JwtTokenProvider(UserService userService, RoleService roleService, HttpApiTokenService httpApiTokenService, SettingService settingService) {
         this.userService = userService;
         this.roleService = roleService;
         singletonInstance = this;
-        this.robotTokenService = robotTokenService;
+        this.httpApiTokenService = httpApiTokenService;
         try {
             final SettingItem item = settingService.getItem("other", "jwtSecret");
             jwtSecret = item.getValue(String.class);
@@ -93,7 +92,7 @@ public class JwtTokenProvider {
                 .parseSignedClaims(token)
                 .getPayload();
         String subject = claims.getSubject();
-        if (subject.equals("robot") && robotTokenService.existByToken(token)) {
+        if (subject.equals("httpApi") && httpApiTokenService.existByToken(token)) {
             return User.ANONYMOUS;
         } else {
             return userService.findByQQNumber(Long.parseLong(subject)).orElseThrow();
@@ -141,10 +140,10 @@ public class JwtTokenProvider {
         return false;
     }
     
-    public String generateRobotToken(User applicant,String id) {
+    public String generateHttpApiToken(User applicant,String id) {
         Date expireDate = new Date(Long.MAX_VALUE);
         return Jwts.builder()
-                .subject("robot")
+                .subject("httpApi")
                 .issuer(String.valueOf(applicant.getQQNumber()))
                 .issuedAt(new Date())
                 .header()

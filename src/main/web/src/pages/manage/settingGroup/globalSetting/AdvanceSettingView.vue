@@ -19,7 +19,8 @@ const data = ref({
     questionScore: 5,
     partitionRange: [0, 100],
     rateLimitRules: [],
-    rateLimitWhitelist: []
+    rateLimitWhitelist: [],
+    httpApiTokenItems: []
 });
 const loading = ref(true);
 const error = ref(false);
@@ -63,12 +64,12 @@ const finishEditing = () => {
                     data: data.value
                 }
             }).then((response) => {
-                // 只更新 robotTokenItems，不覆盖整个 data 对象
+                // 只更新 httpApiTokenItems，不覆盖整个 data 对象
                 if (response.data.currentTokens) {
-                    data.value.robotTokenItems = response.data.currentTokens;
+                    data.value.httpApiTokenItems = response.data.currentTokens;
                 }
-                data.value.deletedRobotTokenIds = [];
-                data.value.createdRobotTokens = [];
+                data.value.deletedHttpApiTokenIds = [];
+                data.value.createdHttpApiTokens = [];
                 ElMessage({
                     type: "success", message: "保存成功"
                 });
@@ -170,14 +171,17 @@ const getData = () => {
         type: "getAdvanceSetting",
     }).then((response) => {
         data.value = response.data.data;
-        data.value.deletedRobotTokenIds = [];
-        data.value.createdRobotTokens = [];
+        data.value.deletedHttpApiTokenIds = [];
+        data.value.createdHttpApiTokens = [];
         if (!data.value.ipSource) {
             data.value.ipSource = "request";
         }
         if (data.value.useRequestIpIfSourceIsNull === null ||
                 data.value.useRequestIpIfSourceIsNull === undefined) {
             data.value.useRequestIpIfSourceIsNull = true;
+        }
+        if (!data.value.httpApiTokenItems) {
+            data.value.httpApiTokenItems = [];
         }
         
         // 加载限流设置
@@ -286,8 +290,8 @@ const createTokenButtonOption = ref([{
     content: "确定",
     type: "primary",
     onclick: () => {
-        if (!(data.value.robotTokenItems instanceof Array)) {
-            data.value.robotTokenItems = [];
+        if (!(data.value.httpApiTokenItems instanceof Array)) {
+            data.value.httpApiTokenItems = [];
         }
         const token = {
             id: uuidv7(),
@@ -296,8 +300,8 @@ const createTokenButtonOption = ref([{
             generateTime: null,
             generateByUserQQ: UserDataInterface.getCurrentUser().value.qq
         };
-        data.value.robotTokenItems.push(token);
-        data.value.createdRobotTokens.push(token);
+        data.value.httpApiTokenItems.push(token);
+        data.value.createdHttpApiTokens.push(token);
         onClose();
     }
 }, {
@@ -317,7 +321,7 @@ UserDataInterface.getUsersAsync().then((users) => {
 
 
 const deleteToken = (index) => {
-    if (Boolean(data.value.robotTokenItems[index].token)) {
+    if (Boolean(data.value.httpApiTokenItems[index].token)) {
         ElMessageBox.confirm(
                 "该 token 将无法再被使用",
                 "确定删除 token",
@@ -329,13 +333,13 @@ const deleteToken = (index) => {
                     type: "warning",
                 }
         ).then(() => {
-            console.log(data.value.robotTokenItems[index]);
-            data.value.deletedRobotTokenIds.push(data.value.robotTokenItems[index].id);
-            data.value.robotTokenItems.splice(index, 1);
+            console.log(data.value.httpApiTokenItems[index]);
+            data.value.deletedHttpApiTokenIds.push(data.value.httpApiTokenItems[index].id);
+            data.value.httpApiTokenItems.splice(index, 1);
         }, () => {
         });
     } else {
-        data.value.robotTokenItems.splice(index, 1);
+        data.value.httpApiTokenItems.splice(index, 1);
     }
 }
 </script>
@@ -552,7 +556,7 @@ const deleteToken = (index) => {
                         </div>
                         
                         <div style="display: flex;flex-direction: row;flex-wrap: wrap;align-items: center;margin-bottom: 8px;margin-top: 24px">
-                            <el-text size="large" style="font-weight: bold;align-self: center;margin-right: 16px">Robot Tokens</el-text>
+                            <el-text size="large" style="font-weight: bold;align-self: center;margin-right: 16px">HTTP API Tokens</el-text>
                             <transition name="blur-scale">
                                 <el-button class="disable-init-animate" link @click="createNewToken" v-if="editing">
                                     <HarmonyOSIcon_Plus style="margin-right: 4px;"/>
@@ -562,10 +566,10 @@ const deleteToken = (index) => {
                         </div>
                         <transition name="blur-scale" mode="out-in">
                             <div style="display: flex;flex-direction: column"
-                                 v-if="data.robotTokenItems && data.robotTokenItems.length > 0">
+                                 v-if="data.httpApiTokenItems && data.httpApiTokenItems.length > 0">
                                 <transition-group name="smooth-height">
                                     <div class="smooth-height-base"
-                                         v-for="(tokenItem,index) of data.robotTokenItems"
+                                         v-for="(tokenItem,index) of data.httpApiTokenItems"
                                          :key="tokenItem.id">
                                         <div>
                                             <div style="display:flex;margin-bottom: 8px;flex-direction: column">

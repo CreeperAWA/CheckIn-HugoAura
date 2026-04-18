@@ -6,8 +6,8 @@ import indi.etern.checkIn.action.interfaces.Action;
 import indi.etern.checkIn.action.interfaces.ExecuteContext;
 import indi.etern.checkIn.action.interfaces.OutputData;
 import indi.etern.checkIn.action.setting.save.SaveAdvanceSetting;
-import indi.etern.checkIn.entities.robotToken.RobotTokenItem;
-import indi.etern.checkIn.service.dao.RobotTokenService;
+import indi.etern.checkIn.entities.httpApiToken.HttpApiTokenItem;
+import indi.etern.checkIn.service.dao.HttpApiTokenService;
 import indi.etern.checkIn.utils.GetSettingCommon;
 
 import java.util.Comparator;
@@ -24,10 +24,10 @@ public class GetAdvanceSetting extends BaseAction<NullInput, GetAdvanceSetting.S
         }
     }
     
-    private final RobotTokenService robotTokenService;
+    private final HttpApiTokenService httpApiTokenService;
     
-    public GetAdvanceSetting(RobotTokenService robotTokenService) {
-        this.robotTokenService = robotTokenService;
+    public GetAdvanceSetting(HttpApiTokenService httpApiTokenService) {
+        this.httpApiTokenService = httpApiTokenService;
     }
     
     @Override
@@ -35,9 +35,9 @@ public class GetAdvanceSetting extends BaseAction<NullInput, GetAdvanceSetting.S
         context.requirePermission("get advance setting");
         GetSettingCommon getSettingCommon = new GetSettingCommon(SaveAdvanceSetting.KEYS,"advance");
         final LinkedHashMap<String, Object> settings = getSettingCommon.doGet();
-        final List<RobotTokenItem> all = robotTokenService.findAll();
-        final List<RobotTokenItem> sortedList = all.stream().sorted(Comparator.comparing(RobotTokenItem::getGenerateTime)).toList();
-        settings.put("robotTokenItems", sortedList);
+        final List<HttpApiTokenItem> all = httpApiTokenService.findAll();
+        final List<HttpApiTokenItem> sortedList = all.stream().sorted(Comparator.comparing(HttpApiTokenItem::getGenerateTime)).toList();
+        settings.put("httpApiTokenItems", sortedList);
         context.resolve(new SuccessOutput(settings));
     }
 }

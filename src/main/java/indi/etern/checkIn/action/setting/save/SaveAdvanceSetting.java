@@ -5,8 +5,8 @@ import indi.etern.checkIn.action.interfaces.Action;
 import indi.etern.checkIn.action.interfaces.ExecuteContext;
 import indi.etern.checkIn.action.interfaces.InputData;
 import indi.etern.checkIn.action.interfaces.OutputData;
-import indi.etern.checkIn.entities.robotToken.RobotTokenItem;
-import indi.etern.checkIn.service.dao.RobotTokenService;
+import indi.etern.checkIn.entities.httpApiToken.HttpApiTokenItem;
+import indi.etern.checkIn.service.dao.HttpApiTokenService;
 import indi.etern.checkIn.utils.SaveSettingCommon;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,9 +16,9 @@ import java.util.List;
 import java.util.Map;
 
 @Action("saveAdvanceSetting")
-public class SaveAdvanceSetting extends BaseAction<SaveAdvanceSetting.Input, SaveAdvanceSetting.RobotTokenOutput> {
+public class SaveAdvanceSetting extends BaseAction<SaveAdvanceSetting.Input, SaveAdvanceSetting.HttpApiTokenOutput> {
     public record Input(Map<String, Object> data) implements InputData {}
-    public record RobotTokenOutput(List<RobotTokenItem> currentTokens) implements OutputData {
+    public record HttpApiTokenOutput(List<HttpApiTokenItem> currentTokens) implements OutputData {
         @Override
         public Result result() {
             return Result.SUCCESS;
@@ -37,46 +37,46 @@ public class SaveAdvanceSetting extends BaseAction<SaveAdvanceSetting.Input, Sav
     };
     SaveSettingCommon saveSettingCommon;
     
-    private final RobotTokenService robotTokenService;
+    private final HttpApiTokenService httpApiTokenService;
     
-    public SaveAdvanceSetting(RobotTokenService robotTokenService) {
-        this.robotTokenService = robotTokenService;
+    public SaveAdvanceSetting(HttpApiTokenService httpApiTokenService) {
+        this.httpApiTokenService = httpApiTokenService;
     }
     
     @Transactional
     @Override
-    public void execute(ExecuteContext<Input, RobotTokenOutput> context) {
+    public void execute(ExecuteContext<Input, HttpApiTokenOutput> context) {
         final Input input = context.getInput();
         saveSettingCommon = new SaveSettingCommon(input.data,
                 KEYS, "advance");
         //noinspection unchecked
-        List<Map<String,String>> createdRobotTokenList = (List<Map<String, String>>) input.data.get("createdRobotTokens");
+        List<Map<String,String>> createdRobotTokenList = (List<Map<String, String>>) input.data.get("createdHttpApiTokens");
         //noinspection unchecked
-        List<String> deletedRobotTokenList = (List<String>) input.data.get("deletedRobotTokenIds");
+        List<String> deletedRobotTokenList = (List<String>) input.data.get("deletedHttpApiTokenIds");
         context.requirePermission("save advance setting");
         saveSettingCommon = new SaveSettingCommon(input.data,
                 KEYS, "advance");
         
         saveSettingCommon.doSave();
         if (createdRobotTokenList != null) {
-            List<RobotTokenItem> robotTokenItems = new ArrayList<>();
+            List<HttpApiTokenItem> httpApiTokenItems = new ArrayList<>();
             for (Map<String, String> tokenData : createdRobotTokenList) {
-                robotTokenItems.add(RobotTokenItem.generateNewToken(tokenData.get("id"), tokenData.get("description"), context.getCurrentUser()));
+                httpApiTokenItems.add(HttpApiTokenItem.generateNewToken(tokenData.get("id"), tokenData.get("description"), context.getCurrentUser()));
             }
-            robotTokenService.saveAll(robotTokenItems);
+            httpApiTokenService.saveAll(httpApiTokenItems);
         }
         if (deletedRobotTokenList != null) {
-            robotTokenService.deleteAllById(deletedRobotTokenList);
+            httpApiTokenService.deleteAllById(deletedRobotTokenList);
         }
-        RobotTokenOutput robotTokenOutput;
+        HttpApiTokenOutput httpApiTokenOutput;
         if (createdRobotTokenList != null || deletedRobotTokenList != null) {
-            final List<RobotTokenItem> all = robotTokenService.findAll();
-            final List<RobotTokenItem> sortedList = all.stream().sorted(Comparator.comparing(RobotTokenItem::getGenerateTime)).toList();
-            robotTokenOutput = new RobotTokenOutput(sortedList);
+            final List<HttpApiTokenItem> all = httpApiTokenService.findAll();
+            final List<HttpApiTokenItem> sortedList = all.stream().sorted(Comparator.comparing(HttpApiTokenItem::getGenerateTime)).toList();
+            httpApiTokenOutput = new HttpApiTokenOutput(sortedList);
         } else {
-            robotTokenOutput = new RobotTokenOutput(null);
+            httpApiTokenOutput = new HttpApiTokenOutput(null);
         }
         
-        context.resolve(robotTokenOutput);
+        context.resolve(httpApiTokenOutput);
     }
 }
