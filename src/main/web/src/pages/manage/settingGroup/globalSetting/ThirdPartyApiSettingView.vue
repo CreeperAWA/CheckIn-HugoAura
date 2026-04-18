@@ -130,7 +130,7 @@ watch(() => PermissionInfo.permissions.value, () => {
 const getSettings = () => {
     loading.value = true;
     WebSocketConnector.send({
-        type: "getRobotApiSetting"
+        type: "getThirdPartyApiSetting"
     }).then((response) => {
         settings.value = response.data.data || {};
         customStringsList.value = parseCustomStrings();
