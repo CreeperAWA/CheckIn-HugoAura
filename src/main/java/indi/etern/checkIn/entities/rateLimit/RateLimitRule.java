@@ -3,7 +3,6 @@ package indi.etern.checkIn.entities.rateLimit;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "rate_limit_rules")
@@ -42,12 +41,6 @@ public class RateLimitRule {
     
     @Column(name = "limit_duration_seconds", nullable = false)
     private int limitDurationSeconds;
-    
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-    
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
     
     public enum RateLimitDimension {
         IP, COOKIE, QQ, OAUTH
