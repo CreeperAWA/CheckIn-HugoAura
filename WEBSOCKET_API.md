@@ -128,7 +128,7 @@ const formatTime = (timeStr) => {
   "data": {
     "list": [
       {
-        "id": "1",
+        "id": "019d9fbb-e479-7f6b-a587-5348a1b23706",
         "qq": "123456789",
         "reason": "违规行为",
         "created_at": [2021, 5, 20, 12, 33, 19, 0]
@@ -148,7 +148,7 @@ const formatTime = (timeStr) => {
   "type": "blacklist_add",
   "messageId": "550e8400-e29b-41d4-a716-446655440000",
   "data": {
-    "id": "2",
+    "id": "019d9fbb-e479-7f6b-a587-5348a1b23707",
     "qq": "987654321",
     "reason": "恶意攻击",
     "created_at": [2021, 5, 20, 12, 33, 20, 0]
@@ -165,7 +165,7 @@ const formatTime = (timeStr) => {
   "type": "blacklist_remove",
   "messageId": "550e8400-e29b-41d4-a716-446655440000",
   "data": {
-    "id": "1",
+    "id": "019d9fbb-e479-7f6b-a587-5348a1b23706",
     "qq": "123456789"
   }
 }
