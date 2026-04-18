@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import indi.etern.checkIn.api.webSocket.JsonRawMessage;
 import indi.etern.checkIn.api.webSocket.Message;
 import indi.etern.checkIn.api.webSocket.interfaces.IMessage;
+import indi.etern.checkIn.api.webSocket.PartRawMessageProcessor;
 import indi.etern.checkIn.auth.JwtTokenProvider;
 import indi.etern.checkIn.entities.user.User;
 import indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService;

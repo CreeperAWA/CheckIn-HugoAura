@@ -34,8 +34,8 @@ CREATE TABLE third_party_api_sid_tokens
 ALTER TABLE robot_tokens RENAME TO http_api_tokens;
 
 -- Remove created_at and updated_at columns from rate_limit_rules table
-ALTER TABLE rate_limit_rules DROP COLUMN IF EXISTS created_at;
-ALTER TABLE rate_limit_rules DROP COLUMN IF EXISTS updated_at;
+ALTER TABLE rate_limit_rules DROP COLUMN created_at;
+ALTER TABLE rate_limit_rules DROP COLUMN updated_at;
 
 INSERT IGNORE INTO server_setting_items (setting_key, setting_value, clazz)
 VALUES ('qqVerify.enabled', 'false', 'java.lang.Boolean'),
