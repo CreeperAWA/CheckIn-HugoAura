@@ -39,6 +39,7 @@ public class Connector {
     private static JwtTokenProvider jwtTokenProvider;
     private static ActionExecutor actionExecutor;
     private static ObjectMapper objectMapper;
+    private static indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService;
     private final int BUFFER_SIZE = 64 * 1024;
     private final int LOG_TRUNCATE_SIZE = 512;
     private Session session;
@@ -64,6 +65,11 @@ public class Connector {
     @Autowired
     public void setObjectMapper(ObjectMapper objectMapper) {
         Connector.objectMapper = objectMapper;
+    }
+    
+    @Autowired
+    public void setThirdPartyApiWebSocketService(indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService) {
+        Connector.thirdPartyApiWebSocketService = thirdPartyApiWebSocketService;
     }
     
     @OnOpen
@@ -146,6 +152,10 @@ public class Connector {
                     logger.debug("websocket unsubscribe from {}({}): channel \"{}\"", sessionUser.getName(), sessionUser.getQQNumber(), channelName);
                     webSocketService.unsubscribeChannel(sid, channelName);
                     sendMessage("{\"type\":\"success\",\"messageId\":\"" + contextId + "\"}");
+                }
+                case "qq_verify_response" -> {
+                    // 转发给第三方API WebSocket服务处理
+                    thirdPartyApiWebSocketService.handleQQVerifyResponseFromUser(this, contextJsonMessage);
                 }
                 default -> {
                     String logMessage = message;

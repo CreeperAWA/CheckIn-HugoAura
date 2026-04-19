@@ -141,6 +141,9 @@ public class ThirdPartyApiConnector {
                         partMessageMap.remove(partId);
                     }
                 }
+                case "qq_verify_check_response" -> {
+                    thirdPartyApiWebSocketService.handleQQVerifyCheckResponse(this, contextJsonMessage);
+                }
                 case "qq_verify_response" -> {
                     thirdPartyApiWebSocketService.handleQQVerifyResponse(this, contextJsonMessage);
                 }
