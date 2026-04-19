@@ -90,6 +90,11 @@ public class ThirdPartyApiConnector {
      */
     private final Map<String, PartRawMessageProcessor> partMessageMap = new HashMap<>();
     
+    /**
+     * 发送消息的同步锁，防止并发写入导致TEXT_FULL_WRITING状态冲突
+     */
+    private final Object sendLock = new Object();
+    
     @Autowired
     public void setThirdPartyApiWebSocketService(ThirdPartyApiWebSocketService thirdPartyApiWebSocketService) {
         ThirdPartyApiConnector.thirdPartyApiWebSocketService = thirdPartyApiWebSocketService;
@@ -447,11 +452,19 @@ public class ThirdPartyApiConnector {
     /**
      * 发送消息字符串（不记录日志）
      * 
+     * 使用同步锁防止并发写入导致TEXT_FULL_WRITING状态冲突
+     * 
      * @param messageString 要发送的消息字符串
      * @throws IOException 如果发送失败
      */
     public void sendMessageWithoutLog(String messageString) throws IOException {
-        this.session.getBasicRemote().sendText(messageString);
+        synchronized (sendLock) {
+            if (session.isOpen()) {
+                this.session.getBasicRemote().sendText(messageString);
+            } else {
+                throw new IOException("WebSocket session is closed");
+            }
+        }
     }
 
     /**

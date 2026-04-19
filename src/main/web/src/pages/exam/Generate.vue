@@ -55,33 +55,42 @@ const startExam = () => {
 const generateExam = () => {
     loadingExam.value = true;
     
-    verifyResultUnregister = WebSocketConnector.registerAction("qq_verify_result", handleVerifyResult);
-    
-    verifyTimeoutTimer = setTimeout(() => {
-        handleVerifyTimeout();
-    }, 2 * 60 * 1000);
-    
     proxy.$http.post("generate", {
         qq: qqNumber.value,
         partitionIds: selectedPartitionIds.value,
         turnstileToken: token.value
     }).then((data) => {
-        clearVerifyTimer();
-        loadingExam.value = false;
-        
-        if (data.type !== "error") {
+        if (data.type === "verify_required") {
+            // 需要验证，显示验证对话框
+            loadingExam.value = false;
+            verifyGuideMessage.value = data.guide_message || "请进行QQ号验证";
+            verifyContent.value = data.verify_content;
+            showVerifyDialog.value = true;
+            verifyLoading.value = true;
+            
+            // 注册验证结果监听器
+            verifyResultUnregister = WebSocketConnector.registerAction("qq_verify_result", handleVerifyResult);
+            
+            // 设置验证超时定时器（2分钟）
+            verifyTimeoutTimer = setTimeout(() => {
+                handleVerifyTimeout();
+            }, 2 * 60 * 1000);
+        } else if (data.type !== "error") {
+            // 生成题目成功，跳转到答题页面
+            clearVerifyTimer();
+            loadingExam.value = false;
+            
             proxy.$cookies.set("examInfo", JSON.stringify(data), "7d");
             proxy.$cookies.set("phase", "examine", "7d");
             proxy.$cookies.remove("submissions");
             proxy.$cookies.remove("timestamps");
             router.push({name: "examine"});
         } else {
-            if (data.exceptionType === "QQVerifyRequired") {
-                verifyGuideMessage.value = data.guide_message || "请进行QQ号验证";
-                verifyContent.value = data.verify_content;
-                showVerifyDialog.value = true;
-                verifyLoading.value = true;
-            } else if (data.exceptionType === "QQVerifyFailed") {
+            // 错误处理
+            clearVerifyTimer();
+            loadingExam.value = false;
+            
+            if (data.exceptionType === "QQVerifyFailed") {
                 ElMessageBox.alert(
                     data.description || "验证失败，请重新验证",
                     "验证失败", {
@@ -143,12 +152,10 @@ const handleVerifyResult = (message) => {
     verifyLoading.value = false;
     showVerifyDialog.value = false;
     
-    if (verifyTimeoutTimer) {
-        clearTimeout(verifyTimeoutTimer);
-        verifyTimeoutTimer = null;
-    }
+    clearVerifyTimer();
     
     if (resultData.status === "success") {
+        // 验证成功，重新调用生成题目接口
         generateExam();
     } else if (resultData.status === "failed") {
         ElMessageBox.alert(

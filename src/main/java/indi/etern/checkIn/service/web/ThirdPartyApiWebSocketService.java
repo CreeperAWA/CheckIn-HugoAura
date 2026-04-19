@@ -22,6 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 第三方API WebSocket服务
@@ -60,8 +63,25 @@ public class ThirdPartyApiWebSocketService {
     private static final long VERIFY_REQUEST_TIMEOUT_MS = 2 * 60 * 1000; // 2分钟
     
     /**
+     * 共享的调度线程池，避免频繁创建Timer导致资源泄漏
+     * 核心线程数为2，足以处理所有超时任务
+     */
+    private static final ScheduledExecutorService timeoutScheduler = Executors.newScheduledThreadPool(
+        2, 
+        r -> {
+            Thread t = new Thread(r, "VerifyTimeoutScheduler");
+            t.setDaemon(true);
+            return t;
+        }
+    );
+    
+    /**
      * 等待验证询问响应的请求映射
      * key: 消息ID, value: 验证询问请求
+     * 
+     * 多用户隔离说明：
+     * 每个验证请求使用唯一的messageId作为key，支持多个用户同时进行验证
+     * 不同用户的验证请求不会相互干扰，因为每个请求都有独立的messageId和回调
      */
     @Getter
     private final Map<String, VerifyCheckRequest> pendingVerifyCheckRequests = new ConcurrentHashMap<>();
@@ -69,6 +89,10 @@ public class ThirdPartyApiWebSocketService {
     /**
      * 等待验证响应的请求映射
      * key: 消息ID, value: 验证请求
+     * 
+     * 多用户隔离说明：
+     * 每个验证请求使用唯一的messageId作为key，支持多个用户同时进行验证
+     * 不同用户的验证请求不会相互干扰，因为每个请求都有独立的messageId和回调
      */
     @Getter
     private final Map<String, VerifyRequest> pendingVerifyRequests = new ConcurrentHashMap<>();
@@ -77,6 +101,21 @@ public class ThirdPartyApiWebSocketService {
         singletonInstance = this;
         this.objectMapper = objectMapper;
         this.blacklistRepository = blacklistRepository;
+        
+        // 注册JVM关闭钩子，优雅关闭超时调度线程池
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.info("Shutting down timeout scheduler...");
+            timeoutScheduler.shutdown();
+            try {
+                if (!timeoutScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                    timeoutScheduler.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                timeoutScheduler.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+            logger.info("Timeout scheduler shut down completed");
+        }));
     }
     
     /**
@@ -273,7 +312,7 @@ public class ThirdPartyApiWebSocketService {
     @SneakyThrows
     public void sendQQVerifyCheck(String qq, VerifyCheckRequest.VerifyCheckCallback callback) {
         String messageId = UUIDv7.randomUUID().toString();
-        Message<Map<String, Object>> message = ThirdPartyApiMessageBuilder.createQQVerifyCheck(qq);
+        Message<Map<String, Object>> message = ThirdPartyApiMessageBuilder.createQQVerifyCheck(qq, messageId);
         
         VerifyCheckRequest request = new VerifyCheckRequest(messageId, qq, callback);
         pendingVerifyCheckRequests.put(messageId, request);
@@ -297,6 +336,12 @@ public class ThirdPartyApiWebSocketService {
      * 处理验证询问响应
      * 
      * 接收第三方API返回的验证询问响应，并触发对应回调
+     * 优先通过MessageID匹配，如果失败则通过QQ号查找（兼容第三方返回不同MessageID的情况）
+     * 
+     * 多用户隔离机制：
+     * - 每个用户的验证请求使用唯一的messageId
+     * - 如果第三方正确回复messageId，直接匹配，完全隔离
+     * - 如果第三方未正确回复，降级通过QQ号查找，确保正确匹配对应用户
      * 
      * @param connector 发送响应的连接器
      * @param message 响应消息
@@ -309,15 +354,38 @@ public class ThirdPartyApiWebSocketService {
         String qq = (String) data.get("qq");
         Boolean needVerify = (Boolean) data.get("need_verify");
         
-        logger.info("Received QQ verify check response from ThirdPartyApi [{}], QQ: {}, need_verify: {}", 
-            connector.getSid(), qq, needVerify);
+        logger.info("Received QQ verify check response from ThirdPartyApi [{}], QQ: {}, need_verify: {}, messageId: {}", 
+            connector.getSid(), qq, needVerify, messageId);
         
+        // 优先通过MessageID查找（正确实现时应当匹配）
         VerifyCheckRequest request = pendingVerifyCheckRequests.remove(messageId);
-        if (request != null && request.getQq().equals(qq)) {
+        
+        // 如果没找到，尝试通过QQ号查找（兼容第三方API未正确使用messageId的情况）
+        // 注意：在多用户场景下，不同用户的QQ号不同，因此通过QQ号查找也能正确隔离
+        // 使用synchronized确保查找和删除的原子性，避免ConcurrentModificationException和并发竞争
+        if (request == null) {
+            synchronized (pendingVerifyCheckRequests) {
+                String matchedKey = null;
+                for (Map.Entry<String, VerifyCheckRequest> entry : pendingVerifyCheckRequests.entrySet()) {
+                    if (entry.getValue().getQq().equals(qq)) {
+                        matchedKey = entry.getKey();
+                        break;
+                    }
+                }
+                if (matchedKey != null) {
+                    request = pendingVerifyCheckRequests.remove(matchedKey);
+                    logger.warn("MessageID mismatch, fallback to QQ lookup. Original messageId: {}, response messageId: {}, QQ: {}", 
+                        matchedKey, messageId, qq);
+                }
+            }
+        }
+        
+        if (request != null) {
+            logger.info("Matched verify check request for QQ: {}, need_verify: {}", qq, needVerify);
             request.getCallback().onResponse(needVerify);
         } else {
-            logger.warn("No pending verify check request found for messageId: {} or QQ mismatch (expected: {}, got: {})", 
-                messageId, request != null ? request.getQq() : "null", qq);
+            logger.warn("No pending verify check request found for messageId: {} or QQ: {}. Response may be delayed or duplicate.", 
+                messageId, qq);
         }
     }
     
@@ -334,7 +402,7 @@ public class ThirdPartyApiWebSocketService {
     @SneakyThrows
     public void sendQQVerifyRequest(String qq, String verifyContent, VerifyRequest.VerifyCallback callback) {
         String messageId = UUIDv7.randomUUID().toString();
-        Message<Map<String, Object>> message = ThirdPartyApiMessageBuilder.createQQVerifyRequest(qq, verifyContent);
+        Message<Map<String, Object>> message = ThirdPartyApiMessageBuilder.createQQVerifyRequest(qq, verifyContent, messageId);
         
         VerifyRequest request = new VerifyRequest(messageId, qq, callback);
         pendingVerifyRequests.put(messageId, request);
@@ -401,15 +469,41 @@ public class ThirdPartyApiWebSocketService {
     
     /**
      * 处理验证响应的通用逻辑
+     * 优先通过MessageID匹配，如果失败则通过QQ号查找
+     * 
+     * 使用synchronized确保原子操作，避免并发竞争条件：
+     * - 防止多个线程同时通过QQ号查找到同一个请求
+     * - 确保查找和删除操作的原子性
      */
     private void processVerifyResponse(String messageId, String qq, String status, String responseMessage) {
-        VerifyRequest request = pendingVerifyRequests.get(messageId);
-        if (request != null && request.getQq().equals(qq)) {
-            pendingVerifyRequests.remove(messageId);
+        // 优先通过MessageID查找
+        VerifyRequest request = pendingVerifyRequests.remove(messageId);
+        
+        // 如果没找到，尝试通过QQ号查找（兼容第三方API返回不同MessageID的情况）
+        // 使用synchronized确保查找和删除的原子性，避免并发竞争
+        if (request == null) {
+            synchronized (pendingVerifyRequests) {
+                String matchedKey = null;
+                for (Map.Entry<String, VerifyRequest> entry : pendingVerifyRequests.entrySet()) {
+                    if (entry.getValue().getQq().equals(qq)) {
+                        matchedKey = entry.getKey();
+                        break;
+                    }
+                }
+                if (matchedKey != null) {
+                    request = pendingVerifyRequests.remove(matchedKey);
+                    logger.warn("MessageID mismatch in verify response, fallback to QQ lookup. Original messageId: {}, response messageId: {}, QQ: {}, status: {}", 
+                        matchedKey, messageId, qq, status);
+                }
+            }
+        }
+        
+        if (request != null) {
+            logger.info("Matched verify request for QQ: {}, status: {}", qq, status);
             request.getCallback().onResponse(status, responseMessage);
         } else {
-            logger.warn("No pending verify request found for messageId: {} or QQ mismatch (expected: {}, got: {})", 
-                messageId, request != null ? request.getQq() : "null", qq);
+            logger.warn("No pending verify request found for messageId: {} or QQ: {}. Response may be delayed or duplicate. Status: {}", 
+                messageId, qq, status);
         }
     }
     
@@ -473,6 +567,9 @@ public class ThirdPartyApiWebSocketService {
             if (connector.isOpen()) {
                 try {
                     connector.sendMessageWithoutLog(messageStr);
+                } catch (java.lang.IllegalStateException e) {
+                    logger.warn("WebSocket state conflict when sending to ThirdPartyApi [{}]: {}, message type: {}", 
+                        connector.getSid(), e.getMessage(), message.getType().getName());
                 } catch (IOException e) {
                     logger.error("Error sending message to ThirdPartyApi [{}]: {}", 
                         connector.getSid(), e.getMessage());
@@ -484,20 +581,25 @@ public class ThirdPartyApiWebSocketService {
     /**
      * 调度超时任务
      * 
+     * 使用共享线程池，避免频繁创建Timer导致资源泄漏
+     * 每个超时任务都是独立的，支持多用户并发验证互不干扰
+     * 
      * @param messageId 消息ID（用于日志）
      * @param timeoutMs 超时时间（毫秒）
      * @param timeoutTask 超时回调任务
      * @param logMessage 超时日志消息
      */
     private void scheduleTimeout(String messageId, long timeoutMs, Runnable timeoutTask, String logMessage) {
-        new java.util.Timer().schedule(
-            new java.util.TimerTask() {
-                @Override
-                public void run() {
+        timeoutScheduler.schedule(
+            () -> {
+                try {
                     timeoutTask.run();
+                } catch (Exception e) {
+                    logger.error("Error executing timeout task for messageId {}: {}", messageId, e.getMessage(), e);
                 }
             },
-            timeoutMs
+            timeoutMs,
+            TimeUnit.MILLISECONDS
         );
     }
     

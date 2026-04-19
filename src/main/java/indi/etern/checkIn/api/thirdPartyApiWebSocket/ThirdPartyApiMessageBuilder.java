@@ -79,12 +79,13 @@ public final class ThirdPartyApiMessageBuilder {
      * 用于向第三方API询问是否需要验证指定QQ号
      * 
      * @param qq QQ号码
+     * @param messageId 消息ID（由调用方传入，确保请求跟踪一致）
      * @return 验证询问消息
      */
-    public static Message<Map<String, Object>> createQQVerifyCheck(String qq) {
+    public static Message<Map<String, Object>> createQQVerifyCheck(String qq, String messageId) {
         Map<String, Object> data = new HashMap<>();
         data.put("qq", qq);
-        return Message.of(ThirdPartyApiMessageTypes.QQ_VERIFY_CHECK, UUIDv7.randomUUID().toString(), data);
+        return Message.of(ThirdPartyApiMessageTypes.QQ_VERIFY_CHECK, messageId, data);
     }
     
     /**
@@ -94,13 +95,14 @@ public final class ThirdPartyApiMessageBuilder {
      * 
      * @param qq QQ号码
      * @param verifyContent 验证内容（如验证码、验证链接等）
+     * @param messageId 消息ID（由调用方传入，确保请求跟踪一致）
      * @return 验证请求消息
      */
-    public static Message<Map<String, Object>> createQQVerifyRequest(String qq, String verifyContent) {
+    public static Message<Map<String, Object>> createQQVerifyRequest(String qq, String verifyContent, String messageId) {
         Map<String, Object> data = new HashMap<>();
         data.put("qq", qq);
         data.put("verify_content", verifyContent);
-        return Message.of(ThirdPartyApiMessageTypes.QQ_VERIFY_REQUEST, UUIDv7.randomUUID().toString(), data);
+        return Message.of(ThirdPartyApiMessageTypes.QQ_VERIFY_REQUEST, messageId, data);
     }
     
     /**

@@ -242,27 +242,29 @@ public class ExamController {
                                 SettingItem verifyContentSetting = settingService.getItem("thirdPartyApi.qqVerify", "customStrings");
                                 List<String> customVerifyList = new java.util.ArrayList<>();
                                 
-                                Object rawValue = verifyContentSetting.getValue(Object.class);
-                                if (rawValue instanceof List) {
-                                    List<?> list = (List<?>) rawValue;
-                                    for (Object obj : list) {
-                                        if (obj != null) {
-                                            String str = obj.toString();
-                                            if (!str.isEmpty()) {
-                                                customVerifyList.add(str);
+                                if (verifyContentSetting != null) {
+                                    Object rawValue = verifyContentSetting.getValue(Object.class);
+                                    if (rawValue instanceof List) {
+                                        List<?> list = (List<?>) rawValue;
+                                        for (Object obj : list) {
+                                            if (obj != null) {
+                                                String str = obj.toString();
+                                                if (!str.isEmpty()) {
+                                                    customVerifyList.add(str);
+                                                }
                                             }
                                         }
-                                    }
-                                } else if (rawValue instanceof String) {
-                                    String jsonStr = (String) rawValue;
-                                    if (!jsonStr.isEmpty() && !jsonStr.equals("[]")) {
-                                        List<?> parsed = objectMapper.readValue(jsonStr, List.class);
-                                        if (parsed != null) {
-                                            for (Object obj : parsed) {
-                                                if (obj != null) {
-                                                    String str = obj.toString();
-                                                    if (!str.isEmpty()) {
-                                                        customVerifyList.add(str);
+                                    } else if (rawValue instanceof String) {
+                                        String jsonStr = (String) rawValue;
+                                        if (!jsonStr.isEmpty() && !jsonStr.equals("[]")) {
+                                            List<?> parsed = objectMapper.readValue(jsonStr, List.class);
+                                            if (parsed != null) {
+                                                for (Object obj : parsed) {
+                                                    if (obj != null) {
+                                                        String str = obj.toString();
+                                                        if (!str.isEmpty()) {
+                                                            customVerifyList.add(str);
+                                                        }
                                                     }
                                                 }
                                             }
@@ -276,7 +278,7 @@ public class ExamController {
                                     verifyContent = generateRandomVerifyCode();
                                 }
                             } catch (Exception e) {
-                                logger.warn("Failed to get custom strings setting", e);
+                                logger.warn("Failed to get custom strings setting, using random code", e);
                                 verifyContent = generateRandomVerifyCode();
                             }
                             
@@ -284,89 +286,37 @@ public class ExamController {
                             String guideMessage = "请按照以下步骤进行验证：\n1. 打开验证页面\n2. 输入验证内容\n3. 点击验证按钮";
                             try {
                                 SettingItem guideMessageSetting = settingService.getItem("thirdPartyApi.qqVerify", "guideMessage");
-                                String guideMsgValue = guideMessageSetting.getValue(String.class);
-                                if (guideMsgValue != null && !guideMsgValue.isEmpty()) {
-                                    guideMessage = guideMsgValue;
+                                if (guideMessageSetting != null) {
+                                    String guideMsgValue = guideMessageSetting.getValue(String.class);
+                                    if (guideMsgValue != null && !guideMsgValue.isEmpty()) {
+                                        guideMessage = guideMsgValue;
+                                    }
                                 }
                             } catch (Exception e) {
-                                logger.warn("Failed to get guide message setting", e);
+                                logger.warn("Failed to get guide message setting, using default", e);
                             }
                             
-                            // 第二步：发送验证请求并等待结果
-                            final CountDownLatch verifyLatch = new CountDownLatch(1);
-                            final AtomicReference<String> verifyStatus = new AtomicReference<>();
-                            final AtomicReference<String> verifyMessage = new AtomicReference<>();
-                            
+                            // 第二步：发送验证请求（异步，不等待结果）
                             thirdPartyApiWebSocketService.sendQQVerifyRequest(qqStr, verifyContent, new indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService.VerifyRequest.VerifyCallback() {
                                 @Override
                                 public void onResponse(String status, String message) {
-                                    verifyStatus.set(status);
-                                    verifyMessage.set(message);
-                                    verifyLatch.countDown();
+                                    // 验证完成，通知前端
+                                    sendVerifyResultToFrontend(qqStr, status, message);
                                 }
                                 
                                 @Override
                                 public void onTimeout() {
-                                    verifyStatus.set("timeout");
-                                    verifyMessage.set("验证超时");
-                                    verifyLatch.countDown();
+                                    // 验证超时，通知前端
+                                    sendVerifyResultToFrontend(qqStr, "timeout", "验证操作超时，请重新验证");
                                 }
                             });
                             
-                            // 等待验证响应，最多2分钟
-                            boolean verifyWaited = verifyLatch.await(2, java.util.concurrent.TimeUnit.MINUTES);
-                            
-                            if (!verifyWaited) {
-                                // 超时 - 通知前端
-                                sendVerifyResultToFrontend(qqStr, "timeout", "验证操作超时，请重新验证");
-                                
-                                Map<String, Object> errorDataMap = new HashMap<>();
-                                errorDataMap.put("type", "error");
-                                errorDataMap.put("description", "验证操作超时，请重新验证");
-                                errorDataMap.put("exceptionType", "QQVerifyTimeout");
-                                return objectMapper.writeValueAsString(errorDataMap);
-                            }
-                            
-                            // 处理验证结果
-                            String status = verifyStatus.get();
-                            String msg = verifyMessage.get();
-                            
-                            switch (status) {
-                                case "success" -> {
-                                    // 验证成功，继续生成试题
-                                    logger.info("QQ verification succeeded for QQ: {}", qqStr);
-                                }
-                                case "failed" -> {
-                                    // 通知前端验证失败
-                                    sendVerifyResultToFrontend(qqStr, "failed", msg != null ? msg : "验证失败，请重新验证");
-                                    
-                                    Map<String, Object> errorDataMap = new HashMap<>();
-                                    errorDataMap.put("type", "error");
-                                    errorDataMap.put("description", msg != null ? msg : "验证失败，请重新验证");
-                                    errorDataMap.put("exceptionType", "QQVerifyFailed");
-                                    return objectMapper.writeValueAsString(errorDataMap);
-                                }
-                                case "cannot_verify" -> {
-                                    // 通知前端无法验证
-                                    sendVerifyResultToFrontend(qqStr, "cannot_verify", msg != null ? msg : "服务异常，请坐和放宽，稍后再试");
-                                    
-                                    Map<String, Object> errorDataMap = new HashMap<>();
-                                    errorDataMap.put("type", "error");
-                                    errorDataMap.put("description", msg != null ? msg : "服务异常，请坐和放宽，稍后再试");
-                                    errorDataMap.put("exceptionType", "QQVerifyCannotVerify");
-                                    return objectMapper.writeValueAsString(errorDataMap);
-                                }
-                                default -> {
-                                    // 其他状态，视为失败
-                                    sendVerifyResultToFrontend(qqStr, "failed", msg != null ? msg : "验证失败");
-                                    
-                                    Map<String, Object> errorDataMap = new HashMap<>();
-                                    errorDataMap.put("type", "error");
-                                    errorDataMap.put("description", msg != null ? msg : "验证失败");
-                                    errorDataMap.put("exceptionType", "QQVerifyFailed");
-                                    return objectMapper.writeValueAsString(errorDataMap);
-                                }
-                            }
+                            // 立即返回验证数据给前端，让前端显示验证对话框
+                            Map<String, Object> verifyDataMap = new HashMap<>();
+                            verifyDataMap.put("type", "verify_required");
+                            verifyDataMap.put("verify_content", verifyContent);
+                            verifyDataMap.put("guide_message", guideMessage);
+                            return objectMapper.writeValueAsString(verifyDataMap);
                         }
                     }
                 }

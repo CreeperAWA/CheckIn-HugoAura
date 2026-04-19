@@ -115,6 +115,173 @@ const formatTime = (timeStr) => {
 
 ## 4. 功能API
 
+### ⚠️ 重要规范说明（第三方客户端开发者必读）
+
+本章节列出了所有第三方客户端必须遵循的核心规范，违反这些规范将导致验证流程失败或多用户并发问题。
+
+#### 4.0.1 MessageID 处理规范 🔴 关键
+
+**核心原则：回复消息时必须使用与请求相同的 messageId**
+
+当服务端发送消息给第三方客户端时，会携带一个唯一的 `messageId`（UUID格式）。第三方客户端在回复该消息时，**必须在响应中使用相同的 messageId**，以便服务端正确匹配请求和响应。
+
+**正确示例**：
+
+```
+服务端发送 → 客户端:
+{
+  "type": "qq_verify_check",
+  "messageId": "550e8400-e29b-41d4-a716-446655440000",  ← 服务端生成的ID
+  "data": { "qq": "123456789" }
+}
+
+客户端回复 → 服务端:
+{
+  "type": "qq_verify_check_response",
+  "messageId": "550e8400-e29b-41d4-a716-446655440000",  ← 必须使用相同的ID
+  "data": { "qq": "123456789", "need_verify": true }
+}
+```
+
+**错误示例（会导致请求/响应脱节）**：
+
+```
+客户端回复 → 服务端:
+{
+  "type": "qq_verify_check_response",
+  "messageId": "新的-uuid-自己生成的",  ← ❌ 错误！不能使用新的messageId
+  "data": { "qq": "123456789", "need_verify": true }
+}
+```
+
+**为什么重要**：
+- 服务端使用 `messageId` 来追踪和匹配待处理的请求
+- 如果客户端使用不同的 `messageId`，服务端将无法找到对应的待处理请求
+- 这会导致请求超时、验证失败、用户体验受损
+
+**例外情况**：
+- 当客户端主动发送消息（如黑名单更新通知）时，应生成新的 `messageId`
+- 当客户端回复服务端的请求时，必须使用请求中的 `messageId`
+
+#### 4.0.2 多用户并发处理规范 🔴 关键
+
+**核心原则：支持同时处理多个用户的验证请求，互不干扰**
+
+服务端可能同时有多个用户在答题验证，每个用户都有独立的验证流程。第三方客户端必须能够正确处理并发验证场景。
+
+**并发场景示例**：
+
+```
+时间 T0: 用户A(123456789) 点击生成题目
+  → 服务端发送: { "type": "qq_verify_check", "messageId": "uuid-A-1", "data": { "qq": "123456789" } }
+
+时间 T1: 用户B(987654321) 点击生成题目
+  → 服务端发送: { "type": "qq_verify_check", "messageId": "uuid-B-1", "data": { "qq": "987654321" } }
+
+时间 T2: 客户端回复 A 的验证询问
+  → 客户端发送: { "type": "qq_verify_check_response", "messageId": "uuid-A-1", "data": { "qq": "123456789", "need_verify": true } }
+
+时间 T3: 客户端回复 B 的验证询问
+  → 客户端发送: { "type": "qq_verify_check_response", "messageId": "uuid-B-1", "data": { "qq": "987654321", "need_verify": true } }
+```
+
+**实现要求**：
+1. **独立追踪每个验证请求**：使用 `messageId` 或 `qq` 字段区分不同用户
+2. **并发处理**：不要阻塞或串行化验证流程，应支持并行处理
+3. **正确路由响应**：确保每个验证结果返回给对应的用户
+4. **独立超时管理**：每个验证请求应有独立的超时计时器
+
+**客户端实现建议**：
+
+```javascript
+// JavaScript 伪代码示例
+class QQVerificationHandler {
+  constructor() {
+    this.pendingVerifications = new Map(); // messageId -> verification context
+  }
+
+  // 接收服务端的验证询问
+  onQQVerifyCheck(message) {
+    const { messageId, data } = message;
+    const qq = data.qq;
+    
+    // 创建验证上下文
+    const context = {
+      messageId,
+      qq,
+      startTime: Date.now()
+    };
+    
+    // 存储待处理验证
+    this.pendingVerifications.set(messageId, context);
+    
+    // 异步处理验证逻辑（不阻塞其他请求）
+    this.processVerification(qq, messageId);
+  }
+
+  // 异步处理验证
+  async processVerification(qq, messageId) {
+    // 设置独立超时（2分钟）
+    const timeout = setTimeout(() => {
+      this.sendVerifyResponse(messageId, qq, 'timeout');
+    }, 2 * 60 * 1000);
+    
+    try {
+      // 执行验证逻辑...
+      const result = await doVerify(qq);
+      clearTimeout(timeout);
+      this.sendVerifyResponse(messageId, qq, result ? 'success' : 'failed');
+    } catch (error) {
+      clearTimeout(timeout);
+      this.sendVerifyResponse(messageId, qq, 'cannot_verify');
+    }
+  }
+
+  // 发送验证响应（使用相同的 messageId）
+  sendVerifyResponse(messageId, qq, status) {
+    const response = {
+      type: 'qq_verify_response',
+      messageId: messageId,  // ⚠️ 必须使用请求中的 messageId
+      data: {
+        qq,
+        status
+      }
+    };
+    websocket.send(JSON.stringify(response));
+  }
+}
+```
+
+#### 4.0.3 响应时效性规范
+
+| 消息类型 | 建议响应时间 | 超时时间 | 说明 |
+|---------|------------|---------|------|
+| `qq_verify_check` | < 1秒 | 30秒 | 验证询问应立即响应 |
+| `qq_verify_request` | 用户操作 | 2分钟 | 取决于用户完成验证的时间 |
+
+**注意事项**：
+- `qq_verify_check` 响应越快，用户体验越好
+- `qq_verify_request` 超时由客户端控制，建议在2分钟后自动发送 `timeout` 状态
+- 超时后不应再发送其他状态，避免状态混乱
+
+#### 4.0.4 错误处理规范
+
+当遇到以下情况时，应返回相应的状态码：
+
+| 情况 | 状态码 | 说明 |
+|------|-------|------|
+| 用户验证成功 | `success` | 用户按要求完成验证 |
+| 用户验证失败 | `failed` | 用户输入错误或拒绝验证 |
+| 验证超时 | `timeout` | 用户未在时限内完成验证 |
+| 服务异常 | `cannot_verify` | 客户端自身异常，无法执行验证 |
+
+**重要**：
+- 每个验证请求**必须且只能**返回一次响应
+- 不应重复发送相同验证请求的响应
+- 超时后发送的响应应标记为最终状态
+
+---
+
 ### 4.1 黑名单管理
 
 #### 4.1.1 完整黑名单列表推送
@@ -173,6 +340,8 @@ const formatTime = (timeStr) => {
 
 ### 4.2 QQ号验证
 
+> **⚠️ 重要提示**：在实现 QQ 号验证之前，请务必阅读 [4.0.1 MessageID 处理规范](#401-messageid-处理规范--关键) 和 [4.0.2 多用户并发处理规范](#402-多用户并发处理规范--关键)，这是验证功能正常工作的基础要求。
+
 #### 4.2.1 验证询问请求
 
 **触发时机**：用户点击生成题目后，服务端在试题生成前向第三方客户端发送验证询问
@@ -208,6 +377,8 @@ const formatTime = (timeStr) => {
 **字段说明**：
 - `need_verify`：`true` 表示需要验证，`false` 表示不需要验证
 
+> **⚠️ 关键**：`messageId` 必须与接收到的 `qq_verify_check` 消息中的 `messageId` 相同，否则服务端无法正确匹配请求！详见 [4.0.1 MessageID 处理规范](#401-messageid-处理规范--关键)
+
 #### 4.2.3 验证请求
 
 **触发时机**：当第三方客户端返回需要验证（`need_verify: true`）后，服务端向第三方客户端发送验证请求
@@ -242,6 +413,11 @@ const formatTime = (timeStr) => {
 }
 ```
 
+**字段说明**：
+- `status`：验证状态，取值见下方说明
+
+> **⚠️ 关键**：`messageId` 必须与接收到的 `qq_verify_request` 消息中的 `messageId` 相同，否则服务端无法正确匹配请求！详见 [4.0.1 MessageID 处理规范](#401-messageid-处理规范--关键)
+
 **status 字段说明**：
 - `success`：验证成功，用户通过验证
 - `failed`：验证失败，用户未通过验证
@@ -274,6 +450,55 @@ const formatTime = (timeStr) => {
    - **验证超时（timeout）**：关闭验证窗口，提示用户"验证操作超时，请重新验证"，返回生成题目页面
    - **无法验证（cannot_verify）**：关闭验证窗口，提示用户"服务异常，请坐和放宽，稍后再试"，返回生成题目页面
 8. 第三方客户端应实现自动超时处理机制，在用户未能手动完成验证时，在2分钟后自动发送验证失败消息至服务端
+
+#### 4.2.6 常见问题排查
+
+**问题1：验证请求超时，日志显示"No pending verify check request found"**
+
+**症状**：
+```
+[WARN] No pending verify check request found for messageId: xxx or QQ: xxx
+```
+
+**原因**：
+- 客户端回复的 `messageId` 与请求中的 `messageId` 不匹配
+- 响应延迟超过30秒超时时间
+
+**解决方案**：
+1. 检查客户端代码，确保回复时使用请求中的 `messageId`
+2. 打印日志对比发送和接收的 `messageId`
+3. 确保响应在超时时间内发送
+
+**问题2：多用户同时验证时出现混乱**
+
+**症状**：
+- 用户A的验证结果显示给用户B
+- 并发验证时部分验证失败
+
+**原因**：
+- 客户端没有正确追踪每个验证请求
+- 使用全局变量而非Map存储验证上下文
+
+**解决方案**：
+1. 使用 Map 结构存储验证上下文，key 为 `messageId`
+2. 确保每个验证请求独立处理，不共享状态
+3. 参考 [4.0.2 多用户并发处理规范](#402-多用户并发处理规范--关键) 中的示例代码
+
+**问题3：WebSocket TEXT_FULL_WRITING 错误**
+
+**症状**：
+```
+java.lang.IllegalStateException: The remote endpoint was in state [TEXT_FULL_WRITING]
+```
+
+**原因**：
+- 并发发送消息导致WebSocket状态冲突
+- 发送缓冲区已满
+
+**解决方案**：
+1. 客户端应确保消息发送的串行化
+2. 避免在同一时刻发送多条消息
+3. 实现消息队列，按顺序发送
 
 ### 4.3 消息通知
 
