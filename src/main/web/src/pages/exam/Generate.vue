@@ -46,53 +46,153 @@ const qqNumber = ref();
 const loadingExam = ref(false);
 
 let verifyResultUnregister = null;
-let verifyTimeoutTimer = null;
+let wsDisconnectTimer = null;
+let isVerifying = false;
 
 const startExam = () => {
-    generateExam();
+    startExamGenerationFlow();
 };
 
-const generateExam = () => {
-    loadingExam.value = true;
+const startExamGenerationFlow = () => {
+    console.log("[Exam Generation] Starting exam generation flow");
+    console.log("[Exam Generation] QQ:", qqNumber.value);
+    console.log("[Exam Generation] Selected partition IDs:", selectedPartitionIds.value);
     
-    proxy.$http.post("generate", {
-        qq: qqNumber.value,
-        partitionIds: selectedPartitionIds.value,
-        turnstileToken: token.value
-    }).then((data) => {
-        if (data.type === "verify_required") {
-            // 需要验证，显示验证对话框
+    loadingExam.value = true;
+    isVerifying = true;
+    
+    verifyResultUnregister = WebSocketConnector.registerAction("qq_verify_result", handleVerifyResult);
+    
+    const messageId = crypto.randomUUID();
+    WebSocketConnector.send({
+        type: "start_qq_verify",
+        messageId: messageId,
+        data: {
+            qq: String(qqNumber.value)
+        }
+    }).then((response) => {
+        if (response.type === "error") {
             loadingExam.value = false;
-            verifyGuideMessage.value = data.guide_message || "请进行QQ号验证";
-            verifyContent.value = data.verify_content;
-            showVerifyDialog.value = true;
-            verifyLoading.value = true;
-            
-            // 注册验证结果监听器
-            verifyResultUnregister = WebSocketConnector.registerAction("qq_verify_result", handleVerifyResult);
-            
-            // 设置验证超时定时器（2分钟）
-            verifyTimeoutTimer = setTimeout(() => {
-                handleVerifyTimeout();
-            }, 2 * 60 * 1000);
-        } else if (data.type !== "error") {
-            // 生成题目成功，跳转到答题页面
-            clearVerifyTimer();
+            isVerifying = false;
+            ElMessage({
+                type: "error",
+                message: "启动验证失败：" + (response.data?.message || "未知错误")
+            });
+            reset();
+        }
+    }).catch((err) => {
+        loadingExam.value = false;
+        isVerifying = false;
+        ElMessage({
+            type: "error",
+            message: "启动验证异常" + ((err && err.message) ? err.message : "")
+        });
+        reset();
+    });
+};
+
+const startWsDisconnectMonitor = () => {
+    clearWsDisconnectTimer();
+    
+    wsDisconnectTimer = setTimeout(() => {
+        if (isVerifying && (!WebSocketConnector.ws || WebSocketConnector.ws.readyState !== WebSocket.OPEN)) {
             loadingExam.value = false;
+            isVerifying = false;
+            showVerifyDialog.value = false;
+            verifyLoading.value = false;
             
-            proxy.$cookies.set("examInfo", JSON.stringify(data), "7d");
-            proxy.$cookies.set("phase", "examine", "7d");
-            proxy.$cookies.remove("submissions");
-            proxy.$cookies.remove("timestamps");
-            router.push({name: "examine"});
-        } else {
-            // 错误处理
-            clearVerifyTimer();
+            ElMessageBox.alert(
+                "验证系统连接异常，请重新验证",
+                "验证系统异常", {
+                    type: "error",
+                    draggable: true,
+                    showClose: false,
+                    confirmButtonText: "确定"
+                }
+            );
+            reset();
+        }
+    }, 10 * 1000);
+};
+
+const clearWsDisconnectTimer = () => {
+    if (wsDisconnectTimer) {
+        clearTimeout(wsDisconnectTimer);
+        wsDisconnectTimer = null;
+    }
+};
+
+const handleVerifyResult = (message) => {
+    const resultData = message.data;
+    const status = resultData.status;
+    
+    console.log("[Verify] Received result:", resultData);
+    
+    if (status === "verify_check_result") {
+        loadingExam.value = false;
+        
+        try {
+            const checkData = typeof resultData.message === 'string' ? JSON.parse(resultData.message) : resultData.message;
+            
+            if (checkData.type === "verify_required") {
+                verifyGuideMessage.value = checkData.guide_message || "请进行QQ号验证";
+                verifyContent.value = checkData.verify_content;
+                showVerifyDialog.value = true;
+                verifyLoading.value = true;
+                startWsDisconnectMonitor();
+            } else if (checkData.type === "no_verify_needed") {
+                showVerifyDialog.value = false;
+                verifyLoading.value = false;
+                isVerifying = false;
+                clearWsDisconnectTimer();
+                generateExamAfterVerify();
+            } else if (checkData.type === "error") {
+                showVerifyDialog.value = false;
+                verifyLoading.value = false;
+                loadingExam.value = false;
+                isVerifying = false;
+                clearWsDisconnectTimer();
+                ElMessage({
+                    type: "error",
+                    message: checkData.message || "验证询问出错"
+                });
+                reset();
+            }
+        } catch (e) {
+            console.error("解析验证检查结果失败", e);
             loadingExam.value = false;
+            isVerifying = false;
+            clearWsDisconnectTimer();
+            ElMessage({
+                type: "error",
+                message: "验证检查结果解析失败"
+            });
+            reset();
+        }
+        return;
+    }
+    
+    if (status === "verify_result") {
+        try {
+            const verifyData = typeof resultData.message === 'string' ? JSON.parse(resultData.message) : resultData.message;
+            const verifyStatus = verifyData.status;
             
-            if (data.exceptionType === "QQVerifyFailed") {
+            verifyLoading.value = false;
+            showVerifyDialog.value = false;
+            loadingExam.value = false;
+            isVerifying = false;
+            clearWsDisconnectTimer();
+            
+            if (verifyStatus === "success") {
+                ElMessage({
+                    type: "success",
+                    message: "验证成功，正在生成题目...",
+                    duration: 2000
+                });
+                generateExamAfterVerify();
+            } else if (verifyStatus === "failed") {
                 ElMessageBox.alert(
-                    data.description || "验证失败，请重新验证",
+                    verifyData.message || "验证失败，请重新验证",
                     "验证失败", {
                         type: "error",
                         draggable: true,
@@ -101,9 +201,9 @@ const generateExam = () => {
                     }
                 );
                 reset();
-            } else if (data.exceptionType === "QQVerifyTimeout") {
+            } else if (verifyStatus === "timeout") {
                 ElMessageBox.alert(
-                    data.description || "验证操作超时，请重新验证",
+                    verifyData.message || "验证操作超时，请重新验证",
                     "验证超时", {
                         type: "error",
                         draggable: true,
@@ -112,9 +212,9 @@ const generateExam = () => {
                     }
                 );
                 reset();
-            } else if (data.exceptionType === "QQVerifyCannotVerify") {
+            } else if (verifyStatus === "cannot_verify") {
                 ElMessageBox.alert(
-                    data.description || "服务异常，请坐和放宽，稍后再试",
+                    verifyData.message || "服务异常，请坐和放宽，稍后再试",
                     "服务异常", {
                         type: "error",
                         draggable: true,
@@ -123,97 +223,55 @@ const generateExam = () => {
                     }
                 );
                 reset();
-            } else {
-                reset();
-                ElMessageBox.alert(
-                    data.description ? data.description : data.exceptionType,
-                    "生成题目时出错", {
-                        type: "error",
-                        draggable: true,
-                        showClose: false,
-                        confirmButtonText: "返回修改生成选项"
-                    }
-                );
             }
+        } catch (e) {
+            console.error("解析验证结果失败", e);
+            loadingExam.value = false;
+            isVerifying = false;
+            clearWsDisconnectTimer();
+            ElMessage({
+                type: "error",
+                message: "验证结果解析失败"
+            });
+            reset();
+        }
+    }
+};
+
+const generateExamAfterVerify = () => {
+    loadingExam.value = true;
+    
+    proxy.$http.post("generate", {
+        qq: qqNumber.value,
+        partitionIds: selectedPartitionIds.value,
+        turnstileToken: token.value
+    }).then((data) => {
+        console.log("[Generate] Exam generated:", data);
+        loadingExam.value = false;
+        
+        if (data.type === "error") {
+            handleGenerateError(data);
+        } else {
+            proxy.$cookies.set("examInfo", JSON.stringify(data), "7d");
+            proxy.$cookies.set("phase", "examine", "7d");
+            proxy.$cookies.remove("submissions");
+            proxy.$cookies.remove("timestamps");
+            router.push({name: "examine"});
         }
     }, (err) => {
-        clearVerifyTimer();
+        console.error("[Generate] Request failed:", err);
         loadingExam.value = false;
         ElMessage({
             type: "error",
             message: "生成题目时出错" + ((err && err.message) ? err.message : "")
         });
+        reset();
     });
 };
 
-const handleVerifyResult = (message) => {
-    const resultData = message.data;
-    
-    verifyLoading.value = false;
-    showVerifyDialog.value = false;
-    
-    clearVerifyTimer();
-    
-    if (resultData.status === "success") {
-        // 验证成功，重新调用生成题目接口
-        generateExam();
-    } else if (resultData.status === "failed") {
-        ElMessageBox.alert(
-            resultData.message || "验证失败，请重新验证",
-            "验证失败", {
-                type: "error",
-                draggable: true,
-                showClose: false,
-                confirmButtonText: "确定"
-            }
-        );
-        reset();
-    } else if (resultData.status === "timeout") {
-        ElMessageBox.alert(
-            resultData.message || "验证操作超时，请重新验证",
-            "验证超时", {
-                type: "error",
-                draggable: true,
-                showClose: false,
-                confirmButtonText: "确定"
-            }
-        );
-        reset();
-    } else if (resultData.status === "cannot_verify") {
-        ElMessageBox.alert(
-            resultData.message || "服务异常，请坐和放宽，稍后再试",
-            "服务异常", {
-                type: "error",
-                draggable: true,
-                showClose: false,
-                confirmButtonText: "确定"
-            }
-        );
-        reset();
-    }
-};
-
-const handleVerifyTimeout = () => {
-    clearVerifyTimer();
-    loadingExam.value = false;
-    
-    ElMessageBox.alert(
-        "验证操作超时，请重新验证",
-        "验证超时", {
-            type: "error",
-            draggable: true,
-            showClose: false,
-            confirmButtonText: "确定"
-        }
-    );
-    reset();
-};
-
 const clearVerifyTimer = () => {
-    if (verifyTimeoutTimer) {
-        clearTimeout(verifyTimeoutTimer);
-        verifyTimeoutTimer = null;
-    }
+    clearWsDisconnectTimer();
+    isVerifying = false;
     if (verifyResultUnregister) {
         verifyResultUnregister.unregister();
         verifyResultUnregister = null;
@@ -248,17 +306,63 @@ proxy.$http.get("check-turnstile").then((resp) => {
 
 onErrorCaptured((e) => {
     if (e.name === "TurnstileError") {
-        // Turnstile 被禁用后的内部报错，可忽略
         console.trace("turnstile disabled", e);
         return false;
     }
 })
 
-// QQ验证相关
 const showVerifyDialog = ref(false);
 const verifyGuideMessage = ref("");
 const verifyContent = ref("");
 const verifyLoading = ref(false);
+
+const handleGenerateError = (data) => {
+    if (data.exceptionType === "QQVerifyFailed") {
+        ElMessageBox.alert(
+            data.description || "验证失败，请重新验证",
+            "验证失败", {
+                type: "error",
+                draggable: true,
+                showClose: false,
+                confirmButtonText: "确定"
+            }
+        );
+        reset();
+    } else if (data.exceptionType === "QQVerifyTimeout") {
+        ElMessageBox.alert(
+            data.description || "验证操作超时，请重新验证",
+            "验证超时", {
+                type: "error",
+                draggable: true,
+                showClose: false,
+                confirmButtonText: "确定"
+            }
+        );
+        reset();
+    } else if (data.exceptionType === "QQVerifyCannotVerify") {
+        ElMessageBox.alert(
+            data.description || "服务异常，请坐和放宽，稍后再试",
+            "服务异常", {
+                type: "error",
+                draggable: true,
+                showClose: false,
+                confirmButtonText: "确定"
+            }
+        );
+        reset();
+    } else {
+        reset();
+        ElMessageBox.alert(
+            data.description ? data.description : data.exceptionType,
+            "生成题目时出错", {
+                type: "error",
+                draggable: true,
+                showClose: false,
+                confirmButtonText: "返回修改生成选项"
+            }
+        );
+    }
+};
 
 const loadingIconIndex = ref(-1);
 

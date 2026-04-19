@@ -44,6 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -73,6 +74,18 @@ public class ExamController {
     private final BlacklistService blacklistService;
     private final AnswerLimitService answerLimitService;
     private final indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService;
+    
+    /**
+     * 已验证的QQ号缓存（内存缓存，JVM重启后清空）
+     * key: QQ号, value: 验证通过的时间戳
+     * 验证成功后，该QQ号在一定时间内（默认24小时）可免验证生成题目
+     */
+    private static final ConcurrentHashMap<String, Long> verifiedQQCache = new ConcurrentHashMap<>();
+    
+    /**
+     * 验证有效期（毫秒），默认24小时
+     */
+    private static final long VERIFY_VALID_DURATION = 24 * 60 * 60 * 1000L;
 
     public ExamController(PartitionService partitionService, ActionExecutor actionExecutor, ExamGenerator examGenerator,
                           ExamDataService examDataService, ObjectMapper objectMapper, QuestionStatisticService questionStatisticService,
@@ -99,6 +112,9 @@ public class ExamController {
     @PostMapping(path = "/api/generate")
     @Transactional(noRollbackFor = Throwable.class)
     public String generateExam(@RequestBody GenerateRequest generateRequest, HttpServletRequest httpServletRequest) throws JsonProcessingException {
+        logger.info("Received generate exam request for QQ: {}, partitionIds: {}", 
+            generateRequest.qq, generateRequest.partitionIds);
+        
         Cookie examTokenCookie = Arrays.stream(httpServletRequest.getCookies())
                 .filter(c -> c.getName().equals("examToken")).findFirst().orElseThrow(IllegalStateException::new);
         String examToken = examTokenCookie.getValue();
@@ -152,186 +168,8 @@ public class ExamController {
                 return objectMapper.writeValueAsString(errorDataMap);
             }
             
-            // QQ号验证 - 两步流程
-            try {
-                SettingItem qqVerifyEnabled = settingService.getItem("thirdPartyApi.qqVerify", "enabled");
-                Boolean verifyEnabled = null;
-                try {
-                    verifyEnabled = qqVerifyEnabled.getValue(Boolean.class);
-                } catch (Exception e) {
-                    logger.warn("Failed to get qqVerifyEnabled setting, defaulting to false", e);
-                    verifyEnabled = false;
-                }
-                
-                logger.info("QQ verification enabled status: {}", verifyEnabled);
-                
-                if (Boolean.TRUE.equals(verifyEnabled)) {
-                    // 检查是否在白名单中
-                    List<String> whitelist = Collections.emptyList();
-                    try {
-                        SettingItem whitelistSetting = settingService.getItem("thirdPartyApi.qqVerify", "whitelist");
-                        List<?> whitelistRaw = whitelistSetting.getValue(List.class);
-                        if (whitelistRaw != null) {
-                            whitelist = whitelistRaw.stream()
-                                    .map(obj -> obj != null ? obj.toString() : "")
-                                    .filter(str -> !str.isEmpty())
-                                    .collect(java.util.stream.Collectors.toList());
-                        }
-                    } catch (Exception e) {
-                        logger.warn("Failed to get whitelist setting", e);
-                    }
-                    
-                    String qqStr = String.valueOf(generateRequest.qq);
-                    logger.info("Checking QQ {} against whitelist: {}", qqStr, whitelist);
-                    
-                    if (!whitelist.contains(qqStr)) {
-                        logger.info("QQ {} not in whitelist, proceeding with verification check", qqStr);
-                        
-                        // 检查是否有第三方API客户端连接
-                        boolean hasThirdPartyConnected = !indi.etern.checkIn.api.thirdPartyApiWebSocket.ThirdPartyApiConnector.CONNECTORS.isEmpty();
-                        
-                        logger.info("QQ verification - hasThirdPartyConnected: {}, thirdParty connectors count: {}", 
-                                hasThirdPartyConnected, 
-                                indi.etern.checkIn.api.thirdPartyApiWebSocket.ThirdPartyApiConnector.CONNECTORS.size());
-                        
-                        if (!hasThirdPartyConnected) {
-                            // 没有客户端连接，返回错误
-                            Map<String, Object> errorDataMap = new HashMap<>();
-                            errorDataMap.put("type", "error");
-                            errorDataMap.put("description", "无可用的验证客户端");
-                            errorDataMap.put("exceptionType", "NoVerifyClient");
-                            return objectMapper.writeValueAsString(errorDataMap);
-                        }
-                        
-                        // 第一步：发送验证询问
-                        final CountDownLatch checkLatch = new CountDownLatch(1);
-                        final AtomicReference<Boolean> needVerifyRef = new AtomicReference<>(false);
-                        
-                        thirdPartyApiWebSocketService.sendQQVerifyCheck(qqStr, new indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService.VerifyCheckRequest.VerifyCheckCallback() {
-                            @Override
-                            public void onResponse(Boolean needVerify) {
-                                needVerifyRef.set(needVerify);
-                                checkLatch.countDown();
-                            }
-                            
-                            @Override
-                            public void onTimeout() {
-                                logger.warn("QQ verify check timeout for QQ: {}", qqStr);
-                                needVerifyRef.set(true);
-                                checkLatch.countDown();
-                            }
-                        });
-                        
-                        // 等待验证询问响应，最多30秒
-                        boolean checkWaited = checkLatch.await(30, java.util.concurrent.TimeUnit.SECONDS);
-                        if (!checkWaited) {
-                            logger.warn("QQ verify check latch timeout, assuming need verify for QQ: {}", qqStr);
-                            needVerifyRef.set(true);
-                        }
-                        
-                        boolean needVerify = needVerifyRef.get();
-                        logger.info("QQ verify check result for QQ {}: need_verify = {}", qqStr, needVerify);
-                        
-                        if (!needVerify) {
-                            // 不需要验证，继续生成试题
-                            logger.info("QQ {} does not need verification, proceeding to generate exam", qqStr);
-                        } else {
-                            // 需要验证，生成验证内容
-                            String verifyContent;
-                            try {
-                                SettingItem verifyContentSetting = settingService.getItem("thirdPartyApi.qqVerify", "customStrings");
-                                List<String> customVerifyList = new java.util.ArrayList<>();
-                                
-                                if (verifyContentSetting != null) {
-                                    Object rawValue = verifyContentSetting.getValue(Object.class);
-                                    if (rawValue instanceof List) {
-                                        List<?> list = (List<?>) rawValue;
-                                        for (Object obj : list) {
-                                            if (obj != null) {
-                                                String str = obj.toString();
-                                                if (!str.isEmpty()) {
-                                                    customVerifyList.add(str);
-                                                }
-                                            }
-                                        }
-                                    } else if (rawValue instanceof String) {
-                                        String jsonStr = (String) rawValue;
-                                        if (!jsonStr.isEmpty() && !jsonStr.equals("[]")) {
-                                            List<?> parsed = objectMapper.readValue(jsonStr, List.class);
-                                            if (parsed != null) {
-                                                for (Object obj : parsed) {
-                                                    if (obj != null) {
-                                                        String str = obj.toString();
-                                                        if (!str.isEmpty()) {
-                                                            customVerifyList.add(str);
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                
-                                if (!customVerifyList.isEmpty()) {
-                                    verifyContent = customVerifyList.get(new Random().nextInt(customVerifyList.size()));
-                                } else {
-                                    verifyContent = generateRandomVerifyCode();
-                                }
-                            } catch (Exception e) {
-                                logger.warn("Failed to get custom strings setting, using random code", e);
-                                verifyContent = generateRandomVerifyCode();
-                            }
-                            
-                            // 获取引导提示信息
-                            String guideMessage = "请按照以下步骤进行验证：\n1. 打开验证页面\n2. 输入验证内容\n3. 点击验证按钮";
-                            try {
-                                SettingItem guideMessageSetting = settingService.getItem("thirdPartyApi.qqVerify", "guideMessage");
-                                if (guideMessageSetting != null) {
-                                    String guideMsgValue = guideMessageSetting.getValue(String.class);
-                                    if (guideMsgValue != null && !guideMsgValue.isEmpty()) {
-                                        guideMessage = guideMsgValue;
-                                    }
-                                }
-                            } catch (Exception e) {
-                                logger.warn("Failed to get guide message setting, using default", e);
-                            }
-                            
-                            // 第二步：发送验证请求（异步，不等待结果）
-                            thirdPartyApiWebSocketService.sendQQVerifyRequest(qqStr, verifyContent, new indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService.VerifyRequest.VerifyCallback() {
-                                @Override
-                                public void onResponse(String status, String message) {
-                                    // 验证完成，通知前端
-                                    sendVerifyResultToFrontend(qqStr, status, message);
-                                }
-                                
-                                @Override
-                                public void onTimeout() {
-                                    // 验证超时，通知前端
-                                    sendVerifyResultToFrontend(qqStr, "timeout", "验证操作超时，请重新验证");
-                                }
-                            });
-                            
-                            // 立即返回验证数据给前端，让前端显示验证对话框
-                            Map<String, Object> verifyDataMap = new HashMap<>();
-                            verifyDataMap.put("type", "verify_required");
-                            verifyDataMap.put("verify_content", verifyContent);
-                            verifyDataMap.put("guide_message", guideMessage);
-                            return objectMapper.writeValueAsString(verifyDataMap);
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("QQ verification failed, blocking exam generation", e);
-                Map<String, Object> errorDataMap = new HashMap<>();
-                errorDataMap.put("type", "error");
-                errorDataMap.put("description", "QQ号验证系统异常：" + e.getMessage());
-                errorDataMap.put("exceptionType", "QQVerifyError");
-                try {
-                    return objectMapper.writeValueAsString(errorDataMap);
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
+            // QQ验证应在前端通过WebSocket完成，此处不再检查
+            // 前端应在调用此接口前完成验证，或者通过后端的startVerificationFlow完成完整验证流程
             
             List<Integer> range = null;
             try {

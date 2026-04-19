@@ -508,6 +508,196 @@ public class ThirdPartyApiWebSocketService {
     }
     
     /**
+     * 启动验证流程（由前端通过WebSocket触发）
+     * 
+     * 完整流程：
+     * 1. 发送 qq_verify_check 给第三方
+     * 2. 第三方返回是否需要验证
+     * 3. 如果需要验证：
+     *    a. 发送 qq_verify_request 给第三方
+     *    b. 推送验证数据给前端（显示验证窗口）
+     *    c. 第三方返回验证结果
+     *    d. 推送验证结果给前端
+     * 4. 如果不需要验证，前端直接调用HTTP接口生成试题
+     * 
+     * @param userConnector 用户WebSocket连接器
+     * @param userQQ 用户QQ号
+     * @param requestMessage 请求消息
+     */
+    public void startVerificationFlow(
+        indi.etern.checkIn.api.webSocket.Connector userConnector, 
+        String userQQ, 
+        JsonRawMessage requestMessage
+    ) {
+        logger.info("Starting verification flow for QQ: {}", userQQ);
+        
+        // 检查是否有第三方API客户端连接
+        if (indi.etern.checkIn.api.thirdPartyApiWebSocket.ThirdPartyApiConnector.CONNECTORS.isEmpty()) {
+            sendVerifyResultToUser(userConnector, "error", "无可用的验证客户端");
+            return;
+        }
+        
+        // 发送验证询问给第三方
+        sendQQVerifyCheck(userQQ, new VerifyCheckRequest.VerifyCheckCallback() {
+            @Override
+            public void onResponse(Boolean needVerify) {
+                logger.info("QQ verify check response for QQ {}: need_verify = {}", userQQ, needVerify);
+                
+                try {
+                    if (needVerify) {
+                        // 需要验证，生成验证内容
+                        String verifyContent = generateRandomVerifyCode();
+                        String guideMessage = "请按照以下步骤进行验证：\n1. 按照提示完成验证\n2. 验证完成后系统将自动生成试题";
+                        
+                        // 推送验证数据给前端，显示验证窗口
+                        Map<String, Object> verifyData = new HashMap<>();
+                        verifyData.put("type", "verify_required");
+                        verifyData.put("verify_content", verifyContent);
+                        verifyData.put("guide_message", guideMessage);
+                        
+                        try {
+                            sendToUserRaw(userConnector, "qq_verify_result", "verify_check_result", objectMapper.writeValueAsString(verifyData));
+                        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                            logger.error("Failed to serialize verify data", e);
+                            sendVerifyResultToUser(userConnector, "error", "验证数据序列化失败");
+                        }
+                        
+                        // 发送验证请求给第三方
+                        sendQQVerifyRequest(userQQ, verifyContent, new VerifyRequest.VerifyCallback() {
+                            @Override
+                            public void onResponse(String status, String message) {
+                                // 验证完成，处理结果
+                                if ("success".equals(status)) {
+                                    // 验证成功，加入缓存
+                                    try {
+                                        Class<?> examControllerClass = Class.forName("indi.etern.checkIn.controller.rest.ExamController");
+                                        java.lang.reflect.Field cacheField = examControllerClass.getDeclaredField("verifiedQQCache");
+                                        cacheField.setAccessible(true);
+                                        @SuppressWarnings("unchecked")
+                                        java.util.concurrent.ConcurrentHashMap<String, Long> cache = 
+                                            (java.util.concurrent.ConcurrentHashMap<String, Long>) cacheField.get(null);
+                                        cache.put(userQQ, System.currentTimeMillis());
+                                        logger.info("QQ {} verification succeeded, added to cache", userQQ);
+                                    } catch (Exception e) {
+                                        logger.error("Failed to add QQ to verified cache", e);
+                                    }
+                                }
+                                
+                                // 推送验证结果给前端
+                                sendVerifyResultToUser(userConnector, status, message);
+                            }
+                            
+                            @Override
+                            public void onTimeout() {
+                                sendVerifyResultToUser(userConnector, "timeout", "验证操作超时，请重新验证");
+                            }
+                        });
+                    } else {
+                        // 不需要验证，通知前端可以直接生成试题
+                        Map<String, Object> noVerifyData = new HashMap<>();
+                        noVerifyData.put("type", "no_verify_needed");
+                        try {
+                            sendToUserRaw(userConnector, "qq_verify_result", "verify_check_result", objectMapper.writeValueAsString(noVerifyData));
+                        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                            logger.error("Failed to serialize no-verify data", e);
+                            sendVerifyResultToUser(userConnector, "error", "验证数据序列化失败");
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.error("Error processing verify check response", e);
+                    sendVerifyResultToUser(userConnector, "error", "验证询问处理异常");
+                }
+            }
+            
+            @Override
+            public void onTimeout() {
+                logger.warn("QQ verify check timeout for QQ: {}", userQQ);
+                sendVerifyResultToUser(userConnector, "error", "验证询问超时，请重试");
+            }
+        });
+    }
+    
+    /**
+     * 发送验证结果给用户（简化版本，直接发送状态和消息）
+     */
+    private void sendVerifyResultToUser(indi.etern.checkIn.api.webSocket.Connector connector, String status, String message) {
+        Map<String, Object> resultData = new HashMap<>();
+        resultData.put("status", status);
+        resultData.put("message", message);
+        
+        try {
+            sendToUserRaw(connector, "qq_verify_result", "verify_result", objectMapper.writeValueAsString(resultData));
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            logger.error("Failed to serialize verify result", e);
+            // 如果序列化失败，尝试直接发送简单消息
+            try {
+                sendToUserRaw(connector, "qq_verify_result", "error", "{\"status\":\"error\",\"message\":\"验证结果序列化失败\"}");
+            } catch (Exception ex) {
+                logger.error("Failed to send fallback error message", ex);
+            }
+        }
+    }
+    
+    /**
+     * 向用户WebSocket连接发送已序列化的消息
+     */
+    private void sendToUserRaw(indi.etern.checkIn.api.webSocket.Connector connector, String type, String status, String messageJson) throws com.fasterxml.jackson.core.JsonProcessingException {
+        Map<String, Object> data = new HashMap<>();
+        data.put("status", status);
+        data.put("message", messageJson);
+        
+        indi.etern.checkIn.api.webSocket.Message<Map<String, Object>> resultMessage = 
+            indi.etern.checkIn.api.webSocket.Message.of(type, data);
+        
+        if (connector.isOpen()) {
+            try {
+                connector.sendMessage(resultMessage);
+                logger.debug("Sent {} message to user connector, status: {}", type, status);
+            } catch (java.io.IOException e) {
+                logger.error("Failed to send message to user connector", e);
+                throw new RuntimeException("发送消息失败", e);
+            }
+        } else {
+            logger.warn("User connector is closed, cannot send message");
+        }
+    }
+    
+    /**
+     * 向用户WebSocket连接发送消息
+     */
+    @Deprecated
+    @SneakyThrows
+    private void sendToUser(indi.etern.checkIn.api.webSocket.Connector connector, String type, String status, String message) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("status", status);
+        data.put("message", message);
+        
+        indi.etern.checkIn.api.webSocket.Message<Map<String, Object>> resultMessage = 
+            indi.etern.checkIn.api.webSocket.Message.of(type, data);
+        
+        if (connector.isOpen()) {
+            connector.sendMessage(resultMessage);
+            logger.debug("Sent {} message to user connector, status: {}", type, status);
+        } else {
+            logger.warn("User connector is closed, cannot send message");
+        }
+    }
+    
+    /**
+     * 生成随机验证代码（12位，包含大小写英文字母）
+     * @return 随机验证代码
+     */
+    private String generateRandomVerifyCode() {
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        StringBuilder sb = new StringBuilder(12);
+        java.util.Random random = new java.util.Random();
+        for (int i = 0; i < 12; i++) {
+            sb.append(characters.charAt(random.nextInt(characters.length())));
+        }
+        return sb.toString();
+    }
+    
+    /**
      * 发送通用通知消息
      * 
      * @param type 通知类型
