@@ -30,7 +30,7 @@ let backupJSON;
 
 const parseCustomStrings = () => {
     try {
-        const val = settings.value['thirdPartyApi.qqVerify.customStrings'];
+        const val = settings.value['qqVerify.customStrings'];
         let strings;
         if (typeof val === 'string') {
             strings = JSON.parse(val || '[]');
@@ -53,7 +53,7 @@ const parseCustomStrings = () => {
 
 const syncCustomStrings = () => {
     const strings = customStringsList.value.map(item => item.content);
-    settings.value['thirdPartyApi.qqVerify.customStrings'] = JSON.stringify(strings);
+    settings.value['qqVerify.customStrings'] = JSON.stringify(strings);
 };
 
 const addCustomString = () => {
@@ -206,8 +206,8 @@ const getSettings = () => {
         type: "getThirdPartyApiSetting"
     }).then((response) => {
         settings.value = response.data.data || {};
-        if (settings.value['thirdPartyApi.qqVerify.validDays'] === undefined || settings.value['thirdPartyApi.qqVerify.validDays'] === null) {
-            settings.value['thirdPartyApi.qqVerify.validDays'] = 3;
+        if (settings.value['qqVerify.validDays'] === undefined || settings.value['qqVerify.validDays'] === null) {
+            settings.value['qqVerify.validDays'] = 3;
         }
         customStringsList.value = parseCustomStrings();
         thirdPartyApiTokenItems.value = settings.value.thirdPartyApiTokenItems || [];
@@ -252,33 +252,33 @@ onMounted(() => {
                     <el-text size="large" style="font-weight: bold;margin-bottom: 16px;display: block">QQ验证设置</el-text>
                     <el-form label-position="top">
                         <el-form-item label="启用 QQ 号验证">
-                            <el-switch v-model="settings['thirdPartyApi.qqVerify.enabled']" :disabled="!hasManagePermission || !editing"/>
+                            <el-switch v-model="settings['qqVerify.enabled']" :disabled="!hasManagePermission || !editing"/>
                         </el-form-item>
-                        <template v-if="settings['thirdPartyApi.qqVerify.enabled']">
+                        <template v-if="settings['qqVerify.enabled']">
                             <el-form-item label="验证有效期（天）">
-                                <el-input-number v-model="settings['thirdPartyApi.qqVerify.validDays']" :min="1" :max="365" :disabled="!hasManagePermission || !editing"/>
+                                <el-input-number v-model="settings['qqVerify.validDays']" :min="1" :max="365" :disabled="!hasManagePermission || !editing"/>
                             </el-form-item>
                             <el-form-item label="超时处理方式">
                                 <transition name="blur-scale" mode="out-in">
-                                    <el-segmented :options="timeoutOptionValues" v-if="editing" v-model="settings['thirdPartyApi.qqVerify.timeoutAction']">
+                                    <el-segmented :options="timeoutOptionValues" v-if="editing" v-model="settings['qqVerify.timeoutAction']">
                                         <template #default="{item}">
                                             <el-text>{{ timeoutOptionNames[item] }}</el-text>
                                         </template>
                                     </el-segmented>
                                     <span v-else style="border: 1px solid var(--el-border-color);border-radius: 8px;padding: 4px 12px;display: inline-block;">
-                                        <el-text style="text-wrap: wrap;word-break: break-all">{{ timeoutOptionNames[settings['thirdPartyApi.qqVerify.timeoutAction']] || timeoutOptionNames.fail }}</el-text>
+                                        <el-text style="text-wrap: wrap;word-break: break-all">{{ timeoutOptionNames[settings['qqVerify.timeoutAction']] || timeoutOptionNames.fail }}</el-text>
                                     </span>
                                 </transition>
                             </el-form-item>
                             <el-form-item label="无法验证处理方式">
                                 <transition name="blur-scale" mode="out-in">
-                                    <el-segmented :options="cannotVerifyOptionValues" v-if="editing" v-model="settings['thirdPartyApi.qqVerify.cannotVerifyAction']">
+                                    <el-segmented :options="cannotVerifyOptionValues" v-if="editing" v-model="settings['qqVerify.cannotVerifyAction']">
                                         <template #default="{item}">
                                             <el-text>{{ cannotVerifyOptionNames[item] }}</el-text>
                                         </template>
                                     </el-segmented>
                                     <span v-else style="border: 1px solid var(--el-border-color);border-radius: 8px;padding: 4px 12px;display: inline-block;">
-                                        <el-text style="text-wrap: wrap;word-break: break-all">{{ cannotVerifyOptionNames[settings['thirdPartyApi.qqVerify.cannotVerifyAction']] || cannotVerifyOptionNames.skip }}</el-text>
+                                        <el-text style="text-wrap: wrap;word-break: break-all">{{ cannotVerifyOptionNames[settings['qqVerify.cannotVerifyAction']] || cannotVerifyOptionNames.skip }}</el-text>
                                     </span>
                                 </transition>
                             </el-form-item>
@@ -304,7 +304,7 @@ onMounted(() => {
                             </el-form-item>
                             <el-form-item label="验证引导提示">
                                 <el-input
-                                    v-model="settings['thirdPartyApi.qqVerify.guideMessage']"
+                                    v-model="settings['qqVerify.guideMessage']"
                                     type="textarea"
                                     :rows="4"
                                     placeholder="验证页面显示的引导提示内容，支持换行"

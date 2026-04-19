@@ -45,8 +45,7 @@ const qqNumber = ref();
 
 const loadingExam = ref(false);
 
-let pendingVerifyData = null;
-let verifyUnregister = null;
+let verifyResultUnregister = null;
 let verifyTimeoutTimer = null;
 
 const startExam = () => {
@@ -56,17 +55,11 @@ const startExam = () => {
 const generateExam = () => {
     loadingExam.value = true;
     
-    verifyUnregister = WebSocketConnector.registerAction("qq_verify_request", handleQQVerifyRequest);
-    
-    pendingVerifyData = {
-        qq: qqNumber.value,
-        serverMessageId: null,
-        isProcessing: false
-    };
+    verifyResultUnregister = WebSocketConnector.registerAction("qq_verify_result", handleVerifyResult);
     
     verifyTimeoutTimer = setTimeout(() => {
         handleVerifyTimeout();
-    }, 3 * 60 * 1000);
+    }, 2 * 60 * 1000);
     
     proxy.$http.post("generate", {
         qq: qqNumber.value,
@@ -84,88 +77,40 @@ const generateExam = () => {
             router.push({name: "examine"});
         } else {
             if (data.exceptionType === "QQVerifyRequired") {
-                // 需要验证，显示验证对话框
                 verifyGuideMessage.value = data.guide_message || "请进行QQ号验证";
                 verifyContent.value = data.verify_content;
-                pendingVerifyData = {
-                    qq: data.qq,
-                    serverMessageId: null,
-                    isProcessing: false
-                };
                 showVerifyDialog.value = true;
                 verifyLoading.value = true;
-                loadingExam.value = false;
-                
-                // 监听验证结果（通过WebSocket通知）
-                const handleVerifyResult = (message) => {
-                    const resultData = message.data;
-                    if (resultData.qq === pendingVerifyData?.qq) {
-                        verifyLoading.value = false;
-                        showVerifyDialog.value = false;
-                        
-                        if (resultData.status === "success") {
-                            // 验证成功，重新生成试题
-                            generateExam();
-                        } else if (resultData.status === "failed") {
-                            ElMessageBox.alert(
-                                resultData.message || "验证失败，请重新验证",
-                                "验证失败", {
-                                    type: "error",
-                                    draggable: true,
-                                    showClose: false,
-                                    confirmButtonText: "确定"
-                                }
-                            );
-                            reset();
-                        } else if (resultData.status === "timeout") {
-                            ElMessageBox.alert(
-                                resultData.message || "验证操作超时，请重新验证",
-                                "验证超时", {
-                                    type: "error",
-                                    draggable: true,
-                                    showClose: false,
-                                    confirmButtonText: "确定"
-                                }
-                            );
-                            reset();
-                        } else if (resultData.status === "cannot_verify") {
-                            ElMessageBox.alert(
-                                resultData.message || "服务异常，请坐和放宽，稍后再试",
-                                "服务异常", {
-                                    type: "error",
-                                    draggable: true,
-                                    showClose: false,
-                                    confirmButtonText: "确定"
-                                }
-                            );
-                            reset();
-                        }
-                        
-                        verifyResultUnregister?.unregister();
-                    }
-                };
-                
-                const { unregister: verifyResultUnregister } = WebSocketConnector.registerAction("qq_verify_result", handleVerifyResult);
-                
             } else if (data.exceptionType === "QQVerifyFailed") {
                 ElMessageBox.alert(
-                    data.description || "未能通过QQ号验证",
+                    data.description || "验证失败，请重新验证",
                     "验证失败", {
                         type: "error",
                         draggable: true,
                         showClose: false,
-                        confirmButtonText: "返回修改生成选项"
+                        confirmButtonText: "确定"
                     }
                 );
                 reset();
             } else if (data.exceptionType === "QQVerifyTimeout") {
                 ElMessageBox.alert(
-                    data.description || "QQ号验证超时",
+                    data.description || "验证操作超时，请重新验证",
                     "验证超时", {
                         type: "error",
                         draggable: true,
                         showClose: false,
-                        confirmButtonText: "返回修改生成选项"
+                        confirmButtonText: "确定"
+                    }
+                );
+                reset();
+            } else if (data.exceptionType === "QQVerifyCannotVerify") {
+                ElMessageBox.alert(
+                    data.description || "服务异常，请坐和放宽，稍后再试",
+                    "服务异常", {
+                        type: "error",
+                        draggable: true,
+                        showClose: false,
+                        confirmButtonText: "确定"
                     }
                 );
                 reset();
@@ -192,89 +137,53 @@ const generateExam = () => {
     });
 };
 
-const handleQQVerifyRequest = (message) => {
-    const requestData = message.data;
-    if (pendingVerifyData && requestData.qq === String(pendingVerifyData.qq)) {
-        if (pendingVerifyData.isProcessing) {
-            return;
-        }
-        pendingVerifyData.isProcessing = true;
-        pendingVerifyData.serverMessageId = message.messageId;
-        
-        verifyGuideMessage.value = requestData.guide_message || "请进行QQ号验证";
-        verifyContent.value = requestData.verify_content;
-        showVerifyDialog.value = true;
-        verifyLoading.value = true;
-        
-        startAutoTimeout();
-    }
-};
-
-let autoTimeoutTimer = null;
-
-const startAutoTimeout = () => {
-    if (autoTimeoutTimer) {
-        clearTimeout(autoTimeoutTimer);
-    }
-    autoTimeoutTimer = setTimeout(() => {
-        if (showVerifyDialog.value && verifyLoading.value) {
-            sendVerifyResponse("failed", "验证超时");
-        }
-    }, 2 * 60 * 1000);
-};
-
-const sendVerifyResponse = (status, message) => {
-    console.log("sendVerifyResponse called with status:", status, "message:", message);
-    console.log("pendingVerifyData:", pendingVerifyData);
-    
-    if (!pendingVerifyData) {
-        console.warn("pendingVerifyData is null, cannot send response");
-        return;
-    }
-    if (!pendingVerifyData.serverMessageId) {
-        console.warn("serverMessageId is null, cannot send response");
-        return;
-    }
-    
-    console.log("Will send response with messageId:", pendingVerifyData.serverMessageId);
+const handleVerifyResult = (message) => {
+    const resultData = message.data;
     
     verifyLoading.value = false;
     showVerifyDialog.value = false;
     
-    if (autoTimeoutTimer) {
-        clearTimeout(autoTimeoutTimer);
-        autoTimeoutTimer = null;
+    if (verifyTimeoutTimer) {
+        clearTimeout(verifyTimeoutTimer);
+        verifyTimeoutTimer = null;
     }
     
-    const responseMessage = {
-        type: "qq_verify_response",
-        messageId: pendingVerifyData.serverMessageId,
-        data: {
-            qq: pendingVerifyData.qq,
-            status: status,
-            message: message
-        }
-    };
-    
-    console.log("Sending qq_verify_response:", responseMessage);
-    WebSocketConnector.send(responseMessage);
-    console.log("Response sent successfully");
-};
-
-const onVerifySuccess = () => {
-    sendVerifyResponse("success", "验证成功");
-};
-
-const onVerifyFailed = () => {
-    sendVerifyResponse("failed", "验证失败");
-};
-
-const onVerifyNoNeed = () => {
-    sendVerifyResponse("no_need", "无需验证");
-};
-
-const onVerifyCannotVerify = () => {
-    sendVerifyResponse("cannot_verify", "无法进行验证");
+    if (resultData.status === "success") {
+        generateExam();
+    } else if (resultData.status === "failed") {
+        ElMessageBox.alert(
+            resultData.message || "验证失败，请重新验证",
+            "验证失败", {
+                type: "error",
+                draggable: true,
+                showClose: false,
+                confirmButtonText: "确定"
+            }
+        );
+        reset();
+    } else if (resultData.status === "timeout") {
+        ElMessageBox.alert(
+            resultData.message || "验证操作超时，请重新验证",
+            "验证超时", {
+                type: "error",
+                draggable: true,
+                showClose: false,
+                confirmButtonText: "确定"
+            }
+        );
+        reset();
+    } else if (resultData.status === "cannot_verify") {
+        ElMessageBox.alert(
+            resultData.message || "服务异常，请坐和放宽，稍后再试",
+            "服务异常", {
+                type: "error",
+                draggable: true,
+                showClose: false,
+                confirmButtonText: "确定"
+            }
+        );
+        reset();
+    }
 };
 
 const handleVerifyTimeout = () => {
@@ -282,12 +191,12 @@ const handleVerifyTimeout = () => {
     loadingExam.value = false;
     
     ElMessageBox.alert(
-        "QQ号验证超时，等待服务器响应超时",
+        "验证操作超时，请重新验证",
         "验证超时", {
             type: "error",
             draggable: true,
             showClose: false,
-            confirmButtonText: "返回修改生成选项"
+            confirmButtonText: "确定"
         }
     );
     reset();
@@ -298,15 +207,10 @@ const clearVerifyTimer = () => {
         clearTimeout(verifyTimeoutTimer);
         verifyTimeoutTimer = null;
     }
-    if (autoTimeoutTimer) {
-        clearTimeout(autoTimeoutTimer);
-        autoTimeoutTimer = null;
+    if (verifyResultUnregister) {
+        verifyResultUnregister.unregister();
+        verifyResultUnregister = null;
     }
-    if (verifyUnregister) {
-        verifyUnregister.unregister();
-        verifyUnregister = null;
-    }
-    pendingVerifyData = null;
 };
 
 const validate1 = computed(() => selectedPartitionIds.value.length >= props.extraData.partitionRange[0] && selectedPartitionIds.value.length <= props.extraData.partitionRange[1]);
@@ -575,7 +479,7 @@ const switchBinding = (provider, index) => {
                 <el-icon class="is-loading" style="font-size: 32px; margin-right: 16px;">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="currentColor"><path d="M512 0a48 48 0 0 1 48 48v160a48 48 0 0 1-96 0V48a48 48 0 0 1 48-48zM272 192a48 48 0 0 1 48-48h160a48 48 0 0 1 0 96H320a48 48 0 0 1-48-48zm0 256a48 48 0 0 1 48-48h160a48 48 0 0 1 0 96H320a48 48 0 0 1-48-48zm256 0a48 48 0 0 1 48-48h160a48 48 0 0 1 0 96H576a48 48 0 0 1-48-48zm-256 256a48 48 0 0 1 48-48h160a48 48 0 0 1 0 96H320a48 48 0 0 1-48-48zm256 0a48 48 0 0 1 48-48h160a48 48 0 0 1 0 96H576a48 48 0 0 1-48-48zM464 0a48 48 0 0 1 48 48v160a48 48 0 0 1-96 0V48a48 48 0 0 1 48-48z" /></svg>
                 </el-icon>
-                <el-text size="large">等待验证...</el-text>
+                <el-text size="large">等待进行验证</el-text>
             </div>
             <div v-else style="padding: 20px 0;">
                 <div style="margin-bottom: 20px;">
@@ -584,12 +488,6 @@ const switchBinding = (provider, index) => {
                 <div style="margin-top: 20px; padding: 15px; background-color: #f5f7fa; border-radius: 4px;">
                     <el-text type="primary" size="large">验证内容: </el-text>
                     <el-tag type="primary" size="large" style="margin-left: 10px;">{{ verifyContent }}</el-tag>
-                </div>
-                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
-                    <el-button type="success" @click="onVerifySuccess">验证成功</el-button>
-                    <el-button type="info" @click="onVerifyNoNeed">无需验证</el-button>
-                    <el-button type="warning" @click="onVerifyCannotVerify">无法验证</el-button>
-                    <el-button type="danger" @click="onVerifyFailed">验证失败</el-button>
                 </div>
             </div>
         </div>

@@ -9,6 +9,7 @@ import indi.etern.checkIn.action.oauth2.GetOAuth2ProvidersSimpleInfoAction;
 import indi.etern.checkIn.action.partition.GetPartitionsAction;
 import indi.etern.checkIn.action.setting.get.GetFacadeSetting;
 import indi.etern.checkIn.action.setting.get.GetGradingSetting;
+import indi.etern.checkIn.api.webSocket.Message;
 import indi.etern.checkIn.auth.JwtTokenProvider;
 import indi.etern.checkIn.entities.exam.ExamData;
 import indi.etern.checkIn.entities.question.impl.Partition;
@@ -316,7 +317,9 @@ public class ExamController {
                             boolean verifyWaited = verifyLatch.await(2, java.util.concurrent.TimeUnit.MINUTES);
                             
                             if (!verifyWaited) {
-                                // 超时
+                                // 超时 - 通知前端
+                                sendVerifyResultToFrontend(qqStr, "timeout", "验证操作超时，请重新验证");
+                                
                                 Map<String, Object> errorDataMap = new HashMap<>();
                                 errorDataMap.put("type", "error");
                                 errorDataMap.put("description", "验证操作超时，请重新验证");
@@ -334,7 +337,9 @@ public class ExamController {
                                     logger.info("QQ verification succeeded for QQ: {}", qqStr);
                                 }
                                 case "failed" -> {
-                                    // 验证失败
+                                    // 通知前端验证失败
+                                    sendVerifyResultToFrontend(qqStr, "failed", msg != null ? msg : "验证失败，请重新验证");
+                                    
                                     Map<String, Object> errorDataMap = new HashMap<>();
                                     errorDataMap.put("type", "error");
                                     errorDataMap.put("description", msg != null ? msg : "验证失败，请重新验证");
@@ -342,7 +347,9 @@ public class ExamController {
                                     return objectMapper.writeValueAsString(errorDataMap);
                                 }
                                 case "cannot_verify" -> {
-                                    // 无法验证
+                                    // 通知前端无法验证
+                                    sendVerifyResultToFrontend(qqStr, "cannot_verify", msg != null ? msg : "服务异常，请坐和放宽，稍后再试");
+                                    
                                     Map<String, Object> errorDataMap = new HashMap<>();
                                     errorDataMap.put("type", "error");
                                     errorDataMap.put("description", msg != null ? msg : "服务异常，请坐和放宽，稍后再试");
@@ -351,6 +358,8 @@ public class ExamController {
                                 }
                                 default -> {
                                     // 其他状态，视为失败
+                                    sendVerifyResultToFrontend(qqStr, "failed", msg != null ? msg : "验证失败");
+                                    
                                     Map<String, Object> errorDataMap = new HashMap<>();
                                     errorDataMap.put("type", "error");
                                     errorDataMap.put("description", msg != null ? msg : "验证失败");
@@ -766,5 +775,36 @@ public class ExamController {
             sb.append(characters.charAt(random.nextInt(characters.length())));
         }
         return sb.toString();
+    }
+    
+    /**
+     * 向用户发送验证结果通知
+     * 
+     * 通过WebSocket向指定QQ号的用户发送验证结果
+     * 
+     * @param qq QQ号码
+     * @param status 验证状态 (success, failed, timeout, cannot_verify)
+     * @param message 验证消息
+     */
+    private void sendVerifyResultToFrontend(String qq, String status, String message) {
+        try {
+            Map<String, Object> data = new HashMap<>();
+            data.put("qq", qq);
+            data.put("status", status);
+            data.put("message", message);
+            
+            Message<Map<String, Object>> resultMessage = Message.of("qq_verify_result", data);
+            
+            // 查找对应的用户WebSocket连接并发送
+            for (indi.etern.checkIn.api.webSocket.Connector connector : indi.etern.checkIn.api.webSocket.Connector.CONNECTORS) {
+                if (connector.isOpen() && connector.getSid().equals(qq)) {
+                    connector.sendMessage(resultMessage);
+                    logger.info("Sent verify result to frontend, QQ: {}, status: {}", qq, status);
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Failed to send verify result to frontend, QQ: {}", qq, e);
+        }
     }
 }
