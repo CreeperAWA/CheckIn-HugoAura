@@ -78,14 +78,33 @@ public class ExamController {
     /**
      * 已验证的QQ号缓存（内存缓存，JVM重启后清空）
      * key: QQ号, value: 验证通过的时间戳
-     * 验证成功后，该QQ号在一定时间内（默认24小时）可免验证生成题目
+     * 验证成功后，该QQ号在配置的有效期内可免验证生成题目
      */
     private static final ConcurrentHashMap<String, Long> verifiedQQCache = new ConcurrentHashMap<>();
     
     /**
-     * 验证有效期（毫秒），默认24小时
+     * 验证状态缓存（内存缓存，JVM重启后清空）
+     * key: QQ号, value: 验证状态信息
+     * 用于存储验证过程中的状态，供前端查询
      */
-    private static final long VERIFY_VALID_DURATION = 24 * 60 * 60 * 1000L;
+    private static final ConcurrentHashMap<String, VerifyStatusInfo> verifyStatusCache = new ConcurrentHashMap<>();
+    
+    /**
+     * 验证状态信息
+     */
+    private static class VerifyStatusInfo {
+        String status;
+        String guideMessage;
+        String verifyContent;
+        long updatedAt;
+        
+        VerifyStatusInfo(String status, String guideMessage, String verifyContent) {
+            this.status = status;
+            this.guideMessage = guideMessage;
+            this.verifyContent = verifyContent;
+            this.updatedAt = System.currentTimeMillis();
+        }
+    }
 
     public ExamController(PartitionService partitionService, ActionExecutor actionExecutor, ExamGenerator examGenerator,
                           ExamDataService examDataService, ObjectMapper objectMapper, QuestionStatisticService questionStatisticService,
@@ -168,8 +187,73 @@ public class ExamController {
                 return objectMapper.writeValueAsString(errorDataMap);
             }
             
-            // QQ验证应在前端通过WebSocket完成，此处不再检查
-            // 前端应在调用此接口前完成验证，或者通过后端的startVerificationFlow完成完整验证流程
+            // 检查QQ验证是否已完成
+            String qqStr = String.valueOf(generateRequest.qq);
+            try {
+                SettingItem qqVerifyEnabled = settingService.getItem("thirdPartyApi.qqVerify", "enabled");
+                Boolean verifyEnabled = null;
+                try {
+                    verifyEnabled = qqVerifyEnabled.getValue(Boolean.class);
+                } catch (Exception e) {
+                    verifyEnabled = false;
+                }
+                
+                if (Boolean.TRUE.equals(verifyEnabled)) {
+                    // 检查是否在白名单
+                    boolean inWhitelist = false;
+                    try {
+                        SettingItem whitelistSetting = settingService.getItem("thirdPartyApi.qqVerify", "whitelist");
+                        List<?> whitelistRaw = whitelistSetting.getValue(List.class);
+                        if (whitelistRaw != null && !whitelistRaw.isEmpty()) {
+                            for (Object item : whitelistRaw) {
+                                if (qqStr.equals(String.valueOf(item).trim())) {
+                                    inWhitelist = true;
+                                    break;
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        logger.warn("Failed to check whitelist in generateExam", e);
+                    }
+                    
+                    // 检查是否在已验证缓存中
+                    boolean inVerifiedCache = false;
+                    try {
+                        Long verifiedTime = verifiedQQCache.get(qqStr);
+                        if (verifiedTime != null) {
+                            int validDays = 1;
+                            try {
+                                SettingItem validDaysSetting = settingService.getItem("thirdPartyApi.qqVerify", "validDays");
+                                validDays = validDaysSetting.getValue(Integer.class);
+                                if (validDays <= 0) {
+                                    validDays = 1;
+                                }
+                            } catch (Exception e) {
+                                logger.warn("Failed to get validDays setting", e);
+                            }
+                            long validDurationMs = validDays * 24L * 60L * 60L * 1000L;
+                            if ((System.currentTimeMillis() - verifiedTime) < validDurationMs) {
+                                inVerifiedCache = true;
+                            }
+                        }
+                    } catch (Exception e) {
+                        logger.warn("Failed to check verified cache in generateExam", e);
+                    }
+                    
+                    // 如果不在白名单且不在验证缓存中，检查验证状态
+                    if (!inWhitelist && !inVerifiedCache) {
+                        VerifyStatusInfo statusInfo = verifyStatusCache.get(qqStr);
+                        if (statusInfo == null || !"success".equals(statusInfo.status)) {
+                            Map<String, String> errorDataMap = new HashMap<>();
+                            errorDataMap.put("type", "error");
+                            errorDataMap.put("description", "请先完成QQ号验证");
+                            return objectMapper.writeValueAsString(errorDataMap);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to check QQ verification status in generateExam", e);
+            }
             
             List<Integer> range = null;
             try {
@@ -445,34 +529,235 @@ public class ExamController {
             Long qq = Long.valueOf(request.get("qq").toString());
             String qqStr = String.valueOf(qq);
             
+            // 检查是否有第三方API客户端连接
+            if (indi.etern.checkIn.api.thirdPartyApiWebSocket.ThirdPartyApiConnector.CONNECTORS.isEmpty()) {
+                response.put("needVerify", false);
+                response.put("error", "无可用的验证客户端");
+                return response;
+            }
+            
             // 检查验证功能是否启用
             SettingItem qqVerifyEnabled = settingService.getItem("thirdPartyApi.qqVerify", "enabled");
-            if (qqVerifyEnabled.getValue(Boolean.class)) {
-                // 检查是否在白名单中
-                SettingItem whitelistSetting = settingService.getItem("thirdPartyApi.qqVerify", "whitelist");
-                List<String> whitelist = (List<String>) whitelistSetting.getValue(List.class);
-                if (whitelist == null) {
-                    whitelist = Collections.emptyList();
-                }
-                if (!whitelist.contains(qqStr)) {
-                    // 需要验证，返回引导提示信息
-                    String guideMessage = "请按照以下步骤进行验证：\n1. 打开验证页面\n2. 输入验证内容\n3. 点击验证按钮";
-                    try {
-                        SettingItem guideMessageSetting = settingService.getItem("thirdPartyApi.qqVerify", "guideMessage");
-                        guideMessage = guideMessageSetting.getValue(String.class);
-                    } catch (Exception e) {
-                        logger.warn("Failed to get guide message setting", e);
-                    }
-                    response.put("needVerify", true);
-                    response.put("guideMessage", guideMessage);
-                    return response;
-                }
+            Boolean verifyEnabled = null;
+            try {
+                verifyEnabled = qqVerifyEnabled.getValue(Boolean.class);
+            } catch (Exception e) {
+                logger.warn("Failed to get qqVerifyEnabled setting, defaulting to false", e);
+                verifyEnabled = false;
             }
+            
+            if (!Boolean.TRUE.equals(verifyEnabled)) {
+                // 验证功能未启用，不需要验证
+                response.put("needVerify", false);
+                return response;
+            }
+            
+            // 检查是否在白名单中
+            try {
+                SettingItem whitelistSetting = settingService.getItem("thirdPartyApi.qqVerify", "whitelist");
+                List<?> whitelistRaw = whitelistSetting.getValue(List.class);
+                if (whitelistRaw != null && !whitelistRaw.isEmpty()) {
+                    for (Object item : whitelistRaw) {
+                        if (qqStr.equals(String.valueOf(item).trim())) {
+                            // 在白名单中，不需要验证
+                            response.put("needVerify", false);
+                            return response;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to check whitelist", e);
+            }
+            
+            // 检查是否已验证且在有效期内
+            try {
+                Long verifiedTime = verifiedQQCache.get(qqStr);
+                if (verifiedTime != null) {
+                    // 获取配置的有效期（天数）
+                    int validDays = 1; // 默认1天
+                    try {
+                        SettingItem validDaysSetting = settingService.getItem("thirdPartyApi.qqVerify", "validDays");
+                        validDays = validDaysSetting.getValue(Integer.class);
+                        if (validDays <= 0) {
+                            validDays = 1;
+                        }
+                    } catch (Exception e) {
+                        logger.warn("Failed to get validDays setting, using default 1 day", e);
+                    }
+                    
+                    long validDurationMs = validDays * 24L * 60L * 60L * 1000L;
+                    if ((System.currentTimeMillis() - verifiedTime) < validDurationMs) {
+                        // 验证仍在有效期内，不需要验证
+                        response.put("needVerify", false);
+                        return response;
+                    } else {
+                        // 验证已过期，清除缓存
+                        verifiedQQCache.remove(qqStr);
+                    }
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to check verified cache", e);
+            }
+            
+            // 提前生成验证内容，在回调中使用
+            String[] verifyInfo = new String[2];
+            java.util.concurrent.atomic.AtomicReference<String> verifyContentRef = new java.util.concurrent.atomic.AtomicReference<>(generateRandomVerifyCode());
+            java.util.concurrent.atomic.AtomicReference<String> guideMessageRef = new java.util.concurrent.atomic.AtomicReference<>("请按照以下步骤进行验证");
+            
+            // 获取自定义验证字符串列表
+            try {
+                SettingItem customStringsSetting = settingService.getItem("thirdPartyApi.qqVerify", "customStrings");
+                String customStringsJson = customStringsSetting.getValue(String.class);
+                if (customStringsJson != null && !customStringsJson.isBlank()) {
+                    List<String> customStrings = objectMapper.readValue(customStringsJson, objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
+                    if (customStrings != null && !customStrings.isEmpty()) {
+                        java.util.Random random = new java.util.Random();
+                        verifyContentRef.set(customStrings.get(random.nextInt(customStrings.size())));
+                    }
+                }
+            } catch (Exception e) {
+                logger.debug("No custom strings configured, using random code", e);
+            }
+            
+            // 获取引导消息
+            try {
+                SettingItem guideMessageSetting = settingService.getItem("thirdPartyApi.qqVerify", "guideMessage");
+                guideMessageRef.set(guideMessageSetting.getValue(String.class));
+            } catch (Exception e) {
+                logger.debug("Failed to get guide message setting", e);
+            }
+            
+            verifyInfo[0] = verifyContentRef.get();
+            verifyInfo[1] = guideMessageRef.get();
+            
+            // 需要验证，向第三方 WebSocket 服务发送验证询问
+            java.util.concurrent.CountDownLatch checkLatch = new java.util.concurrent.CountDownLatch(1);
+            java.util.concurrent.atomic.AtomicReference<Boolean> needVerifyRef = new java.util.concurrent.atomic.AtomicReference<>(false);
+            
+            thirdPartyApiWebSocketService.sendQQVerifyCheck(qqStr, new indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService.VerifyCheckRequest.VerifyCheckCallback() {
+                @Override
+                public void onResponse(Boolean needVerify) {
+                    needVerifyRef.set(needVerify);
+                    if (needVerify) {
+                        final String verifyContent = verifyContentRef.get();
+                        // 发送验证请求给第三方（不等待完成，立即返回给前端）
+                        thirdPartyApiWebSocketService.sendQQVerifyRequest(qqStr, verifyContent, new indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService.VerifyRequest.VerifyCallback() {
+                            @Override
+                            public void onResponse(String status, String message) {
+                                // 验证成功时加入缓存
+                                if ("success".equals(status)) {
+                                    try {
+                                        int validDays = 1;
+                                        try {
+                                            SettingItem validDaysSetting = settingService.getItem("thirdPartyApi.qqVerify", "validDays");
+                                            validDays = validDaysSetting.getValue(Integer.class);
+                                            if (validDays <= 0) {
+                                                validDays = 1;
+                                            }
+                                        } catch (Exception e) {
+                                            logger.warn("Failed to get validDays setting", e);
+                                        }
+                                        verifiedQQCache.put(qqStr, System.currentTimeMillis());
+                                        logger.info("QQ {} verification succeeded, added to cache", qqStr);
+                                    } catch (Exception e) {
+                                        logger.error("Failed to add QQ to verified cache", e);
+                                    }
+                                }
+                                
+                                // 更新验证状态缓存
+                                String resultGuideMessage = message;
+                                if (resultGuideMessage == null || resultGuideMessage.isBlank()) {
+                                    resultGuideMessage = getDefaultGuideMessageForStatus(status);
+                                }
+                                verifyStatusCache.put(qqStr, new VerifyStatusInfo(status, resultGuideMessage, verifyContent));
+                            }
+                            
+                            @Override
+                            public void onTimeout() {
+                                // 验证超时
+                                verifyStatusCache.put(qqStr, new VerifyStatusInfo("timeout", "验证操作超时，请重新验证", verifyContent));
+                            }
+                        });
+                    }
+                    checkLatch.countDown();
+                }
+                
+                @Override
+                public void onTimeout() {
+                    logger.warn("QQ verify check timeout for QQ: {}", qqStr);
+                    needVerifyRef.set(false);
+                    checkLatch.countDown();
+                }
+            });
+            
+            // 等待验证询问响应（30秒超时）
+            try {
+                checkLatch.await(35, java.util.concurrent.TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.error("Check QQ verify interrupted", e);
+                response.put("needVerify", false);
+                response.put("error", "验证检查被中断");
+                return response;
+            }
+            
+            Boolean needVerify = needVerifyRef.get();
+            if (needVerify != null && needVerify) {
+                response.put("needVerify", true);
+                response.put("guideMessage", verifyInfo[1]);
+                response.put("verifyContent", verifyInfo[0]);
+            } else {
+                response.put("needVerify", false);
+            }
+            
         } catch (Exception e) {
             logger.error("Check QQ verify failed", e);
+            response.put("needVerify", false);
+            response.put("error", "验证检查异常");
         }
-        // 不需要验证
-        response.put("needVerify", false);
+        return response;
+    }
+    
+    /**
+     * 根据验证状态获取默认的引导消息
+     */
+    private String getDefaultGuideMessageForStatus(String status) {
+        return switch (status) {
+            case "failed" -> "验证失败，请重新验证";
+            case "timeout" -> "验证操作超时，请重新验证";
+            case "cannot_verify" -> "服务异常，请坐和放宽，稍后再试";
+            default -> "验证状态未知，请重试";
+        };
+    }
+    
+    @RequestMapping(method = RequestMethod.POST, path = "/api/get-qq-verify-status")
+    public Map<String, Object> getQQVerifyStatus(@RequestBody Map<String, Object> request) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Long qq = Long.valueOf(request.get("qq").toString());
+            String qqStr = String.valueOf(qq);
+            
+            // 检查验证状态缓存
+            VerifyStatusInfo statusInfo = verifyStatusCache.get(qqStr);
+            if (statusInfo != null) {
+                response.put("status", statusInfo.status);
+                response.put("guideMessage", statusInfo.guideMessage);
+                response.put("verifyContent", statusInfo.verifyContent);
+                
+                // 如果是验证成功，清除缓存
+                if ("success".equals(statusInfo.status)) {
+                    verifyStatusCache.remove(qqStr);
+                }
+            } else {
+                // 未找到验证状态，可能是验证尚未开始或已过期
+                response.put("status", "pending");
+                response.put("guideMessage", "验证尚未开始，请稍后再试");
+            }
+        } catch (Exception e) {
+            logger.error("Get QQ verify status failed", e);
+            response.put("status", "error");
+            response.put("guideMessage", "获取验证状态异常");
+        }
         return response;
     }
 

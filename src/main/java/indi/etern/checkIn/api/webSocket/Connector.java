@@ -157,12 +157,15 @@ public class Connector {
                     // 转发给第三方API WebSocket服务处理
                     thirdPartyApiWebSocketService.handleQQVerifyResponseFromUser(this, contextJsonMessage);
                 }
+                case "check_qq_verify" -> {
+                    // 前端询问是否需要QQ验证
+                    logger.info("Received check_qq_verify request from user {}({})", sessionUser.getName(), sessionUser.getQQNumber());
+                    thirdPartyApiWebSocketService.checkQQVerify(this, sid, contextJsonMessage);
+                }
                 case "start_qq_verify" -> {
-                    // 前端发起验证请求，后端开始验证流程
+                    // 前端确认需要验证，后端发送验证请求给第三方
                     logger.info("Received start_qq_verify request from user {}({})", sessionUser.getName(), sessionUser.getQQNumber());
-                    // 先发送成功响应，让前端 Promise resolve
-                    this.sendMessage("{\"type\":\"success\",\"messageId\":\"" + contextJsonMessage.getMessageId() + "\"}");
-                    thirdPartyApiWebSocketService.startVerificationFlow(this, sid, contextJsonMessage);
+                    thirdPartyApiWebSocketService.startQQVerify(this, sid, contextJsonMessage);
                 }
                 default -> {
                     String logMessage = message;

@@ -7,7 +7,9 @@ import indi.etern.checkIn.api.thirdPartyApiWebSocket.ThirdPartyApiMessageTypes;
 import indi.etern.checkIn.api.webSocket.JsonRawMessage;
 import indi.etern.checkIn.api.webSocket.Message;
 import indi.etern.checkIn.entities.blacklist.Blacklist;
+import indi.etern.checkIn.entities.setting.SettingItem;
 import indi.etern.checkIn.repositories.BlacklistRepository;
+import indi.etern.checkIn.service.dao.SettingService;
 import indi.etern.checkIn.utils.UUIDv7;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -55,6 +57,7 @@ public class ThirdPartyApiWebSocketService {
     
     private final ObjectMapper objectMapper;
     private final BlacklistRepository blacklistRepository;
+    private final SettingService settingService;
     
     /**
      * 超时时间常量
@@ -97,10 +100,11 @@ public class ThirdPartyApiWebSocketService {
     @Getter
     private final Map<String, VerifyRequest> pendingVerifyRequests = new ConcurrentHashMap<>();
     
-    protected ThirdPartyApiWebSocketService(ObjectMapper objectMapper, BlacklistRepository blacklistRepository) {
+    protected ThirdPartyApiWebSocketService(ObjectMapper objectMapper, BlacklistRepository blacklistRepository, SettingService settingService) {
         singletonInstance = this;
         this.objectMapper = objectMapper;
         this.blacklistRepository = blacklistRepository;
+        this.settingService = settingService;
         
         // 注册JVM关闭钩子，优雅关闭超时调度线程池
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -508,6 +512,225 @@ public class ThirdPartyApiWebSocketService {
     }
     
     /**
+     * 检查是否需要QQ验证（前端调用）
+     * 
+     * 流程：
+     * 1. 检查是否启用QQ验证
+     * 2. 检查用户是否在白名单或已验证缓存中
+     * 3. 如果需要验证，向第三方发送 qq_verify_check 询问
+     * 4. 返回结果给前端
+     * 
+     * @param userConnector 用户WebSocket连接器
+     * @param userQQ 用户QQ号
+     * @param requestMessage 请求消息
+     */
+    public void checkQQVerify(
+        indi.etern.checkIn.api.webSocket.Connector userConnector, 
+        String userQQ, 
+        JsonRawMessage requestMessage
+    ) {
+        logger.info("Checking QQ verify for QQ: {}", userQQ);
+        
+        // 检查是否有第三方API客户端连接
+        if (indi.etern.checkIn.api.thirdPartyApiWebSocket.ThirdPartyApiConnector.CONNECTORS.isEmpty()) {
+            sendCheckResultToUser(userConnector, false, null, null, "无可用的验证客户端");
+            return;
+        }
+        
+        // 检查是否启用验证
+        try {
+            SettingItem qqVerifyEnabled = settingService.getItem("thirdPartyApi.qqVerify", "enabled");
+            Boolean verifyEnabled = null;
+            try {
+                verifyEnabled = qqVerifyEnabled.getValue(Boolean.class);
+            } catch (Exception e) {
+                logger.warn("Failed to get qqVerifyEnabled setting, defaulting to false", e);
+                verifyEnabled = false;
+            }
+            
+            if (!Boolean.TRUE.equals(verifyEnabled)) {
+                sendCheckResultToUser(userConnector, false, null, null, null);
+                return;
+            }
+            
+            // 检查是否在白名单
+            try {
+                SettingItem whitelistSetting = settingService.getItem("thirdPartyApi.qqVerify", "whitelist");
+                String whitelist = whitelistSetting.getValue(String.class);
+                if (whitelist != null && !whitelist.isBlank()) {
+                    String[] whiteQQs = whitelist.split("[,;，；\\s]+");
+                    for (String whiteQQ : whiteQQs) {
+                        if (whiteQQ.trim().equals(userQQ)) {
+                            sendCheckResultToUser(userConnector, false, null, null, null);
+                            return;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to check whitelist", e);
+            }
+            
+            // 检查是否已验证且在有效期内
+            try {
+                Class<?> examControllerClass = Class.forName("indi.etern.checkIn.controller.rest.ExamController");
+                java.lang.reflect.Field cacheField = examControllerClass.getDeclaredField("verifiedQQCache");
+                cacheField.setAccessible(true);
+                @SuppressWarnings("unchecked")
+                java.util.concurrent.ConcurrentHashMap<String, Long> cache = 
+                    (java.util.concurrent.ConcurrentHashMap<String, Long>) cacheField.get(null);
+                Long verifiedTime = cache.get(userQQ);
+                if (verifiedTime != null && (System.currentTimeMillis() - verifiedTime) < 24 * 60 * 60 * 1000) {
+                    sendCheckResultToUser(userConnector, false, null, null, null);
+                    return;
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to check verified cache", e);
+            }
+            
+            // 需要验证，向第三方询问
+            sendQQVerifyCheck(userQQ, new VerifyCheckRequest.VerifyCheckCallback() {
+                @Override
+                public void onResponse(Boolean needVerify) {
+                    logger.info("QQ verify check response for QQ {}: need_verify = {}", userQQ, needVerify);
+                    
+                    if (needVerify) {
+                        // 需要验证，生成验证内容并发送给第三方
+                        String verifyContent = generateRandomVerifyCode();
+                        String guideMessage = "请按照以下步骤进行验证：\n1. 按照提示完成验证\n2. 等待第三方系统确认\n3. 验证完成后系统将自动生成试题";
+                        
+                        // 先发送验证请求给第三方
+                        sendQQVerifyRequest(userQQ, verifyContent, new VerifyRequest.VerifyCallback() {
+                            @Override
+                            public void onResponse(String status, String message) {
+                                if ("success".equals(status)) {
+                                    try {
+                                        Class<?> examControllerClass = Class.forName("indi.etern.checkIn.controller.rest.ExamController");
+                                        java.lang.reflect.Field cacheField = examControllerClass.getDeclaredField("verifiedQQCache");
+                                        cacheField.setAccessible(true);
+                                        @SuppressWarnings("unchecked")
+                                        java.util.concurrent.ConcurrentHashMap<String, Long> cache = 
+                                            (java.util.concurrent.ConcurrentHashMap<String, Long>) cacheField.get(null);
+                                        cache.put(userQQ, System.currentTimeMillis());
+                                        logger.info("QQ {} verification succeeded, added to cache", userQQ);
+                                    } catch (Exception e) {
+                                        logger.error("Failed to add QQ to verified cache", e);
+                                    }
+                                }
+                                sendVerifyResultToUser(userConnector, status, message);
+                            }
+                            
+                            @Override
+                            public void onTimeout() {
+                                sendVerifyResultToUser(userConnector, "timeout", "验证操作超时，请重新验证");
+                            }
+                        });
+                        
+                        // 然后通知前端显示验证窗口
+                        try {
+                            Map<String, Object> verifyData = new HashMap<>();
+                            verifyData.put("type", "verify_required");
+                            verifyData.put("verify_content", verifyContent);
+                            verifyData.put("guide_message", guideMessage);
+                            sendCheckResultToUserWithData(userConnector, true, verifyData, null);
+                        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                            logger.error("Failed to serialize verify data", e);
+                            sendCheckResultToUser(userConnector, false, null, null, "验证数据序列化失败");
+                        }
+                    } else {
+                        sendCheckResultToUser(userConnector, false, null, null, null);
+                    }
+                }
+                
+                @Override
+                public void onTimeout() {
+                    logger.warn("QQ verify check timeout for QQ: {}", userQQ);
+                    sendCheckResultToUser(userConnector, false, null, null, "验证询问超时，请重试");
+                }
+            });
+            
+        } catch (Exception e) {
+            logger.error("Error checking QQ verify", e);
+            sendCheckResultToUser(userConnector, false, null, null, "验证检查异常");
+        }
+    }
+    
+    /**
+     * 启动QQ验证（前端确认后调用，发送验证请求给第三方）
+     * 
+     * @param userConnector 用户WebSocket连接器
+     * @param userQQ 用户QQ号
+     * @param requestMessage 请求消息
+     */
+    public void startQQVerify(
+        indi.etern.checkIn.api.webSocket.Connector userConnector, 
+        String userQQ, 
+        JsonRawMessage requestMessage
+    ) {
+        logger.info("Starting QQ verify for QQ: {}", userQQ);
+        // 验证流程已经在 checkQQVerify 中启动，这里只需要确认即可
+        // 实际验证结果会通过 qq_verify_result 消息推送给前端
+        Map<String, Object> data = new HashMap<>();
+        data.put("status", "verify_started");
+        data.put("message", "验证已启动，请等待验证结果");
+        
+        try {
+            sendToUserRaw(userConnector, "qq_verify_result", "verify_started", objectMapper.writeValueAsString(data));
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            logger.error("Failed to serialize verify started message", e);
+        }
+    }
+    
+    /**
+     * 发送检查结果给用户
+     */
+    private void sendCheckResultToUser(
+        indi.etern.checkIn.api.webSocket.Connector connector, 
+        Boolean needVerify, 
+        Map<String, Object> data, 
+        String status,
+        String message
+    ) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("need_verify", needVerify);
+        if (data != null) {
+            result.putAll(data);
+        }
+        if (status != null) {
+            result.put("status", status);
+        }
+        if (message != null) {
+            result.put("message", message);
+        }
+        
+        try {
+            sendToUserRaw(connector, "qq_verify_check_result", "success", objectMapper.writeValueAsString(result));
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            logger.error("Failed to serialize check result", e);
+        }
+    }
+    
+    /**
+     * 发送检查结果给用户（带数据）
+     */
+    private void sendCheckResultToUserWithData(
+        indi.etern.checkIn.api.webSocket.Connector connector, 
+        Boolean needVerify, 
+        Map<String, Object> data,
+        String message
+    ) throws com.fasterxml.jackson.core.JsonProcessingException {
+        Map<String, Object> result = new HashMap<>();
+        result.put("need_verify", needVerify);
+        if (data != null) {
+            result.putAll(data);
+        }
+        if (message != null) {
+            result.put("message", message);
+        }
+        
+        sendToUserRaw(connector, "qq_verify_check_result", "success", objectMapper.writeValueAsString(result));
+    }
+    
+    /**
      * 启动验证流程（由前端通过WebSocket触发）
      * 
      * 完整流程：
@@ -524,6 +747,7 @@ public class ThirdPartyApiWebSocketService {
      * @param userQQ 用户QQ号
      * @param requestMessage 请求消息
      */
+    @Deprecated
     public void startVerificationFlow(
         indi.etern.checkIn.api.webSocket.Connector userConnector, 
         String userQQ, 
