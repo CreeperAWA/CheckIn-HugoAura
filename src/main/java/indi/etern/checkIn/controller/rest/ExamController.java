@@ -631,8 +631,8 @@ public class ExamController {
             verifyInfo[1] = guideMessageRef.get();
             
             // 需要验证，向第三方 WebSocket 服务发送验证询问
-            java.util.concurrent.CountDownLatch checkLatch = new java.util.concurrent.CountDownLatch(1);
             java.util.concurrent.atomic.AtomicReference<Boolean> needVerifyRef = new java.util.concurrent.atomic.AtomicReference<>(false);
+            java.util.concurrent.CountDownLatch checkLatch = new java.util.concurrent.CountDownLatch(1);
             
             thirdPartyApiWebSocketService.sendQQVerifyCheck(qqStr, new indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService.VerifyCheckRequest.VerifyCheckCallback() {
                 @Override
@@ -671,33 +671,17 @@ public class ExamController {
                                 }
                                 verifyStatusCache.put(qqStr, new VerifyStatusInfo(status, resultGuideMessage, verifyContent));
                             }
-                            
-                            @Override
-                            public void onTimeout() {
-                                // 验证超时
-                                verifyStatusCache.put(qqStr, new VerifyStatusInfo("timeout", "验证操作超时，请重新验证", verifyContent));
-                            }
                         });
                     }
                     checkLatch.countDown();
                 }
-                
-                @Override
-                public void onTimeout() {
-                    logger.warn("QQ verify check timeout for QQ: {}", qqStr);
-                    needVerifyRef.set(false);
-                    checkLatch.countDown();
-                }
             });
             
-            // 等待验证询问响应（30秒超时）
-            try {
-                checkLatch.await(35, java.util.concurrent.TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                logger.error("Check QQ verify interrupted", e);
+            // 等待验证询问响应（35秒超时）
+            if (!checkLatch.await(35, java.util.concurrent.TimeUnit.SECONDS)) {
+                logger.warn("QQ verify check timeout for QQ: {}", qqStr);
                 response.put("needVerify", false);
-                response.put("error", "验证检查被中断");
+                response.put("error", "验证检查超时");
                 return response;
             }
             
@@ -707,6 +691,9 @@ public class ExamController {
                 response.put("guideMessage", verifyInfo[1]);
                 response.put("verifyContent", verifyInfo[0]);
             } else {
+                // 第三方API返回无需验证，添加验证状态缓存和已验证缓存
+                verifyStatusCache.put(qqStr, new VerifyStatusInfo("success", "无需验证", ""));
+                verifiedQQCache.put(qqStr, System.currentTimeMillis());
                 response.put("needVerify", false);
             }
             
@@ -749,9 +736,9 @@ public class ExamController {
                     verifyStatusCache.remove(qqStr);
                 }
             } else {
-                // 未找到验证状态，可能是验证尚未开始或已过期
+                // 未找到验证状态，可能是用户没有按照引导执行操作
                 response.put("status", "pending");
-                response.put("guideMessage", "验证尚未开始，请稍后再试");
+                response.put("guideMessage", "未找到验证记录，请按照引导操作");
             }
         } catch (Exception e) {
             logger.error("Get QQ verify status failed", e);
@@ -848,36 +835,5 @@ public class ExamController {
             sb.append(characters.charAt(random.nextInt(characters.length())));
         }
         return sb.toString();
-    }
-    
-    /**
-     * 向用户发送验证结果通知
-     * 
-     * 通过WebSocket向指定QQ号的用户发送验证结果
-     * 
-     * @param qq QQ号码
-     * @param status 验证状态 (success, failed, timeout, cannot_verify)
-     * @param message 验证消息
-     */
-    private void sendVerifyResultToFrontend(String qq, String status, String message) {
-        try {
-            Map<String, Object> data = new HashMap<>();
-            data.put("qq", qq);
-            data.put("status", status);
-            data.put("message", message);
-            
-            Message<Map<String, Object>> resultMessage = Message.of("qq_verify_result", data);
-            
-            // 查找对应的用户WebSocket连接并发送
-            for (indi.etern.checkIn.api.webSocket.Connector connector : indi.etern.checkIn.api.webSocket.Connector.CONNECTORS) {
-                if (connector.isOpen() && connector.getSid().equals(qq)) {
-                    connector.sendMessage(resultMessage);
-                    logger.info("Sent verify result to frontend, QQ: {}, status: {}", qq, status);
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Failed to send verify result to frontend, QQ: {}", qq, e);
-        }
     }
 }

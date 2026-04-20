@@ -24,9 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 第三方API WebSocket服务
@@ -60,25 +57,6 @@ public class ThirdPartyApiWebSocketService {
     private final SettingService settingService;
     
     /**
-     * 超时时间常量
-     */
-    private static final long VERIFY_CHECK_TIMEOUT_MS = 30 * 1000; // 30秒
-    private static final long VERIFY_REQUEST_TIMEOUT_MS = 2 * 60 * 1000; // 2分钟
-    
-    /**
-     * 共享的调度线程池，避免频繁创建Timer导致资源泄漏
-     * 核心线程数为2，足以处理所有超时任务
-     */
-    private static final ScheduledExecutorService timeoutScheduler = Executors.newScheduledThreadPool(
-        2, 
-        r -> {
-            Thread t = new Thread(r, "VerifyTimeoutScheduler");
-            t.setDaemon(true);
-            return t;
-        }
-    );
-    
-    /**
      * 等待验证询问响应的请求映射
      * key: 消息ID, value: 验证询问请求
      * 
@@ -105,21 +83,6 @@ public class ThirdPartyApiWebSocketService {
         this.objectMapper = objectMapper;
         this.blacklistRepository = blacklistRepository;
         this.settingService = settingService;
-        
-        // 注册JVM关闭钩子，优雅关闭超时调度线程池
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("Shutting down timeout scheduler...");
-            timeoutScheduler.shutdown();
-            try {
-                if (!timeoutScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
-                    timeoutScheduler.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                timeoutScheduler.shutdownNow();
-                Thread.currentThread().interrupt();
-            }
-            logger.info("Timeout scheduler shut down completed");
-        }));
     }
     
     /**
@@ -142,11 +105,6 @@ public class ThirdPartyApiWebSocketService {
              * @param needVerify 是否需要验证
              */
             void onResponse(Boolean needVerify);
-            
-            /**
-             * 超时时的回调
-             */
-            void onTimeout();
         }
         
         public VerifyCheckRequest(String messageId, String qq, VerifyCheckCallback callback) {
@@ -194,11 +152,6 @@ public class ThirdPartyApiWebSocketService {
              * @param message 响应消息
              */
             void onResponse(String status, String message);
-            
-            /**
-             * 超时时的回调
-             */
-            void onTimeout();
         }
         
         public VerifyRequest(String messageId, String qq, VerifyCallback callback) {
@@ -308,7 +261,6 @@ public class ThirdPartyApiWebSocketService {
      * 发送QQ验证询问（第一步）
      * 
      * 向所有第三方API发送验证询问，询问是否需要验证指定QQ号
-     * 设置30秒超时，超时后自动清理并调用onTimeout回调
      * 
      * @param qq QQ号码
      * @param callback 验证询问回调
@@ -323,17 +275,6 @@ public class ThirdPartyApiWebSocketService {
         
         sendToAllThirdPartyApis(message);
         logger.info("Sent QQ verify check for QQ: {}, messageId: {}", qq, messageId);
-        
-        scheduleTimeout(messageId, VERIFY_CHECK_TIMEOUT_MS, 
-            () -> {
-                VerifyCheckRequest req = pendingVerifyCheckRequests.remove(messageId);
-                if (req != null) {
-                    logger.warn("QQ verify check timeout for QQ: {}, messageId: {}", qq, messageId);
-                    req.getCallback().onTimeout();
-                }
-            },
-            "QQ verify check timeout for QQ: " + qq
-        );
     }
     
     /**
@@ -397,7 +338,6 @@ public class ThirdPartyApiWebSocketService {
      * 发送QQ验证请求（第二步）
      * 
      * 向所有第三方API发送验证请求，请求执行QQ验证
-     * 设置2分钟超时，超时后自动清理并调用onTimeout回调
      * 
      * @param qq QQ号码
      * @param verifyContent 验证内容
@@ -413,17 +353,6 @@ public class ThirdPartyApiWebSocketService {
         
         sendToAllThirdPartyApis(message);
         logger.info("Sent QQ verify request for QQ: {}, messageId: {}", qq, messageId);
-        
-        scheduleTimeout(messageId, VERIFY_REQUEST_TIMEOUT_MS,
-            () -> {
-                VerifyRequest req = pendingVerifyRequests.remove(messageId);
-                if (req != null) {
-                    logger.warn("QQ verify request timeout for QQ: {}, messageId: {}", qq, messageId);
-                    req.getCallback().onTimeout();
-                }
-            },
-            "QQ verify request timeout for QQ: " + qq
-        );
     }
     
     /**
@@ -618,11 +547,6 @@ public class ThirdPartyApiWebSocketService {
                                 }
                                 sendVerifyResultToUser(userConnector, status, message);
                             }
-                            
-                            @Override
-                            public void onTimeout() {
-                                sendVerifyResultToUser(userConnector, "timeout", "验证操作超时，请重新验证");
-                            }
                         });
                         
                         // 然后通知前端显示验证窗口
@@ -639,12 +563,6 @@ public class ThirdPartyApiWebSocketService {
                     } else {
                         sendCheckResultToUser(userConnector, false, null, null, null);
                     }
-                }
-                
-                @Override
-                public void onTimeout() {
-                    logger.warn("QQ verify check timeout for QQ: {}", userQQ);
-                    sendCheckResultToUser(userConnector, false, null, null, "验证询问超时，请重试");
                 }
             });
             
@@ -810,11 +728,6 @@ public class ThirdPartyApiWebSocketService {
                                 // 推送验证结果给前端
                                 sendVerifyResultToUser(userConnector, status, message);
                             }
-                            
-                            @Override
-                            public void onTimeout() {
-                                sendVerifyResultToUser(userConnector, "timeout", "验证操作超时，请重新验证");
-                            }
                         });
                     } else {
                         // 不需要验证，通知前端可以直接生成试题
@@ -831,12 +744,6 @@ public class ThirdPartyApiWebSocketService {
                     logger.error("Error processing verify check response", e);
                     sendVerifyResultToUser(userConnector, "error", "验证询问处理异常");
                 }
-            }
-            
-            @Override
-            public void onTimeout() {
-                logger.warn("QQ verify check timeout for QQ: {}", userQQ);
-                sendVerifyResultToUser(userConnector, "error", "验证询问超时，请重试");
             }
         });
     }
@@ -990,31 +897,6 @@ public class ThirdPartyApiWebSocketService {
                 }
             }
         }
-    }
-    
-    /**
-     * 调度超时任务
-     * 
-     * 使用共享线程池，避免频繁创建Timer导致资源泄漏
-     * 每个超时任务都是独立的，支持多用户并发验证互不干扰
-     * 
-     * @param messageId 消息ID（用于日志）
-     * @param timeoutMs 超时时间（毫秒）
-     * @param timeoutTask 超时回调任务
-     * @param logMessage 超时日志消息
-     */
-    private void scheduleTimeout(String messageId, long timeoutMs, Runnable timeoutTask, String logMessage) {
-        timeoutScheduler.schedule(
-            () -> {
-                try {
-                    timeoutTask.run();
-                } catch (Exception e) {
-                    logger.error("Error executing timeout task for messageId {}: {}", messageId, e.getMessage(), e);
-                }
-            },
-            timeoutMs,
-            TimeUnit.MILLISECONDS
-        );
     }
     
     /**
