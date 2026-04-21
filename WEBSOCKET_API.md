@@ -602,10 +602,16 @@ java.lang.IllegalStateException: The remote endpoint was in state [TEXT_FULL_WRI
     "paper_id": "paper_001",
     "qq": "123456789",
     "rating_id": "rating_001",
-    "score": 90
+    "score": 90,
+    "max_answer_count": 5,
+    "answer_count": 2
   }
 }
 ```
+
+**字段说明**：
+- `max_answer_count`：最大答题次数限制，由服务端设置
+- `answer_count`：用户当前答题次数，按提交成功计算（包括提交成功、注册成功、成绩无效化等情况均计入答题计数，同时包括这次答题）
 
 #### 4.3.6 用户开始考试
 

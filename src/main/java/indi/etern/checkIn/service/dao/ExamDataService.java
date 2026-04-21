@@ -36,8 +36,9 @@ public class ExamDataService {
     private final QuestionStatisticService questionStatisticService;
     private final indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService;
     private final SubmitFrequencyMonitorService submitFrequencyMonitorService;
+    private final AnswerLimitService answerLimitService;
     
-    protected ExamDataService(SettingService settingService, GradingLevelService gradingLevelService, QuestionService questionService, ExamGenerator examGenerator, QuestionStatisticService questionStatisticService, indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService, SubmitFrequencyMonitorService submitFrequencyMonitorService) {
+    protected ExamDataService(SettingService settingService, GradingLevelService gradingLevelService, QuestionService questionService, ExamGenerator examGenerator, QuestionStatisticService questionStatisticService, indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService, SubmitFrequencyMonitorService submitFrequencyMonitorService, AnswerLimitService answerLimitService) {
         singletonInstance = this;
         this.settingService = settingService;
         this.gradingLevelService = gradingLevelService;
@@ -46,6 +47,7 @@ public class ExamDataService {
         this.questionStatisticService = questionStatisticService;
         this.thirdPartyApiWebSocketService = thirdPartyApiWebSocketService;
         this.submitFrequencyMonitorService = submitFrequencyMonitorService;
+        this.answerLimitService = answerLimitService;
     }
     
     public void save(ExamData examData) {
@@ -117,6 +119,8 @@ public class ExamDataService {
                 data.put("score", examResult.getScore());
                 data.put("generate_time", new int[]{examData.getGenerateTime().getYear(), examData.getGenerateTime().getMonthValue(), examData.getGenerateTime().getDayOfMonth(), examData.getGenerateTime().getHour(), examData.getGenerateTime().getMinute(), examData.getGenerateTime().getSecond(), examData.getGenerateTime().getNano()});
                 data.put("submit_time", new int[]{now.getYear(), now.getMonthValue(), now.getDayOfMonth(), now.getHour(), now.getMinute(), now.getSecond(), now.getNano()});
+                data.put("max_answer_count", answerLimitService.getMaxAnswerCount());
+                data.put("answer_count", answerLimitService.getAnswerCount(String.valueOf(examData.getQqNumber())));
                 thirdPartyApiWebSocketService.sendNotification("notification_paper_submit", data);
                 logger.info("Sent paper_submit notification for exam {}", examData.getId());
             } else {
