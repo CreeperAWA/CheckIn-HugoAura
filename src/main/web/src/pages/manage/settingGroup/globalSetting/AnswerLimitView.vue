@@ -422,12 +422,12 @@ onMounted(() => {
                                 <el-table-column prop="questionAmount" label="题量" width="100"/>
                                 <el-table-column label="成绩" width="120">
                                     <template #default="{row}">
-                                        {{ (row.status === 'SUBMITTED' || row.status === 'SCORE_INVALIDED') ? (row.examResult?.score || 0) : '未提交' }}
+                                        {{ (row.status === 'SUBMITTED' || row.status === 'SCORE_INVALIDED' || row.status === 'SIGN_UP_COMPLETED' || row.status === 'MANUAL_INVALIDED') ? (row.examResult?.score || 0) : '未提交' }}
                                     </template>
                                 </el-table-column>
                                 <el-table-column prop="status" label="状态" width="120">
                                     <template #default="{row}">
-                                        <el-tag :type="row.status === 'SUBMITTED' ? 'success' : 'info'">
+                                        <el-tag :type="(row.status === 'SUBMITTED' || row.status === 'SIGN_UP_COMPLETED' || row.status === 'SCORE_INVALIDED' || row.status === 'MANUAL_INVALIDED') ? 'success' : 'info'">
                                             {{ row.status }}
                                         </el-tag>
                                     </template>
