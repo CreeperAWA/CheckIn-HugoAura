@@ -249,7 +249,7 @@ onMounted(() => {
         <el-scrollbar v-loading="loading">
             <div style="width: 100%;display: flex;flex-direction: column;gap: 24px;padding: 0 24px 32px 24px;box-sizing: border-box">
                 <div class="panel-1" style="padding: 20px">
-                    <el-text size="large" style="font-weight: bold;margin-bottom: 16px;display: block">QQ验证设置</el-text>
+                    <el-text size="large" style="font-weight: bold;margin-bottom: 16px;display: block">QQ 验证设置</el-text>
                     <el-form label-position="top">
                         <el-form-item label="启用 QQ 号验证">
                             <el-switch v-model="settings['qqVerify.enabled']" :disabled="!hasManagePermission || !editing"/>

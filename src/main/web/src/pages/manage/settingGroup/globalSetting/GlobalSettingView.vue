@@ -144,8 +144,8 @@ const groups = [
                 }
             },
             {
-                name: "第三方API设置",
-                description: "配置第三方WebSocket API、QQ验证和通知",
+                name: "第三方 API 设置",
+                description: "配置第三方 WebSocket API、QQ 验证和通知",
                 show: showThirdPartyApiSetting,
                 icon: MoreFilled,
                 action: () => {
