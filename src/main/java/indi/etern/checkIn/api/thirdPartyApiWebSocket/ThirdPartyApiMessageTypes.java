@@ -91,6 +91,29 @@ public final class ThirdPartyApiMessageTypes {
      */
     public static final String QQ_VERIFY_RESPONSE = "qq_verify_response";
     
+    // ========== 通知类消息 ==========
+    
+    /**
+     * 通知消息 - 各类系统通知
+     * 前缀：notification_
+     */
+    public static final String NOTIFICATION = "notification_";
+    
+    // ========== 成绩查询类消息 ==========
+    
+    /**
+     * 考试记录查询请求 - 第三方客户端查询用户历次考试成绩
+     * 数据结构：{ "qq": "QQ号" }
+     * 期望响应：exam_records_response
+     */
+    public static final String EXAM_RECORDS_QUERY = "exam_records_query";
+    
+    /**
+     * 考试记录查询响应 - 服务端返回用户考试记录列表
+     * 数据结构：{ "qq": "QQ号", "records": [...] }
+     */
+    public static final String EXAM_RECORDS_RESPONSE = "exam_records_response";
+    
     // ========== 分片消息类 ==========
     
     /**

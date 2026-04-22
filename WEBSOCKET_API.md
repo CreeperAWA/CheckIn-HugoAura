@@ -611,7 +611,7 @@ java.lang.IllegalStateException: The remote endpoint was in state [TEXT_FULL_WRI
 
 **字段说明**：
 - `max_answer_count`：最大答题次数限制，由服务端设置
-- `answer_count`：用户当前答题次数，按提交成功计算（包括提交成功、注册成功、成绩无效化等情况均计入答题计数，同时包括这次答题）
+- `answer_count`：用户当前答题次数，按提交成功计算（即提交成功、注册成功、成绩无效化等情况均计入答题计数）
 
 #### 4.3.6 用户开始考试
 
@@ -624,6 +624,80 @@ java.lang.IllegalStateException: The remote endpoint was in state [TEXT_FULL_WRI
     "paper_id": "paper_001",
     "qq": "123456789"
   }
+}
+```
+
+#### 4.3.7 查询用户历次考试成绩
+
+**触发时机**：第三方客户端主动发送查询请求
+
+##### 4.3.7.1 客户端发送查询请求
+
+```json
+{
+  "type": "exam_records_query",
+  "messageId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "qq": "123456789"
+  }
+}
+```
+
+**字段说明**：
+- `qq`：要查询的 QQ 号（必填）
+
+##### 4.3.7.2 服务端返回查询结果
+
+```json
+{
+  "type": "exam_records_response",
+  "messageId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "qq": "123456789",
+    "records": [
+      {
+        "paper_id": "019d9fbb-e479-7f6b-a587-5348a1b23706",
+        "score": 90.0,
+        "status": "SUBMITTED",
+        "generate_time": [2021, 5, 20, 12, 31, 40, 0],
+        "submit_time": [2021, 5, 20, 12, 33, 20, 0]
+      },
+      {
+        "paper_id": "019d9fbb-e479-7f6b-a587-5348a1b23707",
+        "score": null,
+        "status": "EXPIRED",
+        "generate_time": [2021, 5, 19, 10, 20, 0, 0],
+        "submit_time": null
+      }
+    ]
+  }
+}
+```
+
+**字段说明**：
+- `qq`：查询的 QQ 号
+- `records`：考试记录列表，按生成时间倒序排列
+- `records[].paper_id`：试卷 ID（UUID 格式）
+- `records[].score`：考试成绩，仅已完成提交的记录有值，未完成的记录为 `null`
+- `records[].status`：考试状态，取值如下：
+  - `ONGOING`：答题中
+  - `SUBMITTED`：已提交
+  - `MANUAL_INVALIDED`：手动作废
+  - `EXPIRED`：已过期
+  - `SIGN_UP_COMPLETED`：注册完成
+  - `SCORE_INVALIDED`：成绩无效
+- `records[].generate_time`：试卷生成时间
+- `records[].submit_time`：试卷提交时间，未提交的记录为 `null`
+
+##### 4.3.7.3 错误响应
+
+当查询失败时，服务端返回错误消息：
+
+```json
+{
+  "type": "error",
+  "messageId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": "未找到该用户的考试记录"
 }
 ```
 

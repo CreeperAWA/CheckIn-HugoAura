@@ -159,4 +159,15 @@ public final class ThirdPartyApiMessageBuilder {
     public static Message<Map<String, Object>> createNotification(String type, Map<String, Object> data) {
         return Message.of(type, UUIDv7.randomUUID().toString(), data);
     }
+    
+    /**
+     * 创建考试记录查询响应消息
+     * 
+     * @param messageId 消息ID，与查询请求保持一致
+     * @param data 响应数据，包含qq和records字段
+     * @return 考试记录查询响应消息
+     */
+    public static Message<Map<String, Object>> createExamRecordsResponse(String messageId, Map<String, Object> data) {
+        return Message.of(ThirdPartyApiMessageTypes.EXAM_RECORDS_RESPONSE, messageId, data);
+    }
 }

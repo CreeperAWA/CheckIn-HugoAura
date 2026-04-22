@@ -55,6 +55,7 @@ public class ThirdPartyApiWebSocketService {
     private final ObjectMapper objectMapper;
     private final BlacklistRepository blacklistRepository;
     private final SettingService settingService;
+    private final indi.etern.checkIn.service.dao.ExamDataService examDataService;
     
     /**
      * 等待验证询问响应的请求映射
@@ -78,11 +79,12 @@ public class ThirdPartyApiWebSocketService {
     @Getter
     private final Map<String, VerifyRequest> pendingVerifyRequests = new ConcurrentHashMap<>();
     
-    protected ThirdPartyApiWebSocketService(ObjectMapper objectMapper, BlacklistRepository blacklistRepository, SettingService settingService) {
+    protected ThirdPartyApiWebSocketService(ObjectMapper objectMapper, BlacklistRepository blacklistRepository, SettingService settingService, indi.etern.checkIn.service.dao.ExamDataService examDataService) {
         singletonInstance = this;
         this.objectMapper = objectMapper;
         this.blacklistRepository = blacklistRepository;
         this.settingService = settingService;
+        this.examDataService = examDataService;
     }
     
     /**
@@ -438,6 +440,91 @@ public class ThirdPartyApiWebSocketService {
             logger.warn("No pending verify request found for messageId: {} or QQ: {}. Response may be delayed or duplicate. Status: {}", 
                 messageId, qq, status);
         }
+    }
+    
+    /**
+     * 处理考试记录查询请求
+     * 
+     * 接收第三方API发送的考试记录查询请求，返回该用户的所有历史记录
+     * 
+     * @param connector 发送请求的连接器
+     * @param message 查询请求消息
+     */
+    @SneakyThrows
+    public void handleExamRecordsQuery(ThirdPartyApiConnector connector, JsonRawMessage message) {
+        Map<String, Object> data = objectMapper.readValue(message.getData(), Map.class);
+        String messageId = message.getMessageId();
+        String qq = (String) data.get("qq");
+        
+        logger.info("Received exam records query from ThirdPartyApi [{}], QQ: {}, messageId: {}", 
+            connector.getSid(), qq, messageId);
+        
+        if (qq == null || qq.isBlank()) {
+            sendMessageToConnector(connector, ThirdPartyApiMessageBuilder.createError(messageId, "QQ号不能为空"));
+            return;
+        }
+        
+        try {
+            long qqNumber = Long.parseLong(qq);
+            List<indi.etern.checkIn.entities.exam.ExamData> examDataList = examDataService.findAllByQQ(qqNumber);
+            
+            if (examDataList.isEmpty()) {
+                sendMessageToConnector(connector, ThirdPartyApiMessageBuilder.createError(messageId, "未找到该用户的考试记录"));
+                return;
+            }
+            
+            examDataList.sort((a, b) -> {
+                if (a.getGenerateTime() == null) return 1;
+                if (b.getGenerateTime() == null) return -1;
+                return b.getGenerateTime().compareTo(a.getGenerateTime());
+            });
+            
+            List<Map<String, Object>> records = new ArrayList<>(examDataList.size());
+            for (indi.etern.checkIn.entities.exam.ExamData examData : examDataList) {
+                Map<String, Object> record = new HashMap<>();
+                record.put("paper_id", examData.getId());
+                record.put("status", examData.getStatus().name());
+                record.put("generate_time", toTimeArray(examData.getGenerateTime()));
+                
+                if (examData.getExamResult() != null) {
+                    record.put("score", examData.getExamResult().getScore());
+                } else {
+                    record.put("score", null);
+                }
+                
+                if (examData.getSubmitTime() != null) {
+                    record.put("submit_time", toTimeArray(examData.getSubmitTime()));
+                } else {
+                    record.put("submit_time", null);
+                }
+                
+                records.add(record);
+            }
+            
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("qq", qq);
+            responseData.put("records", records);
+            
+            Message<Map<String, Object>> responseMessage = ThirdPartyApiMessageBuilder.createExamRecordsResponse(
+                messageId, responseData);
+            sendMessageToConnector(connector, responseMessage);
+            
+            logger.info("Sent exam records response to ThirdPartyApi [{}], QQ: {}, count: {}", 
+                connector.getSid(), qq, records.size());
+        } catch (NumberFormatException e) {
+            sendMessageToConnector(connector, ThirdPartyApiMessageBuilder.createError(messageId, "QQ号格式错误"));
+        } catch (Exception e) {
+            logger.error("Failed to query exam records for QQ: {}", qq, e);
+            sendMessageToConnector(connector, ThirdPartyApiMessageBuilder.createError(messageId, "查询考试记录失败: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * 向指定连接器发送消息
+     */
+    @SneakyThrows
+    private void sendMessageToConnector(ThirdPartyApiConnector connector, Message<?> message) {
+        connector.sendMessage(message);
     }
     
     /**

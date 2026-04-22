@@ -211,6 +211,9 @@ public class ThirdPartyApiConnector {
                 case ThirdPartyApiMessageTypes.QQ_VERIFY_RESPONSE -> 
                     thirdPartyApiWebSocketService.handleQQVerifyResponse(this, contextJsonMessage);
                     
+                case ThirdPartyApiMessageTypes.EXAM_RECORDS_QUERY -> 
+                    thirdPartyApiWebSocketService.handleExamRecordsQuery(this, contextJsonMessage);
+                    
                 default -> logUnknownMessage(message, logPrefix);
             }
         } catch (Exception e) {
