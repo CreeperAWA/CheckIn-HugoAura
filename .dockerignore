@@ -1,0 +1,12 @@
+.git
+.github
+.mvn/wrapper/maven-wrapper.jar
+src/test
+target
+*.md
+screenshots
+icon.svg
+LICENSE
+WEBSOCKET_API.md
+WSAPI.md
+readme.md
