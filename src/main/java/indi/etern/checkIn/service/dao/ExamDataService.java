@@ -15,6 +15,7 @@ import indi.etern.checkIn.throwable.exam.grading.ExamInvalidException;
 import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,13 +33,14 @@ public class ExamDataService {
     ExamDataRepository examDataRepository;
     private final QuestionService questionService;
     private final Logger logger = LoggerFactory.getLogger(ExamDataService.class);
+    @Lazy
     private final ExamGenerator examGenerator;
     private final QuestionStatisticService questionStatisticService;
     private final indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService;
     private final SubmitFrequencyMonitorService submitFrequencyMonitorService;
     private final AnswerLimitService answerLimitService;
     
-    protected ExamDataService(SettingService settingService, GradingLevelService gradingLevelService, QuestionService questionService, ExamGenerator examGenerator, QuestionStatisticService questionStatisticService, indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService, SubmitFrequencyMonitorService submitFrequencyMonitorService, AnswerLimitService answerLimitService) {
+    protected ExamDataService(SettingService settingService, GradingLevelService gradingLevelService, QuestionService questionService, @Lazy ExamGenerator examGenerator, QuestionStatisticService questionStatisticService, @Lazy indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService, SubmitFrequencyMonitorService submitFrequencyMonitorService, AnswerLimitService answerLimitService) {
         singletonInstance = this;
         this.settingService = settingService;
         this.gradingLevelService = gradingLevelService;

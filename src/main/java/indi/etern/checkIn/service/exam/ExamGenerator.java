@@ -19,6 +19,7 @@ import indi.etern.checkIn.utils.UUIDv7;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -34,9 +35,10 @@ public class ExamGenerator {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final QuestionService questionService;
     private final SpecialPartitionLimitService specialPartitionLimitService;
+    @Lazy
     private final indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService;
     
-    public ExamGenerator(PartitionService partitionService, SettingService settingService, QuestionService questionService, QuestionStatisticService questionStatisticService, SpecialPartitionLimitService specialPartitionLimitService, indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService) {
+    public ExamGenerator(PartitionService partitionService, SettingService settingService, QuestionService questionService, QuestionStatisticService questionStatisticService, SpecialPartitionLimitService specialPartitionLimitService, @Lazy indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService) {
         this.partitionService = partitionService;
         this.settingService = settingService;
         this.questionService = questionService;

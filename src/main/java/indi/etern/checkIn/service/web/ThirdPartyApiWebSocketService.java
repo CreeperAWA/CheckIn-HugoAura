@@ -15,6 +15,7 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -55,6 +56,7 @@ public class ThirdPartyApiWebSocketService {
     private final ObjectMapper objectMapper;
     private final BlacklistRepository blacklistRepository;
     private final SettingService settingService;
+    @Lazy
     private final indi.etern.checkIn.service.dao.ExamDataService examDataService;
     
     /**
@@ -79,7 +81,7 @@ public class ThirdPartyApiWebSocketService {
     @Getter
     private final Map<String, VerifyRequest> pendingVerifyRequests = new ConcurrentHashMap<>();
     
-    protected ThirdPartyApiWebSocketService(ObjectMapper objectMapper, BlacklistRepository blacklistRepository, SettingService settingService, indi.etern.checkIn.service.dao.ExamDataService examDataService) {
+    protected ThirdPartyApiWebSocketService(ObjectMapper objectMapper, BlacklistRepository blacklistRepository, SettingService settingService, @Lazy indi.etern.checkIn.service.dao.ExamDataService examDataService) {
         singletonInstance = this;
         this.objectMapper = objectMapper;
         this.blacklistRepository = blacklistRepository;
