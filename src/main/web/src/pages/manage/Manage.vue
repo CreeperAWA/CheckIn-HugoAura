@@ -41,6 +41,8 @@ const breadcrumbMap = {
     "rate-limit-monitor": "限流监控",
     "blacklist": "黑名单管理",
     "answer-limit": "答题次数限制",
+    "whitelist": "白名单管理",
+    "third-party-api-setting": "第三方 API 设置"
 }
 
 let breadcrumbPathArray = reactive([]);
