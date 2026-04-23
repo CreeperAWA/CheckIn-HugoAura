@@ -22,7 +22,7 @@ COPY --from=build_web /webui/dist src/main/resources/static
 
 RUN ./mvnw package -DskipTests -B
 
-FROM bellsoft/liberica-runtime-container:jdk-all-21-musl
+FROM amazoncorretto:21-alpine-jdk
 
 EXPOSE 8080
 
