@@ -22,7 +22,7 @@ COPY --from=build_web /webui/dist src/main/resources/static
 
 RUN ./mvnw package -DskipTests -B
 
-FROM openjdk:21-alpine
+FROM eclipse-temurin:21-jdk
 
 EXPOSE 8080
 
