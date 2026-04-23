@@ -1,6 +1,8 @@
 FROM --platform=$BUILDPLATFORM eclipse-temurin:21-jdk AS build
 
-RUN apt-get update && apt-get install -y nodejs npm
+RUN apt-get update && apt-get install -y curl && \
+    curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
+    apt-get install -y nodejs
 
 WORKDIR /app
 
