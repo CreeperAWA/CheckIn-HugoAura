@@ -1,5 +1,7 @@
 FROM --platform=$BUILDPLATFORM eclipse-temurin:21-jdk AS build
 
+RUN apt-get update && apt-get install -y nodejs npm
+
 WORKDIR /app
 
 COPY .mvn .mvn
