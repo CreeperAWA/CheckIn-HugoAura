@@ -7,7 +7,7 @@ WORKDIR /webui
 RUN npm install --legacy-peer-deps
 RUN npm run build
 
-FROM --platform=$BUILDPLATFORM docker.io/eclipse-temurin:21.0.10_7-jdk-ubi10-minimal AS build
+FROM --platform=$BUILDPLATFORM eclipse-temurin:21-jdk AS build
 
 WORKDIR /app
 
@@ -22,7 +22,7 @@ COPY --from=build_web /webui/dist src/main/resources/static
 
 RUN ./mvnw package -DskipTests -B
 
-FROM docker.io/eclipse-temurin:21.0.10_7-jdk-ubi10-minimal
+FROM eclipse-temurin:21-jre
 
 EXPOSE 8080
 
