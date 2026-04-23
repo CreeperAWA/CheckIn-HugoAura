@@ -22,7 +22,7 @@ COPY --from=build_web /webui/dist src/main/resources/static
 
 RUN ./mvnw package -DskipTests -B
 
-FROM amazoncorretto:21-alpine-jdk
+FROM openjdk:21-alpine
 
 EXPOSE 8080
 
