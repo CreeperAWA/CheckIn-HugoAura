@@ -1,12 +1,3 @@
-FROM --platform=$BUILDPLATFORM node:24-alpine AS build_web
-
-COPY src/main/web /webui
-
-WORKDIR /webui
-
-RUN npm install --legacy-peer-deps
-RUN npm run build
-
 FROM --platform=$BUILDPLATFORM eclipse-temurin:21-jdk AS build
 
 WORKDIR /app
@@ -20,7 +11,12 @@ RUN ./mvnw dependency:go-offline -B
 
 COPY src src
 
-COPY --from=build_web /webui/src/main/resources/static/view/front-face src/main/resources/static/view/front-face
+WORKDIR /app/src/main/web
+
+RUN npm install --legacy-peer-deps
+RUN npm run build
+
+WORKDIR /app
 
 RUN ./mvnw package -DskipTests -B
 
