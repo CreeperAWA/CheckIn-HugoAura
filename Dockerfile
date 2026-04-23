@@ -19,7 +19,8 @@ RUN chmod +x mvnw
 RUN ./mvnw dependency:go-offline -B
 
 COPY src src
-COPY --from=build_web /webui/dist src/main/resources/static
+
+COPY --from=build_web /webui/src/main/resources/static/view/front-face src/main/resources/static/view/front-face
 
 RUN ./mvnw package -DskipTests -B
 
