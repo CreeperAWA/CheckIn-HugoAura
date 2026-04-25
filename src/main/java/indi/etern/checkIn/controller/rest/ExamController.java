@@ -530,13 +530,6 @@ public class ExamController {
             Long qq = Long.valueOf(request.get("qq").toString());
             String qqStr = String.valueOf(qq);
             
-            // 检查是否有第三方API客户端连接
-            if (indi.etern.checkIn.api.thirdPartyApiWebSocket.ThirdPartyApiConnector.CONNECTORS.isEmpty()) {
-                response.put("needVerify", false);
-                response.put("error", "无可用的验证客户端");
-                return response;
-            }
-            
             // 检查验证功能是否启用
             SettingItem qqVerifyEnabled = settingService.getItem("thirdPartyApi.qqVerify", "enabled");
             Boolean verifyEnabled = null;
@@ -550,6 +543,13 @@ public class ExamController {
             if (!Boolean.TRUE.equals(verifyEnabled)) {
                 // 验证功能未启用，不需要验证
                 response.put("needVerify", false);
+                return response;
+            }
+            
+            // 检查是否有第三方API客户端连接
+            if (indi.etern.checkIn.api.thirdPartyApiWebSocket.ThirdPartyApiConnector.CONNECTORS.isEmpty()) {
+                response.put("needVerify", false);
+                response.put("error", "无可用的验证客户端");
                 return response;
             }
             
