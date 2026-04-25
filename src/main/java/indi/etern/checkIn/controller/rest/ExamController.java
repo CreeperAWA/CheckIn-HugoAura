@@ -30,6 +30,7 @@ import indi.etern.checkIn.throwable.exam.ExamSubmittedException;
 import indi.etern.checkIn.throwable.exam.generate.ExamGenerateFailedException;
 import indi.etern.checkIn.throwable.exam.generate.PartitionsOutOfRangeException;
 import indi.etern.checkIn.throwable.exam.grading.ExamInvalidException;
+import indi.etern.checkIn.utils.RandomUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.security.SignatureException;
@@ -601,7 +602,7 @@ public class ExamController {
             
             // 提前生成验证内容，在回调中使用
             String[] verifyInfo = new String[2];
-            java.util.concurrent.atomic.AtomicReference<String> verifyContentRef = new java.util.concurrent.atomic.AtomicReference<>(generateRandomVerifyCode());
+            java.util.concurrent.atomic.AtomicReference<String> verifyContentRef = new java.util.concurrent.atomic.AtomicReference<>(RandomUtils.generateRandomVerifyCode());
             java.util.concurrent.atomic.AtomicReference<String> guideMessageRef = new java.util.concurrent.atomic.AtomicReference<>("请按照以下步骤进行验证");
             
             // 获取自定义验证字符串列表
@@ -823,17 +824,4 @@ public class ExamController {
     public record SignUpRequest(String examId, String name, String password) {
     }
 
-    /**
-     * 生成随机验证代码（12位，包含大小写英文字母）
-     * @return 随机验证代码
-     */
-    private String generateRandomVerifyCode() {
-        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        StringBuilder sb = new StringBuilder(12);
-        Random random = new Random();
-        for (int i = 0; i < 12; i++) {
-            sb.append(characters.charAt(random.nextInt(characters.length())));
-        }
-        return sb.toString();
-    }
 }

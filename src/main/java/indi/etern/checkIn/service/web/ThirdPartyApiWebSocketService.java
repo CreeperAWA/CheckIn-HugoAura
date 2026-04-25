@@ -10,6 +10,7 @@ import indi.etern.checkIn.entities.blacklist.Blacklist;
 import indi.etern.checkIn.entities.setting.SettingItem;
 import indi.etern.checkIn.repositories.BlacklistRepository;
 import indi.etern.checkIn.service.dao.SettingService;
+import indi.etern.checkIn.utils.RandomUtils;
 import indi.etern.checkIn.utils.UUIDv7;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -613,7 +614,7 @@ public class ThirdPartyApiWebSocketService {
                     
                     if (needVerify) {
                         // 需要验证，生成验证内容并发送给第三方
-                        String verifyContent = generateRandomVerifyCode();
+                        String verifyContent = RandomUtils.generateRandomVerifyCode();
                         String guideMessage = "请按照以下步骤进行验证：\n1. 按照提示完成验证\n2. 等待第三方系统确认\n3. 验证完成后系统将自动生成试题";
                         
                         // 先发送验证请求给第三方
@@ -777,7 +778,7 @@ public class ThirdPartyApiWebSocketService {
                 try {
                     if (needVerify) {
                         // 需要验证，生成验证内容
-                        String verifyContent = generateRandomVerifyCode();
+                        String verifyContent = RandomUtils.generateRandomVerifyCode();
                         String guideMessage = "请按照以下步骤进行验证：\n1. 按照提示完成验证\n2. 验证完成后系统将自动生成试题";
                         
                         // 推送验证数据给前端，显示验证窗口
@@ -901,20 +902,6 @@ public class ThirdPartyApiWebSocketService {
         } else {
             logger.warn("User connector is closed, cannot send message");
         }
-    }
-    
-    /**
-     * 生成随机验证代码（12位，包含大小写英文字母）
-     * @return 随机验证代码
-     */
-    private String generateRandomVerifyCode() {
-        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        StringBuilder sb = new StringBuilder(12);
-        java.util.Random random = new java.util.Random();
-        for (int i = 0; i < 12; i++) {
-            sb.append(characters.charAt(random.nextInt(characters.length())));
-        }
-        return sb.toString();
     }
     
     /**
