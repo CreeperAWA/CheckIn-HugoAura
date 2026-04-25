@@ -5,6 +5,7 @@ import katexPlugin from '@techie_doubts/editor-plugin-katex';
 import {KATEX_CONFIG} from '@/config/katex.js';
 import 'katex/dist/katex.min.css';
 import '@toast-ui/editor/dist/toastui-editor.css';
+import '@toast-ui/editor/dist/theme/toastui-editor-dark.css';
 
 const props = defineProps({
   modelValue: {
@@ -120,33 +121,33 @@ watch(() => props.theme, (newValue) => {
 }
 
 :deep(.toastui-editor) {
-  background: #F0F5F5 !important;
+  background: var(--panel-bg-color) !important;
 }
 
 :deep(.toastui-editor-contents) {
   padding: 20px !important;
-  background: #F0F5F5 !important;
+  background: var(--panel-bg-color) !important;
 }
 
 :deep(.toastui-editor-md-container) {
   padding: 20px !important;
-  background: #F0F5F5 !important;
+  background: var(--panel-bg-color) !important;
 }
 
 :deep(.toastui-editor-preview-container) {
   padding: 20px !important;
-  background: #F0F5F5 !important;
+  background: var(--panel-bg-color) !important;
 }
 
 :deep(.toastui-editor-main) {
-  background: #F0F5F5 !important;
+  background: var(--panel-bg-color) !important;
 }
 
 :deep(.toastui-editor-defaultUI) {
-  background: #F0F5F5 !important;
+  background: var(--panel-bg-color) !important;
 }
 
 :deep(.toastui-editor-contents-wrapper) {
-  background: #F0F5F5 !important;
+  background: var(--panel-bg-color) !important;
 }
 </style>

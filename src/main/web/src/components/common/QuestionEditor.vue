@@ -5,6 +5,7 @@ import katexPlugin from '@techie_doubts/editor-plugin-katex';
 import {KATEX_CONFIG} from '@/config/katex.js';
 import 'katex/dist/katex.min.css';
 import '@toast-ui/editor/dist/toastui-editor.css';
+import '@toast-ui/editor/dist/theme/toastui-editor-dark.css';
 
 const props = defineProps({
   modelValue: {

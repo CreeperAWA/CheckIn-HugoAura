@@ -6,6 +6,7 @@ import {KATEX_CONFIG} from '@/config/katex.js';
 import '@/assets/styles/katex.css';
 import 'katex/dist/katex.min.css';
 import '@toast-ui/editor/dist/toastui-editor.css';
+import '@toast-ui/editor/dist/theme/toastui-editor-dark.css';
 
 const props = defineProps({
     modelValue: {
@@ -33,7 +34,10 @@ const props = defineProps({
 const viewerRef = ref(null);
 let viewerInstance = null;
 
-onMounted(() => {
+const createViewer = () => {
+    if (viewerInstance) {
+        viewerInstance.destroy();
+    }
     if (viewerRef.value) {
         viewerInstance = Editor.factory({
             el: viewerRef.value,
@@ -45,6 +49,10 @@ onMounted(() => {
             usageStatistics: false
         });
     }
+};
+
+onMounted(() => {
+    createViewer();
 });
 
 onUnmounted(() => {
@@ -60,10 +68,7 @@ watch(() => props.modelValue, () => {
 }, { immediate: false });
 
 watch(() => props.theme, () => {
-    if (viewerInstance) {
-        // Viewer 不支持 changeTheme，需要重新创建或忽略
-        // 这里我们暂时不处理主题切换
-    }
+    createViewer();
 });
 </script>
 
