@@ -18,7 +18,7 @@
     "element-plus": "^2.13.7",
     "jwt-decode": "^4.0.0",
     "katex": "^0.16.45",
-    "md-editor-v3": "^6.4.2",
+    "md-editor-v3": "^6.5.0",
     "splitpanes": "^4.0.4",
     "uuidv7": "^1.2.1",
     "vite": "^8.0.10",
