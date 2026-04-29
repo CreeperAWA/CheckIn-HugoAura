@@ -118,9 +118,7 @@
 }
 
 .el-button:active,
-.el-upload--picture-card:active
-    /*.v-md-editor__toolbar li:active*/
-{
+.el-upload--picture-card:active {
     transform: scale(0.98);
 }
 
@@ -172,18 +170,6 @@ input[type="number"] {
     animation-fill-mode: backwards;
 }
 
-.md-editor-resize-operate {
-    background: var(--panel-bg-color) !important;
-}
-
-.md-editor {
-    --md-scrollbar-bg-color: rgba(0, 0, 0, 0) !important;
-    --md-scrollbar-thumb-color: var(--el-scrollbar-bg-color) !important;
-    --md-scrollbar-thumb-hover-color: var(--el-scrollbar-hover-bg-color) !important;
-    --md-bk-color-outstand: var(--panel-bg-color-overlay) !important;
-    /*--md-color: var(--el-text-color) !important;*/
-}
-
 .cm-scroller {
     overflow: auto !important;
 }
@@ -198,12 +184,10 @@ input[type="number"] {
     flex-direction: row;
 }
 
-#app:has(.md-editor-resize-operate:active) *,
 #app:has(.splitpanes__splitter:active) * {
     user-select: none !important;
 }
 
-#app:has(.md-editor-resize-operate:active) *,
 #app:has(.splitpanes--vertical > .splitpanes__splitter:active) * {
     cursor: col-resize !important;
 }
@@ -212,7 +196,6 @@ input[type="number"] {
     cursor: row-resize !important;
 }
 
-.md-editor-resize-operate,
 .splitpanes__splitter {
     transition: background-color 300ms var(--ease-in-out-quint);
     border-radius: 4px !important;
@@ -224,24 +207,16 @@ input[type="number"] {
     justify-content: center;
 }
 
-.md-editor-content .md-editor-resize-operate[style*="display: none;"] {
-    display: none !important;
-}
-
-/*noinspection SpellCheckingInspection*/
-.md-editor-resize-operate:hover,
 .splitpanes__splitter:hover {
     background: var(--splitter-bg-hover) !important;
 }
 
 /*noinspection SpellCheckingInspection*/
-.md-editor-resize-operate:active,
 .splitpanes__splitter:active {
     background: var(--splitter-bg-active) !important;
 }
 
 /*noinspection SpellCheckingInspection*/
-.md-editor-resize-operate::after,
 .splitpanes--vertical .splitpanes__splitter::after {
     transition: 200ms var(--ease-in-out-quint);
     content: "";
@@ -270,14 +245,12 @@ input[type="number"] {
 }
 
 /*noinspection SpellCheckingInspection*/
-.md-editor-resize-operate:hover::after,
 .splitpanes--vertical .splitpanes__splitter:hover::after {
     height: 44px !important;
     opacity: 0.75 !important;
 }
 
 /*noinspection SpellCheckingInspection*/
-.md-editor-resize-operate:active::after,
 .splitpanes--vertical .splitpanes__splitter:active::after {
     height: 20px !important;
     opacity: 1 !important;
@@ -318,16 +291,6 @@ input[type="number"] {
 .cm-cursor {
     background-color: var(--front-color);
     opacity: 0.75;
-}
-
-.md-editor-btn {
-    background: var(--button-bg-color) var(--lighting-effect-background-2);
-    --md-bk-color: rgba(0,0,0,0);
-    transition: 0.2s var(--ease-in-out-quint);
-}
-
-.md-editor-btn:hover {
-    background-color: var(--panel-bg-color-overlay) !important;
 }
 
 .el-button:not(.is-text):not(.is-link) {
@@ -661,7 +624,6 @@ input[type="number"] {
 }
 
 #app .el-date-editor--daterange,
-.md-editor-input,
 .el-textarea, .el-input, .el-select {
     box-sizing: border-box;
     border-radius: 4px !important;
@@ -740,7 +702,6 @@ input[type="number"] {
 }
 
 .el-date-editor--daterange.is-active::after,
-.md-editor-input:focus::after,
 .el-input:has(.is-focus)::after, .el-textarea:has(textarea:focus)::after, .el-select:has(.is-focused)::after,
 .el-input-number.error > .el-input::after, .el-input-number.warning > .el-input::after,
 .question-input.warning::after,
@@ -866,8 +827,7 @@ input[type="number"] {
     text-align: start;
 }
 
-.md-editor-dropdown,
-.el-popper, .el-message-box, .v-md-editor__tooltip {
+.el-popper, .el-message-box {
     border: var(--border-1) !important;
     background: var(--popper-bg-color) var(--lighting-effect-background-2) !important;
     backdrop-filter: blur(16px) !important;
@@ -911,7 +871,6 @@ input[type="number"] {
     flex-direction: column-reverse;
 }
 
-.md-editor-custom-scrollbar__track .md-editor-custom-scrollbar__thumb,
 .el-scrollbar__bar.is-vertical .el-scrollbar__thumb {
     transition: background-color 150ms var(--ease-in-out-quint),
     width 150ms var(--ease-in-out-quint),
@@ -919,10 +878,6 @@ input[type="number"] {
     opacity 150ms var(--ease-in-out-quint) !important;
     width: 3px !important;
     background: var(--el-scrollbar-bg-color) !important;
-}
-
-.md-editor-custom-scrollbar__track .md-editor-custom-scrollbar__thumb {
-    margin-left: 3px;
 }
 
 .el-scrollbar__bar.is-horizontal .el-scrollbar__thumb {
@@ -933,13 +888,10 @@ input[type="number"] {
     background: var(--el-scrollbar-bg-color) !important;
 }
 
-.md-editor-custom-scrollbar__thumb,
 .el-scrollbar__thumb {
     opacity: 0.5;
 }
 
-.md-editor-custom-scrollbar__track:hover .md-editor-custom-scrollbar__thumb,
-.md-editor-custom-scrollbar__track .md-editor-custom-scrollbar__thumb:active,
 #app .el-scrollbar__bar.is-vertical:hover > .el-scrollbar__thumb,
 #app .el-scrollbar__bar.is-vertical > .el-scrollbar__thumb:active {
     width: 6px !important;
@@ -1176,7 +1128,6 @@ input[type="number"] {
     margin: 0 !important;
 }
 
-.md-editor-modal,
 .el-message-box,
 .el-dialog {
     border-radius: 8px !important;
