@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -519,6 +520,55 @@ public class ThirdPartyApiWebSocketService {
         } catch (Exception e) {
             logger.error("Failed to query exam records for QQ: {}", qq, e);
             sendMessageToConnector(connector, ThirdPartyApiMessageBuilder.createError(messageId, "查询考试记录失败: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * 处理考试无效化请求
+     * 
+     * 接收第三方API发送的考试无效化请求，将指定试卷标记为成绩无效
+     * 
+     * @param connector 发送请求的连接器
+     * @param message 无效化请求消息
+     */
+    @SneakyThrows
+    public void handleExamInvalidateRequest(ThirdPartyApiConnector connector, JsonRawMessage message) {
+        Map<String, Object> data = objectMapper.readValue(message.getData(), Map.class);
+        String messageId = message.getMessageId();
+        String paperId = (String) data.get("paper_id");
+        
+        logger.info("Received exam invalidate request from ThirdPartyApi [{}], paper_id: {}, messageId: {}", 
+            connector.getSid(), paperId, messageId);
+        
+        if (paperId == null || paperId.isBlank()) {
+            sendMessageToConnector(connector, ThirdPartyApiMessageBuilder.createError(messageId, "试卷ID不能为空"));
+            return;
+        }
+        
+        try {
+            Optional<indi.etern.checkIn.entities.exam.ExamData> optionalExamData = examDataService.findById(paperId);
+            
+            if (optionalExamData.isEmpty()) {
+                sendMessageToConnector(connector, ThirdPartyApiMessageBuilder.createError(messageId, "试卷不存在"));
+                return;
+            }
+            
+            indi.etern.checkIn.entities.exam.ExamData examData = optionalExamData.get();
+            
+            if (examData.getStatus() != indi.etern.checkIn.entities.exam.ExamData.Status.SUBMITTED) {
+                sendMessageToConnector(connector, ThirdPartyApiMessageBuilder.createExamInvalidateResponse(messageId, paperId, "failed"));
+                return;
+            }
+            
+            examData.setStatus(indi.etern.checkIn.entities.exam.ExamData.Status.SCORE_INVALIDED);
+            examDataService.save(examData);
+            examData.sendUpdateExamRecord();
+            
+            sendMessageToConnector(connector, ThirdPartyApiMessageBuilder.createExamInvalidateResponse(messageId, paperId, "success"));
+            logger.info("Exam invalidated successfully, paper_id: {}", paperId);
+        } catch (Exception e) {
+            logger.error("Failed to invalidate exam, paper_id: {}", paperId, e);
+            sendMessageToConnector(connector, ThirdPartyApiMessageBuilder.createError(messageId, "无效化考试失败: " + e.getMessage()));
         }
     }
     

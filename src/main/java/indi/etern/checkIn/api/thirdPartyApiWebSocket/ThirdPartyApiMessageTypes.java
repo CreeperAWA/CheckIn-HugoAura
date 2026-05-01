@@ -114,6 +114,19 @@ public final class ThirdPartyApiMessageTypes {
      */
     public static final String EXAM_RECORDS_RESPONSE = "exam_records_response";
     
+    /**
+     * 考试无效化请求 - 第三方客户端请求无效化某次考试结果
+     * 数据结构：{ "paper_id": "试卷ID" }
+     * 期望响应：exam_invalidate_response
+     */
+    public static final String EXAM_INVALIDATE_REQUEST = "exam_invalidate_request";
+    
+    /**
+     * 考试无效化响应 - 服务端返回无效化操作结果
+     * 数据结构：{ "paper_id": "试卷ID", "status": "success/failed" }
+     */
+    public static final String EXAM_INVALIDATE_RESPONSE = "exam_invalidate_response";
+    
     // ========== 分片消息类 ==========
     
     /**

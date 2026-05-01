@@ -214,6 +214,9 @@ public class ThirdPartyApiConnector {
                 case ThirdPartyApiMessageTypes.EXAM_RECORDS_QUERY -> 
                     thirdPartyApiWebSocketService.handleExamRecordsQuery(this, contextJsonMessage);
                     
+                case ThirdPartyApiMessageTypes.EXAM_INVALIDATE_REQUEST -> 
+                    thirdPartyApiWebSocketService.handleExamInvalidateRequest(this, contextJsonMessage);
+                    
                 default -> logUnknownMessage(message, logPrefix);
             }
         } catch (Exception e) {

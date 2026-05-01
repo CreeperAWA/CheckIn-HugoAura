@@ -170,4 +170,19 @@ public final class ThirdPartyApiMessageBuilder {
     public static Message<Map<String, Object>> createExamRecordsResponse(String messageId, Map<String, Object> data) {
         return Message.of(ThirdPartyApiMessageTypes.EXAM_RECORDS_RESPONSE, messageId, data);
     }
+    
+    /**
+     * 创建考试无效化响应消息
+     * 
+     * @param messageId 消息ID，与请求保持一致
+     * @param paperId 试卷ID
+     * @param status 操作状态，success 或 failed
+     * @return 考试无效化响应消息
+     */
+    public static Message<Map<String, Object>> createExamInvalidateResponse(String messageId, String paperId, String status) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("paper_id", paperId);
+        data.put("status", status);
+        return Message.of(ThirdPartyApiMessageTypes.EXAM_INVALIDATE_RESPONSE, messageId, data);
+    }
 }
