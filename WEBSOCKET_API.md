@@ -699,6 +699,80 @@ java.lang.IllegalStateException: The remote endpoint was in state [TEXT_FULL_WRI
 }
 ```
 
+#### 4.3.8 无效化考试结果
+
+**触发时机**：第三方客户端主动发送无效化请求，用于将某次考试结果标记为无效
+
+##### 4.3.8.1 客户端发送无效化请求
+
+```json
+{
+  "type": "exam_invalidate_request",
+  "messageId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "paper_id": "019d9fbb-e479-7f6b-a587-5348a1b23706"
+  }
+}
+```
+
+**字段说明**：
+- `paper_id`：要无效化的试卷 ID（UUID 格式，必填）
+
+> **⚠️ 关键**：`messageId` 由客户端生成，服务端将使用相同的 `messageId` 返回响应
+
+##### 4.3.8.2 服务端返回无效化结果
+
+**无效化成功**：
+
+```json
+{
+  "type": "exam_invalidate_response",
+  "messageId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "paper_id": "019d9fbb-e479-7f6b-a587-5348a1b23706",
+    "status": "success"
+  }
+}
+```
+
+**字段说明**：
+- `paper_id`：被无效化的试卷 ID
+- `status`：操作状态，`success` 表示成功，`failed` 表示失败
+
+**无效化失败**：
+
+```json
+{
+  "type": "exam_invalidate_response",
+  "messageId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "paper_id": "019d9fbb-e479-7f6b-a587-5348a1b23706",
+    "status": "failed",
+    "error": "该试卷已被无效化"
+  }
+}
+```
+
+**字段说明**：
+- `error`：失败原因说明
+
+##### 4.3.8.3 错误响应
+
+当请求格式错误或权限不足时，服务端返回错误消息：
+
+```json
+{
+  "type": "error",
+  "messageId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": "无效的试卷 ID"
+}
+```
+
+**常见错误**：
+- 试卷不存在
+- 试卷状态不允许无效化（如已过期或已手动作废）
+- 权限不足
+
 ## 5. 错误处理
 
 服务端可能发送的错误消息：
