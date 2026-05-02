@@ -191,6 +191,9 @@ public class LoginController {
     }
 
     private boolean checkPassword(User user, String password) {
-        return user.getPassword() == null || passwordEncoder.matches(password, user.getPassword());
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            return false;
+        }
+        return passwordEncoder.matches(password, user.getPassword());
     }
 }
