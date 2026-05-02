@@ -76,9 +76,9 @@ const model = defineModel({
                 </el-image>
             </div>
         </el-scrollbar>
-        <div class="content" style="flex:1;display: flex;flex-direction: column">
+        <div class="content">
             <toast-markdown-viewer :theme="UIMeta.colorScheme.value" :model-value="question.content"
-                                   class="preview-only" :width="'100%'" style="flex: none;overflow: visible;"/>
+                                   class="preview-only" :width="'100%'"/>
             <multiple-choices-view-module style="padding: 32px"
                                              v-if="question.type==='MultipleChoicesQuestion'"
                                              :question="question" v-model="model"/>
@@ -113,6 +113,13 @@ const model = defineModel({
         padding: 32px 0;
         width: 100%;
     }
+
+    .content {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        padding: 32px 24px;
+    }
 }
 
 .question-view-base.mobile {
@@ -131,11 +138,15 @@ const model = defineModel({
         height: 200px;
         min-width: fit-content;
     }
-}
 
-.question-view-base:not(.mobile) {
     .content {
-        padding: 32px 24px;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+
+    .content > .toast-markdown-viewer {
+        overflow: auto !important;
     }
 }
 
