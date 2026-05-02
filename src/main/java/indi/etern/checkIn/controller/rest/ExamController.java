@@ -75,13 +75,7 @@ public class ExamController {
     private final BlacklistService blacklistService;
     private final AnswerLimitService answerLimitService;
     private final indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService;
-    
-    /**
-     * 已验证的QQ号缓存（内存缓存，JVM重启后清空）
-     * key: QQ号, value: 验证通过的时间戳
-     * 验证成功后，该QQ号在配置的有效期内可免验证生成题目
-     */
-    private static final ConcurrentHashMap<String, Long> verifiedQQCache = new ConcurrentHashMap<>();
+    private final indi.etern.checkIn.service.web.QQVerifyService qqVerifyService;
     
     /**
      * 验证状态缓存（内存缓存，JVM重启后清空）
@@ -111,7 +105,8 @@ public class ExamController {
                           ExamDataService examDataService, ObjectMapper objectMapper, QuestionStatisticService questionStatisticService,
                           SettingService settingService, UserService userService, GradingLevelService gradingLevelService,
                           TurnstileService turnstileService, OAuth2Service oAuth2Service, JwtTokenProvider jwtTokenProvider,
-                          BlacklistService blacklistService, AnswerLimitService answerLimitService, indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService) {
+                          BlacklistService blacklistService, AnswerLimitService answerLimitService, indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService,
+                          indi.etern.checkIn.service.web.QQVerifyService qqVerifyService) {
         this.partitionService = partitionService;
         this.actionExecutor = actionExecutor;
         this.examGenerator = examGenerator;
@@ -127,6 +122,7 @@ public class ExamController {
         this.blacklistService = blacklistService;
         this.answerLimitService = answerLimitService;
         this.thirdPartyApiWebSocketService = thirdPartyApiWebSocketService;
+        this.qqVerifyService = qqVerifyService;
     }
 
     @PostMapping(path = "/api/generate")
@@ -191,65 +187,13 @@ public class ExamController {
             // 检查QQ验证是否已完成
             String qqStr = String.valueOf(generateRequest.qq);
             try {
-                SettingItem qqVerifyEnabled = settingService.getItem("thirdPartyApi.qqVerify", "enabled");
-                Boolean verifyEnabled = null;
-                try {
-                    verifyEnabled = qqVerifyEnabled.getValue(Boolean.class);
-                } catch (Exception e) {
-                    verifyEnabled = false;
-                }
-                
-                if (Boolean.TRUE.equals(verifyEnabled)) {
-                    // 检查是否在白名单
-                    boolean inWhitelist = false;
-                    try {
-                        SettingItem whitelistSetting = settingService.getItem("thirdPartyApi.qqVerify", "whitelist");
-                        List<?> whitelistRaw = whitelistSetting.getValue(List.class);
-                        if (whitelistRaw != null && !whitelistRaw.isEmpty()) {
-                            for (Object item : whitelistRaw) {
-                                if (qqStr.equals(String.valueOf(item).trim())) {
-                                    inWhitelist = true;
-                                    break;
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        logger.warn("Failed to check whitelist in generateExam", e);
-                    }
-                    
-                    // 检查是否在已验证缓存中
-                    boolean inVerifiedCache = false;
-                    try {
-                        Long verifiedTime = verifiedQQCache.get(qqStr);
-                        if (verifiedTime != null) {
-                            int validDays = 1;
-                            try {
-                                SettingItem validDaysSetting = settingService.getItem("thirdPartyApi.qqVerify", "validDays");
-                                validDays = validDaysSetting.getValue(Integer.class);
-                                if (validDays <= 0) {
-                                    validDays = 1;
-                                }
-                            } catch (Exception e) {
-                                logger.warn("Failed to get validDays setting", e);
-                            }
-                            long validDurationMs = validDays * 24L * 60L * 60L * 1000L;
-                            if ((System.currentTimeMillis() - verifiedTime) < validDurationMs) {
-                                inVerifiedCache = true;
-                            }
-                        }
-                    } catch (Exception e) {
-                        logger.warn("Failed to check verified cache in generateExam", e);
-                    }
-                    
-                    // 如果不在白名单且不在验证缓存中，检查验证状态
-                    if (!inWhitelist && !inVerifiedCache) {
-                        VerifyStatusInfo statusInfo = verifyStatusCache.get(qqStr);
-                        if (statusInfo == null || !"success".equals(statusInfo.status)) {
-                            Map<String, String> errorDataMap = new HashMap<>();
-                            errorDataMap.put("type", "error");
-                            errorDataMap.put("description", "请先完成QQ号验证");
-                            return objectMapper.writeValueAsString(errorDataMap);
-                        }
+                if (qqVerifyService.needsVerification(qqStr)) {
+                    VerifyStatusInfo statusInfo = verifyStatusCache.get(qqStr);
+                    if (statusInfo == null || !"success".equals(statusInfo.status)) {
+                        Map<String, String> errorDataMap = new HashMap<>();
+                        errorDataMap.put("type", "error");
+                        errorDataMap.put("description", "请先完成QQ号验证");
+                        return objectMapper.writeValueAsString(errorDataMap);
                     }
                 }
             } catch (Exception e) {
@@ -531,16 +475,7 @@ public class ExamController {
             String qqStr = String.valueOf(qq);
             
             // 检查验证功能是否启用
-            SettingItem qqVerifyEnabled = settingService.getItem("thirdPartyApi.qqVerify", "enabled");
-            Boolean verifyEnabled = null;
-            try {
-                verifyEnabled = qqVerifyEnabled.getValue(Boolean.class);
-            } catch (Exception e) {
-                logger.warn("Failed to get qqVerifyEnabled setting, defaulting to false", e);
-                verifyEnabled = false;
-            }
-            
-            if (!Boolean.TRUE.equals(verifyEnabled)) {
+            if (!qqVerifyService.isVerifyEnabled()) {
                 // 验证功能未启用，不需要验证
                 response.put("needVerify", false);
                 return response;
@@ -554,50 +489,18 @@ public class ExamController {
             }
             
             // 检查是否在白名单中
-            try {
-                SettingItem whitelistSetting = settingService.getItem("thirdPartyApi.qqVerify", "whitelist");
-                List<?> whitelistRaw = whitelistSetting.getValue(List.class);
-                if (whitelistRaw != null && !whitelistRaw.isEmpty()) {
-                    for (Object item : whitelistRaw) {
-                        if (qqStr.equals(String.valueOf(item).trim())) {
-                            // 在白名单中，不需要验证
-                            response.put("needVerify", false);
-                            return response;
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                logger.warn("Failed to check whitelist", e);
+            if (qqVerifyService.isInWhitelist(qqStr)) {
+                response.put("needVerify", false);
+                return response;
             }
             
             // 检查是否已验证且在有效期内
-            try {
-                Long verifiedTime = verifiedQQCache.get(qqStr);
-                if (verifiedTime != null) {
-                    // 获取配置的有效期（天数）
-                    int validDays = 1; // 默认1天
-                    try {
-                        SettingItem validDaysSetting = settingService.getItem("thirdPartyApi.qqVerify", "validDays");
-                        validDays = validDaysSetting.getValue(Integer.class);
-                        if (validDays <= 0) {
-                            validDays = 1;
-                        }
-                    } catch (Exception e) {
-                        logger.warn("Failed to get validDays setting, using default 1 day", e);
-                    }
-                    
-                    long validDurationMs = validDays * 24L * 60L * 60L * 1000L;
-                    if ((System.currentTimeMillis() - verifiedTime) < validDurationMs) {
-                        // 验证仍在有效期内，不需要验证
-                        response.put("needVerify", false);
-                        return response;
-                    } else {
-                        // 验证已过期，清除缓存
-                        verifiedQQCache.remove(qqStr);
-                    }
-                }
-            } catch (Exception e) {
-                logger.warn("Failed to check verified cache", e);
+            if (qqVerifyService.isVerifiedWithinValidPeriod(qqStr)) {
+                response.put("needVerify", false);
+                return response;
+            } else {
+                // 验证已过期，清除缓存
+                qqVerifyService.removeFromVerifiedCache(qqStr);
             }
             
             // 提前生成验证内容，在回调中使用
@@ -648,18 +551,7 @@ public class ExamController {
                                 // 验证成功时加入缓存
                                 if ("success".equals(status)) {
                                     try {
-                                        int validDays = 1;
-                                        try {
-                                            SettingItem validDaysSetting = settingService.getItem("thirdPartyApi.qqVerify", "validDays");
-                                            validDays = validDaysSetting.getValue(Integer.class);
-                                            if (validDays <= 0) {
-                                                validDays = 1;
-                                            }
-                                        } catch (Exception e) {
-                                            logger.warn("Failed to get validDays setting", e);
-                                        }
-                                        verifiedQQCache.put(qqStr, System.currentTimeMillis());
-                                        logger.info("QQ {} verification succeeded, added to cache", qqStr);
+                                        qqVerifyService.addToVerifiedCache(qqStr);
                                     } catch (Exception e) {
                                         logger.error("Failed to add QQ to verified cache", e);
                                     }
@@ -694,7 +586,7 @@ public class ExamController {
             } else {
                 // 第三方API返回无需验证，添加验证状态缓存和已验证缓存
                 verifyStatusCache.put(qqStr, new VerifyStatusInfo("success", "无需验证", ""));
-                verifiedQQCache.put(qqStr, System.currentTimeMillis());
+                qqVerifyService.addToVerifiedCache(qqStr);
                 response.put("needVerify", false);
             }
             
