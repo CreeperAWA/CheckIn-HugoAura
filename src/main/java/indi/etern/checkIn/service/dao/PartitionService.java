@@ -19,7 +19,7 @@ import java.util.Optional;
 @Service
 @CacheConfig(cacheNames = "partition")
 public class PartitionService {
-    public static PartitionService singletonInstance;
+    public static volatile PartitionService singletonInstance;
     @Resource
     private PartitionRepository partitionRepository;
     private final Cache cache;

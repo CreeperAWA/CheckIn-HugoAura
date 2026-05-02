@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @Service
 public class RequestRecordService {
-    public static RequestRecordService singletonInstance;
+    public static volatile RequestRecordService singletonInstance;
     private final RequestRecordRepository requestRecordRepository;
 
     public RequestRecordService(RequestRecordRepository requestRecordRepository) {

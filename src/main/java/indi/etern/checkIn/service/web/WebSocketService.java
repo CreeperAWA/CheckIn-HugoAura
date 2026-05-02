@@ -17,7 +17,7 @@ import java.util.LinkedHashMap;
 @Service
 public class WebSocketService {
     private static final Logger logger = LoggerFactory.getLogger(WebSocketService.class);
-    public static WebSocketService singletonInstance;
+    public static volatile WebSocketService singletonInstance;
     private final ObjectMapper objectMapper;
     private final HashMap<String, Channel> channelHashMap = new HashMap<>();
     

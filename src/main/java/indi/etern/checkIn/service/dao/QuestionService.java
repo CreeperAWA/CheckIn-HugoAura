@@ -24,7 +24,7 @@ import java.util.Set;
 
 @Service
 public class QuestionService {
-    public static QuestionService singletonInstance;
+    public static volatile QuestionService singletonInstance;
     final PartitionService partitionService;
     @Resource
     private QuestionRepository questionRepository;

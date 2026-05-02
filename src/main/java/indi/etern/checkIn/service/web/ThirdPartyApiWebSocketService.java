@@ -53,7 +53,7 @@ public class ThirdPartyApiWebSocketService {
     /**
      * 单例实例引用，供非Spring管理的类调用
      */
-    public static ThirdPartyApiWebSocketService singletonInstance;
+    public static volatile ThirdPartyApiWebSocketService singletonInstance;
     
     private final ObjectMapper objectMapper;
     private final BlacklistRepository blacklistRepository;

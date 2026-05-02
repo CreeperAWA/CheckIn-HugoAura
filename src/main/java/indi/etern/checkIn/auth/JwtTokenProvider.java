@@ -27,7 +27,7 @@ import java.util.function.Consumer;
 @Component
 public class JwtTokenProvider {
     private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
-    public static JwtTokenProvider singletonInstance;
+    public static volatile JwtTokenProvider singletonInstance;
     
     /*@Value("${jwt-secret}")*/
     private String jwtSecret;

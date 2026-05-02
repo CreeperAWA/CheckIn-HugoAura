@@ -34,13 +34,9 @@ public class ExamData implements BaseEntity<String> , Comparable<ExamData>{
     
     @Override
     public int compareTo(@NonNull ExamData o) {
-        if (this.examResult == null) {
-            return -1;
-        } else if (o.examResult == null) {
-            return 1;
-        } else {
-            return (int) (this.examResult.getScore() - o.examResult.getScore());
-        }
+        float thisScore = this.examResult != null ? this.examResult.getScore() : 0f;
+        float otherScore = o.examResult != null ? o.examResult.getScore() : 0f;
+        return Float.compare(thisScore, otherScore);
     }
     
     public enum Status {

@@ -4,6 +4,7 @@ import indi.etern.checkIn.action.ActionExecutor;
 import indi.etern.checkIn.action.interfaces.ResultContext;
 import indi.etern.checkIn.action.oauth2.GetOAuth2ProvidersSimpleInfoAction;
 import indi.etern.checkIn.api.webSocket.Message;
+import indi.etern.checkIn.auth.JwtTokenProvider;
 import indi.etern.checkIn.entities.exam.ExamData;
 import indi.etern.checkIn.entities.setting.grading.GradingLevel;
 import indi.etern.checkIn.entities.user.User;
@@ -13,8 +14,11 @@ import indi.etern.checkIn.service.dao.UserService;
 import indi.etern.checkIn.service.exam.ExamResult;
 import indi.etern.checkIn.service.exam.SignUpCompletingType;
 import indi.etern.checkIn.service.web.WebSocketService;
+import indi.etern.checkIn.throwable.auth.PermissionDeniedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,6 +50,11 @@ public class ExposeApi {
     @PostMapping(path = "/api/qualify", produces = "application/json")
     public Map<String, Object> qualify(@RequestBody QualifyRequest qualifyRequest) {
         try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || authentication.getPrincipal() instanceof String) {
+                throw new PermissionDeniedException("未认证用户");
+            }
+            User currentUser = (User) authentication.getPrincipal();
             Map<String, Object> map = new HashMap<>();
             final Optional<ExamData> optionalExamData = examDataService.findMaxByQQ(qualifyRequest.qq);
             if (optionalExamData.isPresent()) {
@@ -82,6 +91,9 @@ public class ExposeApi {
             }
             return map;
         } catch (Exception e) {
+            if (e instanceof PermissionDeniedException) {
+                throw e;
+            }
             return Map.of("type", "error", "result", e.getClass().getSimpleName() + ":" + e.getMessage());
         }
     }

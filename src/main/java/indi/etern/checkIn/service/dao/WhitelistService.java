@@ -13,7 +13,7 @@ import java.util.Optional;
 
 @Service
 public class WhitelistService {
-    public static WhitelistService singletonInstance;
+    public static volatile WhitelistService singletonInstance;
     
     @Resource
     private WhitelistRepository whitelistRepository;

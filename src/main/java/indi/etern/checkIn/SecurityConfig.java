@@ -3,6 +3,7 @@ package indi.etern.checkIn;
 import indi.etern.checkIn.auth.JwtAuthenticationFilter;
 import indi.etern.checkIn.auth.LogoutHandler;
 import indi.etern.checkIn.service.dao.UserService;
+import indi.etern.checkIn.utils.CookieUtils;
 import jakarta.servlet.http.Cookie;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -140,8 +141,7 @@ public class SecurityConfig {
                 message = exceptionMessage;
             }
             String encoded = URLEncoder.encode(message, StandardCharsets.UTF_8).replace("+", "%20");
-            Cookie errorMessage = new Cookie("OAuth2ErrorMessage", encoded);
-            errorMessage.setPath("/checkIn");
+            Cookie errorMessage = CookieUtils.createClientReadableCookie("OAuth2ErrorMessage", encoded);
             response.addCookie(errorMessage);
             response.sendRedirect("/checkIn/oauth2/error");
         };

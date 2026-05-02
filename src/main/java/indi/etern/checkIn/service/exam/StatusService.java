@@ -24,7 +24,7 @@ import java.util.*;
 @Service
 @Aspect
 public class StatusService {
-    public static StatusService singletonInstance;
+    public static volatile StatusService singletonInstance;
     private final GradingLevelService gradingLevelService;
     private final QuestionService questionService;
     private final PartitionService partitionService;

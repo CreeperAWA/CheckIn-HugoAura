@@ -39,6 +39,7 @@ public class User implements UserDetails, OAuth2User {
 
     @Setter
     @Getter
+    @Column(unique = true)
     protected String name;
 
     @JsonProperty("qq")
@@ -95,7 +96,7 @@ public class User implements UserDetails, OAuth2User {
 
     @Override
     public String toString() {
-        return "{value:\"" + name + "\",QQ:\"" + QQNumber + "\",password:\"" + password + "\",role:\"" + role.getType() + "\"}";
+        return "{value:\"" + name + "\",QQ:\"" + QQNumber + "\",role:\"" + role.getType() + "\"}";
     }
 
     @Override

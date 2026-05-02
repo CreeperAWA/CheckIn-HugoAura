@@ -16,7 +16,7 @@ import java.util.List;
 @CacheConfig(cacheNames = "gradingLevel")
 public class GradingLevelService {
     private final GradingLevelRepository gradingLevelRepository;
-    public static GradingLevelService singletonInstance;
+    public static volatile GradingLevelService singletonInstance;
     
     protected GradingLevelService(GradingLevelRepository gradingLevelRepository) {
         singletonInstance = this;

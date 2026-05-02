@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class ExamDataService {
-    public static ExamDataService singletonInstance;
+    public static volatile ExamDataService singletonInstance;
     final SettingService settingService;
     final GradingLevelService gradingLevelService;
     @Resource

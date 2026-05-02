@@ -16,7 +16,7 @@ import java.util.Optional;
 
 @Service
 public class RoleService {
-    public static RoleService singletonInstance;
+    public static volatile RoleService singletonInstance;
     final RoleRepository roleRepository;
     final PermissionRepository permissionRepository;
     final PermissionGroupRepository permissionGroupRepository;

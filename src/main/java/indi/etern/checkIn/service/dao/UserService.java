@@ -18,6 +18,7 @@ import indi.etern.checkIn.throwable.entity.UserExistsException;
 import indi.etern.checkIn.throwable.exam.ExamException;
 import indi.etern.checkIn.throwable.exam.ExamIllegalStateException;
 import indi.etern.checkIn.throwable.exam.grading.ExamInvalidException;
+import indi.etern.checkIn.utils.CookieUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import jakarta.annotation.Resource;
@@ -44,7 +45,7 @@ import java.util.*;
 
 @Service
 public class UserService extends DefaultOAuth2UserService implements UserDetailsService {
-    public static UserService singletonInstance;
+    public static volatile UserService singletonInstance;
     private final OAuth2Service oauth2Service;
     private final RoleService roleService;
     private final RoleRepository roleRepository;
@@ -105,6 +106,10 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
         return userRepository.existsById(qqNumber);
     }
 
+    public boolean existsByName(String name) {
+        return userRepository.existsByName(name);
+    }
+
     public void saveAndFlush(User user) {
         userRepository.saveAndFlush(user);
     }
@@ -131,24 +136,26 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
         } else if (examData.getStatus() == ExamData.Status.SUBMITTED) {
             if (existsByQQNumber(examData.getQqNumber())) {
                 throw new UserExistsException();
-            } else {
-                User user = new User(name, examData.getQqNumber(), rawPassword);
-                user.setRole(role);
-                user.setEnabled(enabled);
-                save(user);
-                for (Map.Entry<String, String> oAuth2BindingEntry : examData.getOAuth2Bindings().entrySet()) {
-                    String id = oAuth2BindingEntry.getKey();
-                    if (!oAuth2BindingRepository.existsByProviderId(id)) {
-                        OAuth2Binding oAuth2Binding = OAuth2Binding.of(id, oAuth2BindingEntry.getValue());
-                        oAuth2Binding.setUser(user);
-                        oAuth2BindingRepository.save(oAuth2Binding);
-                        user.getOauth2Bindings().add(oAuth2Binding);
-                    }
-                }
-                save(user);
-                Message<User> message = Message.of("addUser", user);
-                webSocketService.sendMessageToAllUsers(message);
             }
+            if (existsByName(name)) {
+                throw new UserExistsException();
+            }
+            User user = new User(name, examData.getQqNumber(), rawPassword);
+            user.setRole(role);
+            user.setEnabled(enabled);
+            save(user);
+            for (Map.Entry<String, String> oAuth2BindingEntry : examData.getOAuth2Bindings().entrySet()) {
+                String id = oAuth2BindingEntry.getKey();
+                if (!oAuth2BindingRepository.existsByProviderId(id)) {
+                    OAuth2Binding oAuth2Binding = OAuth2Binding.of(id, oAuth2BindingEntry.getValue());
+                    oAuth2Binding.setUser(user);
+                    oAuth2BindingRepository.save(oAuth2Binding);
+                    user.getOauth2Bindings().add(oAuth2Binding);
+                }
+            }
+            save(user);
+            Message<User> message = Message.of("addUser", user);
+            webSocketService.sendMessageToAllUsers(message);
         } else {
             throw new ExamInvalidException();
         }
@@ -229,9 +236,7 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
                             oAuth2Map.put(providerId, subObject.toString());
                             jwtBuilder.header().add("OAuth2", oAuth2Map);
                         });
-                        Cookie examTokenCookie = new Cookie("examToken", examToken);
-                        examTokenCookie.setPath("/checkIn");
-                        response.addCookie(examTokenCookie);
+                        response.addCookie(CookieUtils.createSecureCookie("examToken", examToken));
                         return anonymous;
                     }
                     case null, default -> throw new OAuth2AuthenticationException("不支持的验证类型");
@@ -250,12 +255,8 @@ public class UserService extends DefaultOAuth2UserService implements UserDetails
         userDataMap.put("token", token);
         String userData = URLEncoder.encode(objectMapper.writeValueAsString(userDataMap), StandardCharsets.UTF_8)
                 .replace("+", "%20");
-        Cookie userCookie = new Cookie("user", userData);
-        Cookie tokenCookie = new Cookie("token", token);
-        userCookie.setPath("/checkIn");
-        tokenCookie.setPath("/checkIn");
-        response.addCookie(userCookie);
-        response.addCookie(tokenCookie);
+        response.addCookie(CookieUtils.createSecureCookie("user", userData));
+        response.addCookie(CookieUtils.createSecureCookie("token", token));
     }
 
     public Optional<User> findByOAuth2ProviderAndUserId(String providerId, String userId) {

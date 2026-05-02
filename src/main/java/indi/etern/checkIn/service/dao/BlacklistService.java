@@ -16,7 +16,7 @@ import java.util.Optional;
 
 @Service
 public class BlacklistService {
-    public static BlacklistService singletonInstance;
+    public static volatile BlacklistService singletonInstance;
     
     @Resource
     private BlacklistRepository blacklistRepository;

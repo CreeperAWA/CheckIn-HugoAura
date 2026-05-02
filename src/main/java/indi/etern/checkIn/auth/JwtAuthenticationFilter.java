@@ -1,6 +1,7 @@
 package indi.etern.checkIn.auth;
 
 import indi.etern.checkIn.entities.user.User;
+import indi.etern.checkIn.utils.CookieUtils;
 import jakarta.servlet.*;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,13 +34,8 @@ public class JwtAuthenticationFilter implements Filter {
                 try {
                     userDetails = jwtTokenProvider.getUser(token);
                     if (!userDetails.isEnabled()) {
-                        final Cookie nameCookie = new Cookie("name", userDetails.getUsername());
-                        nameCookie.setPath("/checkIn");
-                        response.addCookie(nameCookie);
-                        final Cookie qqCookie = new Cookie("qq", String.valueOf(userDetails.getQQNumber()));
-                        qqCookie.setPath("/checkIn");
-                        response.addCookie(qqCookie);
-//                    response.sendRedirect("/checkIn/login/");
+                        response.addCookie(CookieUtils.createSecureCookie("name", userDetails.getUsername()));
+                        response.addCookie(CookieUtils.createSecureCookie("qq", String.valueOf(userDetails.getQQNumber())));
                         return;
                     }
                 } catch (Exception e) {

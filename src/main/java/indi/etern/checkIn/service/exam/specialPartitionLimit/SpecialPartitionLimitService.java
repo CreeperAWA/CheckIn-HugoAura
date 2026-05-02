@@ -19,7 +19,7 @@ public class SpecialPartitionLimitService {
     private final SettingService settingService;
     private Map<String,SpecialPartitionLimit> specialPartitionLimits;
     private final Logger logger = LoggerFactory.getLogger(SpecialPartitionLimitService.class);
-    public static SpecialPartitionLimitService singletonInstance;
+    public static volatile SpecialPartitionLimitService singletonInstance;
     
     public SpecialPartitionLimitService(SettingService settingService) {
         this.settingService = settingService;

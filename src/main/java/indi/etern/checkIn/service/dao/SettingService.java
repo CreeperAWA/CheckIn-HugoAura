@@ -16,7 +16,7 @@ import java.util.Objects;
 @Service
 @CacheConfig(cacheNames = "setting")
 public class SettingService {
-    public static SettingService singletonInstance;
+    public static volatile SettingService singletonInstance;
     final SettingRepository settingRepository;
     final Cache cache;
     

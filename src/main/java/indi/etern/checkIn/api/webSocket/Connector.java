@@ -107,9 +107,17 @@ public class Connector {
     
     @OnMessage
     public void onMessage(String message) {
+        processMessage(message, false);
+    }
+    
+    private void processMessage(String message, boolean isReassembled) {
         try {
             JsonRawMessage contextJsonMessage = objectMapper.readValue(message, JsonRawMessage.class);
-            if (!checkToken(contextJsonMessage)) {
+            if (!isReassembled && !checkToken(contextJsonMessage)) {
+                return;
+            }
+            if (isReassembled && sessionUser == null) {
+                sendError(contextJsonMessage.getMessageId(), "Authentication required");
                 return;
             }
             String contextId = contextJsonMessage.getMessageId();
@@ -135,7 +143,7 @@ public class Connector {
                         return;
                     }
                     if (partRawMessageProcessor.isComplete()) {
-                        onMessage(partRawMessageProcessor.toString());
+                        processMessage(partRawMessageProcessor.toString(), true);
                         partMessageMap.remove(partId);
                     }
                 }
@@ -224,14 +232,20 @@ public class Connector {
         if (message.getType().equals(Message.Type.of("token"))) {
             final TokenMessage tokenMessage = objectMapper.readValue(message.getData(), TokenMessage.class);
             sessionUser = jwtTokenProvider.getUser(tokenMessage.token);
-            // 拒绝第三方 API 连接
+            if (sessionUser == null) {
+                sendError(message.getMessageId(), "Invalid token");
+                session.close(new CloseReason(CloseReason.CloseCodes.POLICY_VIOLATION, "Invalid token"));
+                return false;
+            }
             if (sessionUser == User.ThirdParty) {
                 sendError(message.getMessageId(), "Third party API connections should use /api/websocket/thirdParty/{sid} endpoint");
+                session.close(new CloseReason(CloseReason.CloseCodes.POLICY_VIOLATION, "Wrong endpoint"));
                 return false;
             }
             JwtAuthenticationFilter.setUserToSecurityContextHolder(sessionUser);
             if (!sid.equals(String.valueOf(sessionUser.getQQNumber()))) {
                 sendError(message.getMessageId(), "sid is not equal to qq");
+                session.close(new CloseReason(CloseReason.CloseCodes.VIOLATED_POLICY, "SID mismatch"));
                 return false;
             }
             return false;
@@ -239,9 +253,12 @@ public class Connector {
             JwtAuthenticationFilter.setUserToSecurityContextHolder(sessionUser);
             if (!sessionUser.isEnabled()) {
                 sendMessage(Message.error(message.getMessageId(), "user is disabled"));
+                session.close(new CloseReason(CloseReason.CloseCodes.POLICY_VIOLATION, "User is disabled"));
+                return false;
             }
             return sessionUser.isEnabled();
         } else {
+            session.close(new CloseReason(CloseReason.CloseCodes.POLICY_VIOLATION, "Authentication required"));
             return false;
         }
     }

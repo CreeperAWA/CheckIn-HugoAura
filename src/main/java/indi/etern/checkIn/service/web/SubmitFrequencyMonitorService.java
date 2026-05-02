@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class SubmitFrequencyMonitorService {
     private static final Logger logger = LoggerFactory.getLogger(SubmitFrequencyMonitorService.class);
-    public static SubmitFrequencyMonitorService singletonInstance;
+    public static volatile SubmitFrequencyMonitorService singletonInstance;
     
     private final SettingService settingService;
     private final ThirdPartyApiWebSocketService thirdPartyApiWebSocketService;

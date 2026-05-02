@@ -23,7 +23,7 @@ import java.util.List;
 @Service
 @CacheConfig(cacheNames = "verificationRule")
 public class VerificationRuleService {
-    public static VerificationRuleService singletonInstance;
+    public static volatile VerificationRuleService singletonInstance;
     final VerificationRuleRepository verificationRuleRepository;
     final Cache cache;
     private final QuestionService questionService;

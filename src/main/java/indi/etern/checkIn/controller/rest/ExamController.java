@@ -30,6 +30,7 @@ import indi.etern.checkIn.throwable.exam.ExamSubmittedException;
 import indi.etern.checkIn.throwable.exam.generate.ExamGenerateFailedException;
 import indi.etern.checkIn.throwable.exam.generate.PartitionsOutOfRangeException;
 import indi.etern.checkIn.throwable.exam.grading.ExamInvalidException;
+import indi.etern.checkIn.utils.CookieUtils;
 import indi.etern.checkIn.utils.RandomUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -45,7 +46,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -77,16 +77,15 @@ public class ExamController {
     private final indi.etern.checkIn.service.web.ThirdPartyApiWebSocketService thirdPartyApiWebSocketService;
     private final indi.etern.checkIn.service.web.QQVerifyService qqVerifyService;
     
-    /**
-     * 验证状态缓存（内存缓存，JVM重启后清空）
-     * key: QQ号, value: 验证状态信息
-     * 用于存储验证过程中的状态，供前端查询
-     */
-    private static final ConcurrentHashMap<String, VerifyStatusInfo> verifyStatusCache = new ConcurrentHashMap<>();
+    private static final long VERIFY_STATUS_EXPIRY_MS = 10 * 60 * 1000;
     
-    /**
-     * 验证状态信息
-     */
+    private final Map<String, VerifyStatusInfo> verifyStatusCache = new LinkedHashMap<>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, VerifyStatusInfo> eldest) {
+            return size() > 1000;
+        }
+    };
+    
     private static class VerifyStatusInfo {
         String status;
         String guideMessage;
@@ -98,6 +97,10 @@ public class ExamController {
             this.guideMessage = guideMessage;
             this.verifyContent = verifyContent;
             this.updatedAt = System.currentTimeMillis();
+        }
+        
+        boolean isExpired() {
+            return System.currentTimeMillis() - updatedAt > VERIFY_STATUS_EXPIRY_MS;
         }
     }
 
@@ -188,7 +191,14 @@ public class ExamController {
             String qqStr = String.valueOf(generateRequest.qq);
             try {
                 if (qqVerifyService.needsVerification(qqStr)) {
-                    VerifyStatusInfo statusInfo = verifyStatusCache.get(qqStr);
+                    VerifyStatusInfo statusInfo;
+                    synchronized (verifyStatusCache) {
+                        statusInfo = verifyStatusCache.get(qqStr);
+                        if (statusInfo != null && statusInfo.isExpired()) {
+                            verifyStatusCache.remove(qqStr);
+                            statusInfo = null;
+                        }
+                    }
                     if (statusInfo == null || !"success".equals(statusInfo.status)) {
                         Map<String, String> errorDataMap = new HashMap<>();
                         errorDataMap.put("type", "error");
@@ -461,9 +471,7 @@ public class ExamController {
             jwtBuilder.header().add("OAuth2", oAuth2Map);
 
         });
-        Cookie examTokenCookie = new Cookie("examToken", examToken);
-        examTokenCookie.setPath("/checkIn");
-        response.addCookie(examTokenCookie);
+        response.addCookie(CookieUtils.createSecureCookie("examToken", examToken));
         return TOKEN_REFRESHED_SUCCESSFULLY_JSON;
     }
 
@@ -562,7 +570,14 @@ public class ExamController {
                                 if (resultGuideMessage == null || resultGuideMessage.isBlank()) {
                                     resultGuideMessage = getDefaultGuideMessageForStatus(status);
                                 }
-                                verifyStatusCache.put(qqStr, new VerifyStatusInfo(status, resultGuideMessage, verifyContent));
+                                synchronized (verifyStatusCache) {
+                                    verifyStatusCache.compute(qqStr, (key, oldValue) -> {
+                                        if (oldValue != null && oldValue.isExpired()) {
+                                            return new VerifyStatusInfo(status, resultGuideMessage, verifyContent);
+                                        }
+                                        return new VerifyStatusInfo(status, resultGuideMessage, verifyContent);
+                                    });
+                                }
                             }
                         });
                     }
@@ -585,7 +600,9 @@ public class ExamController {
                 response.put("verifyContent", verifyInfo[0]);
             } else {
                 // 第三方API返回无需验证，添加验证状态缓存和已验证缓存
-                verifyStatusCache.put(qqStr, new VerifyStatusInfo("success", "无需验证", ""));
+                synchronized (verifyStatusCache) {
+                    verifyStatusCache.put(qqStr, new VerifyStatusInfo("success", "无需验证", ""));
+                }
                 qqVerifyService.addToVerifiedCache(qqStr);
                 response.put("needVerify", false);
             }
@@ -617,21 +634,26 @@ public class ExamController {
             Long qq = Long.valueOf(request.get("qq").toString());
             String qqStr = String.valueOf(qq);
             
-            // 检查验证状态缓存
-            VerifyStatusInfo statusInfo = verifyStatusCache.get(qqStr);
-            if (statusInfo != null) {
-                response.put("status", statusInfo.status);
-                response.put("guideMessage", statusInfo.guideMessage);
-                response.put("verifyContent", statusInfo.verifyContent);
-                
-                // 如果是验证成功，清除缓存
-                if ("success".equals(statusInfo.status)) {
-                    verifyStatusCache.remove(qqStr);
+            synchronized (verifyStatusCache) {
+                VerifyStatusInfo statusInfo = verifyStatusCache.get(qqStr);
+                if (statusInfo != null) {
+                    if (statusInfo.isExpired()) {
+                        verifyStatusCache.remove(qqStr);
+                        response.put("status", "pending");
+                        response.put("guideMessage", "验证记录已过期，请重新验证");
+                        return response;
+                    }
+                    response.put("status", statusInfo.status);
+                    response.put("guideMessage", statusInfo.guideMessage);
+                    response.put("verifyContent", statusInfo.verifyContent);
+                    
+                    if ("success".equals(statusInfo.status)) {
+                        verifyStatusCache.remove(qqStr);
+                    }
+                } else {
+                    response.put("status", "pending");
+                    response.put("guideMessage", "未找到验证记录，请按照引导操作");
                 }
-            } else {
-                // 未找到验证状态，可能是用户没有按照引导执行操作
-                response.put("status", "pending");
-                response.put("guideMessage", "未找到验证记录，请按照引导操作");
             }
         } catch (Exception e) {
             logger.error("Get QQ verify status failed", e);

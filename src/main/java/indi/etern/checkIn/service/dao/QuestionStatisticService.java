@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 
 @Service
 public class QuestionStatisticService {
-    public static QuestionStatisticService singletonInstance;
+    public static volatile QuestionStatisticService singletonInstance;
     private final QuestionService questionService;
     @Resource
     private QuestionStatisticRepository questionStatisticRepository;
