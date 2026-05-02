@@ -52,7 +52,7 @@ public class ExposeApi {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || authentication.getPrincipal() instanceof String) {
-                throw new PermissionDeniedException("未认证用户");
+                throw new PermissionDeniedException("未认证用户", "authenticate");
             }
             User currentUser = (User) authentication.getPrincipal();
             Map<String, Object> map = new HashMap<>();

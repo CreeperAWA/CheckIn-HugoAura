@@ -234,12 +234,12 @@ public class Connector {
             sessionUser = jwtTokenProvider.getUser(tokenMessage.token);
             if (sessionUser == null) {
                 sendError(message.getMessageId(), "Invalid token");
-                session.close(new CloseReason(CloseReason.CloseCodes.POLICY_VIOLATION, "Invalid token"));
+                session.close(new CloseReason(CloseReason.CloseCodes.CANNOT_ACCEPT, "Invalid token"));
                 return false;
             }
             if (sessionUser == User.ThirdParty) {
                 sendError(message.getMessageId(), "Third party API connections should use /api/websocket/thirdParty/{sid} endpoint");
-                session.close(new CloseReason(CloseReason.CloseCodes.POLICY_VIOLATION, "Wrong endpoint"));
+                session.close(new CloseReason(CloseReason.CloseCodes.CANNOT_ACCEPT, "Wrong endpoint"));
                 return false;
             }
             JwtAuthenticationFilter.setUserToSecurityContextHolder(sessionUser);
@@ -253,12 +253,12 @@ public class Connector {
             JwtAuthenticationFilter.setUserToSecurityContextHolder(sessionUser);
             if (!sessionUser.isEnabled()) {
                 sendMessage(Message.error(message.getMessageId(), "user is disabled"));
-                session.close(new CloseReason(CloseReason.CloseCodes.POLICY_VIOLATION, "User is disabled"));
+                session.close(new CloseReason(CloseReason.CloseCodes.CANNOT_ACCEPT, "User is disabled"));
                 return false;
             }
             return sessionUser.isEnabled();
         } else {
-            session.close(new CloseReason(CloseReason.CloseCodes.POLICY_VIOLATION, "Authentication required"));
+            session.close(new CloseReason(CloseReason.CloseCodes.CANNOT_ACCEPT, "Authentication required"));
             return false;
         }
     }

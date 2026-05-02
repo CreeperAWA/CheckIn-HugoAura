@@ -565,18 +565,9 @@ public class ExamController {
                                     }
                                 }
                                 
-                                // 更新验证状态缓存
-                                String resultGuideMessage = message;
-                                if (resultGuideMessage == null || resultGuideMessage.isBlank()) {
-                                    resultGuideMessage = getDefaultGuideMessageForStatus(status);
-                                }
+                                final String resultGuideMessage = (message == null || message.isBlank()) ? getDefaultGuideMessageForStatus(status) : message;
                                 synchronized (verifyStatusCache) {
-                                    verifyStatusCache.compute(qqStr, (key, oldValue) -> {
-                                        if (oldValue != null && oldValue.isExpired()) {
-                                            return new VerifyStatusInfo(status, resultGuideMessage, verifyContent);
-                                        }
-                                        return new VerifyStatusInfo(status, resultGuideMessage, verifyContent);
-                                    });
+                                    verifyStatusCache.compute(qqStr, (key, oldValue) -> new VerifyStatusInfo(status, resultGuideMessage, verifyContent));
                                 }
                             }
                         });
