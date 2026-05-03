@@ -166,7 +166,7 @@ public class ExamGenerator {
                     data.put("paper_id", examData.getId());
                     data.put("generate_time", new int[]{now.getYear(), now.getMonthValue(), now.getDayOfMonth(), now.getHour(), now.getMinute(), now.getSecond(), now.getNano()});
                     thirdPartyApiWebSocketService.sendNotification("notification_exam_start", data);
-                    logger.info("Sent exam_start notification for qq {} exam {}", qq, examData.getId());
+                    logger.info("已发送考试开始通知，QQ: {} 试卷: {}", qq, examData.getId());
                 } else {
                     logger.debug("examStart notification is disabled");
                 }

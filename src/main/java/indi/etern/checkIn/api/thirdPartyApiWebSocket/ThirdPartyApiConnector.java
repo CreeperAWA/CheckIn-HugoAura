@@ -133,7 +133,7 @@ public class ThirdPartyApiConnector {
         session.setMaxBinaryMessageBufferSize(0);
         CONNECTORS.add(this);
         this.sid = sid;
-        logger.info("ThirdPartyApi [{}]: connected", sid);
+        logger.info("第三方API [{}] 已连接", sid);
     }
 
     /**
@@ -147,9 +147,9 @@ public class ThirdPartyApiConnector {
     public void onError(Throwable throwable) {
         String logPrefix = buildLogPrefix();
         if (throwable instanceof IOException) {
-            logger.trace("{}: connection error (possibly normal disconnection)", logPrefix, throwable);
+            logger.trace("{}: 连接错误，可能是正常断开", logPrefix, throwable);
         } else {
-            logger.error("{}: unexpected error", logPrefix, throwable);
+            logger.error("{}: 意外错误", logPrefix, throwable);
         }
     }
 
@@ -162,7 +162,7 @@ public class ThirdPartyApiConnector {
     @OnClose
     public void onClose() {
         CONNECTORS.remove(this);
-        logger.info("ThirdPartyApi [{}]: closed", sid);
+        logger.info("第三方API [{}] 已关闭", sid);
     }
 
     /**
@@ -411,7 +411,7 @@ public class ThirdPartyApiConnector {
             authenticated = true;
             sendMessage(ThirdPartyApiMessageBuilder.createSuccess(message.getMessageId()));
             thirdPartyApiWebSocketService.onThirdPartyApiAuthenticated(this);
-            logger.info("ThirdPartyApi [{}]: authenticated successfully", sid);
+            logger.info("第三方API [{}] 认证成功", sid);
             return true;
             
         } catch (Exception e) {

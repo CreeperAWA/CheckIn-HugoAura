@@ -48,7 +48,7 @@ public class JwtTokenProvider {
             final SettingItem item = settingService.getItem("other", "jwtSecret");
             jwtSecret = item.getValue(String.class);
         } catch (NoSuchElementException e) {
-            logger.info("setting \"other.jwtRawSecret\" not found, now generating new secret and save");
+            logger.info("未找到配置项 \"other.jwtRawSecret\"，正在生成新的密钥并保存");
             byte[] bytes = new byte[64];
             new SecureRandom().nextBytes(bytes);
             jwtSecret = Base64.getEncoder().encodeToString(bytes);

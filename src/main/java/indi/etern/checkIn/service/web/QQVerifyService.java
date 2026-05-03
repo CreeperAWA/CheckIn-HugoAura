@@ -115,7 +115,7 @@ public class QQVerifyService {
      */
     public void addToVerifiedCache(String qqStr) {
         verifiedQQCache.put(qqStr, System.currentTimeMillis());
-        logger.info("QQ {} added to verified cache", qqStr);
+        logger.info("QQ {} 已添加至已验证缓存", qqStr);
     }
     
     /**
@@ -124,7 +124,7 @@ public class QQVerifyService {
      */
     public void removeFromVerifiedCache(String qqStr) {
         verifiedQQCache.remove(qqStr);
-        logger.info("QQ {} removed from verified cache", qqStr);
+        logger.info("QQ {} 已从已验证缓存中移除", qqStr);
     }
     
     /**

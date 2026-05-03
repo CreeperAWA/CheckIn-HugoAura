@@ -68,11 +68,11 @@ public class GenerateThirdPartyApiSidToken extends BaseAction<GenerateThirdParty
         
         try {
             String trimmedSid = sid.trim();
-            logger.info("Generating token for SID: {}", trimmedSid);
+            logger.info("正在为 SID 生成 Token: {}", trimmedSid);
             
             String token = jwtTokenProvider.generateThirdPartyApiSidToken(trimmedSid);
             
-            logger.info("Token generated successfully for SID: {}", trimmedSid);
+            logger.info("Token 生成成功，SID: {}", trimmedSid);
             context.resolve(createSuccessResponse(token));
             
         } catch (Exception e) {

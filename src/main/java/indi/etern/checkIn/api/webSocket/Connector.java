@@ -79,15 +79,15 @@ public class Connector {
         session.setMaxBinaryMessageBufferSize(0);
         CONNECTORS.add(this);
         this.sid = sid;
-        logger.info("sid_{}:connected", sid);
+        logger.info("WebSocket 连接已建立，SID: {}", sid);
     }
 
     @OnError
     public void onError(Throwable throwable) {
         if (throwable instanceof IOException) {
-            logger.trace("Websocket connector error, may cause by normal disconnection",throwable);
+            logger.trace("WebSocket 连接错误，可能是正常断开",throwable);
         } else {
-            logger.error("Websocket connector error",throwable);
+            logger.error("WebSocket 连接器错误",throwable);
         }
     }
     
@@ -96,7 +96,7 @@ public class Connector {
     public void onClose() {
         CONNECTORS.remove(this);
         webSocketService.unsubscribeAllChannels(sid);
-        logger.info("sid_{}:close", sid);
+        logger.info("WebSocket 连接已关闭，SID: {}", sid);
     }
     
     private final Map<String, PartRawMessageProcessor> partMessageMap = new HashMap<>();
@@ -167,12 +167,12 @@ public class Connector {
                 }
                 case "check_qq_verify" -> {
                     // 前端询问是否需要QQ验证
-                    logger.info("Received check_qq_verify request from user {}({})", sessionUser.getName(), sessionUser.getQQNumber());
+                    logger.info("收到用户 check_qq_verify 请求，用户: {}({})", sessionUser.getName(), sessionUser.getQQNumber());
                     thirdPartyApiWebSocketService.checkQQVerify(this, sid, contextJsonMessage);
                 }
                 case "start_qq_verify" -> {
                     // 前端确认需要验证，后端发送验证请求给第三方
-                    logger.info("Received start_qq_verify request from user {}({})", sessionUser.getName(), sessionUser.getQQNumber());
+                    logger.info("收到用户 start_qq_verify 请求，用户: {}({})", sessionUser.getName(), sessionUser.getQQNumber());
                     thirdPartyApiWebSocketService.startQQVerify(this, sid, contextJsonMessage);
                 }
                 default -> {

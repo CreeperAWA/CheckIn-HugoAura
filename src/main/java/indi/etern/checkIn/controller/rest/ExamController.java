@@ -131,7 +131,7 @@ public class ExamController {
     @PostMapping(path = "/api/generate")
     @Transactional(noRollbackFor = Throwable.class)
     public String generateExam(@RequestBody GenerateRequest generateRequest, HttpServletRequest httpServletRequest) throws JsonProcessingException {
-        logger.info("Received generate exam request for QQ: {}, partitionIds: {}", 
+        logger.info("收到生成试卷请求，QQ: {}, 分区ID: {}", 
             generateRequest.qq, generateRequest.partitionIds);
         
         Cookie examTokenCookie = Arrays.stream(httpServletRequest.getCookies())

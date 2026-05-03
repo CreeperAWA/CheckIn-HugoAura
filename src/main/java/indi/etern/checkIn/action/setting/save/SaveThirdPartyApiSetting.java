@@ -103,7 +103,7 @@ public class SaveThirdPartyApiSetting extends BaseAction<SaveThirdPartyApiSettin
         boolean tokensChanged = false;
         
         if (createdThirdPartyApiTokenList != null && !createdThirdPartyApiTokenList.isEmpty()) {
-            logger.info("Creating {} new ThirdPartyApiTokens", createdThirdPartyApiTokenList.size());
+            logger.info("正在创建 {} 个新的 ThirdPartyApiToken", createdThirdPartyApiTokenList.size());
             List<ThirdPartyApiTokenItem> thirdPartyApiTokenItems = new ArrayList<>();
             for (Map<String, String> tokenData : createdThirdPartyApiTokenList) {
                 thirdPartyApiTokenItems.add(ThirdPartyApiTokenItem.generateNewToken(

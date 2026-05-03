@@ -124,7 +124,7 @@ public class ExamDataService {
                 data.put("max_answer_count", answerLimitService.getMaxAnswerCount());
                 data.put("answer_count", answerLimitService.getAnswerCount(String.valueOf(examData.getQqNumber())));
                 thirdPartyApiWebSocketService.sendNotification("notification_paper_submit", data);
-                logger.info("Sent paper_submit notification for exam {}", examData.getId());
+                logger.info("已发送试卷提交通知，试卷ID: {}", examData.getId());
             } else {
                 logger.debug("paperSubmit notification is disabled");
             }
@@ -146,7 +146,7 @@ public class ExamDataService {
                     data.put("submit_time", new int[]{now.getYear(), now.getMonthValue(), now.getDayOfMonth(), now.getHour(), now.getMinute(), now.getSecond(), now.getNano()});
                     data.put("interval", intervalSeconds);
                     thirdPartyApiWebSocketService.sendNotification("notification_quick_submit", data);
-                    logger.info("Sent quick_submit notification for exam {} (interval: {} seconds)", examData.getId(), intervalSeconds);
+                    logger.info("已发送快速提交通知，试卷ID: {} (用时: {} 秒)", examData.getId(), intervalSeconds);
                 } else {
                     logger.debug("quickSubmit notification not sent: interval {} seconds > threshold {} minutes", intervalSeconds, thresholdMinutes);
                 }

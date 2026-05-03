@@ -45,7 +45,7 @@ public class ThirdPartyApiTokenService {
      */
     @CachePut(key = "#thirdPartyApiTokenItem.id")
     public ThirdPartyApiTokenItem save(ThirdPartyApiTokenItem thirdPartyApiTokenItem) {
-        logger.info("Saving ThirdPartyApiToken, id: {}, sid: {}", 
+        logger.info("正在保存 ThirdPartyApiToken，ID: {}, SID: {}", 
             thirdPartyApiTokenItem.getId(), thirdPartyApiTokenItem.getSid());
         return thirdPartyApiTokenRepository.save(thirdPartyApiTokenItem);
     }
@@ -68,7 +68,7 @@ public class ThirdPartyApiTokenService {
      */
     @CacheEvict(key = "#thirdPartyApiTokenItem.id")
     public void delete(ThirdPartyApiTokenItem thirdPartyApiTokenItem) {
-        logger.info("Deleting ThirdPartyApiToken, id: {}", thirdPartyApiTokenItem.getId());
+        logger.info("正在删除 ThirdPartyApiToken，ID: {}", thirdPartyApiTokenItem.getId());
         thirdPartyApiTokenRepository.delete(thirdPartyApiTokenItem);
     }
     
@@ -81,7 +81,7 @@ public class ThirdPartyApiTokenService {
      */
     @CacheEvict(allEntries = true)
     public void saveAll(List<ThirdPartyApiTokenItem> thirdPartyApiTokenItems) {
-        logger.info("Batch saving {} ThirdPartyApiTokens", thirdPartyApiTokenItems.size());
+        logger.info("正在批量保存 {} 个 ThirdPartyApiToken", thirdPartyApiTokenItems.size());
         thirdPartyApiTokenRepository.saveAll(thirdPartyApiTokenItems);
     }
     
@@ -94,7 +94,7 @@ public class ThirdPartyApiTokenService {
      */
     @CacheEvict(allEntries = true)
     public void deleteAllById(List<String> deletedThirdPartyApiTokenList) {
-        logger.info("Batch deleting {} ThirdPartyApiTokens", deletedThirdPartyApiTokenList.size());
+        logger.info("正在批量删除 {} 个 ThirdPartyApiToken", deletedThirdPartyApiTokenList.size());
         thirdPartyApiTokenRepository.deleteAllById(deletedThirdPartyApiTokenList);
     }
     

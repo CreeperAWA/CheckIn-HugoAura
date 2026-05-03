@@ -215,7 +215,7 @@ public class ThirdPartyApiWebSocketService {
         
         Message<Map<String, Object>> message = ThirdPartyApiMessageBuilder.createBlacklistFull(list);
         connector.sendMessage(message);
-        logger.info("Sent full blacklist to ThirdPartyApi [{}], count: {}", connector.getSid(), list.size());
+        logger.info("已发送完整黑名单数据至第三方API [{}]，数量: {}", connector.getSid(), list.size());
     }
     
     /**
@@ -234,7 +234,7 @@ public class ThirdPartyApiWebSocketService {
             toTimeArray(blacklist.getCreatedAt())
         );
         sendToAllThirdPartyApis(message);
-        logger.info("Broadcast blacklist add notification, id: {}, qq: {}", blacklist.getId(), blacklist.getTargetId());
+        logger.info("已广播黑名单新增通知，ID: {}, QQ: {}", blacklist.getId(), blacklist.getTargetId());
     }
     
     /**
@@ -248,7 +248,7 @@ public class ThirdPartyApiWebSocketService {
     public void sendBlacklistRemove(String id, String qq) {
         Message<Map<String, Object>> message = ThirdPartyApiMessageBuilder.createBlacklistRemove(id, qq);
         sendToAllThirdPartyApis(message);
-        logger.info("Broadcast blacklist remove notification, id: {}, qq: {}", id, qq);
+        logger.info("已广播黑名单移除通知，ID: {}, QQ: {}", id, qq);
     }
     
     /**
@@ -280,7 +280,7 @@ public class ThirdPartyApiWebSocketService {
         pendingVerifyCheckRequests.put(messageId, request);
         
         sendToAllThirdPartyApis(message);
-        logger.info("Sent QQ verify check for QQ: {}, messageId: {}", qq, messageId);
+        logger.info("已发送QQ验证询问，QQ: {}, 消息ID: {}", qq, messageId);
     }
     
     /**
@@ -305,7 +305,7 @@ public class ThirdPartyApiWebSocketService {
         String qq = (String) data.get("qq");
         Boolean needVerify = (Boolean) data.get("need_verify");
         
-        logger.info("Received QQ verify check response from ThirdPartyApi [{}], QQ: {}, need_verify: {}, messageId: {}", 
+        logger.info("收到第三方API [{}] 的验证询问响应，QQ: {}, need_verify: {}, 消息ID: {}", 
             connector.getSid(), qq, needVerify, messageId);
         
         // 优先通过MessageID查找（正确实现时应当匹配）
@@ -332,7 +332,7 @@ public class ThirdPartyApiWebSocketService {
         }
         
         if (request != null) {
-            logger.info("Matched verify check request for QQ: {}, need_verify: {}", qq, needVerify);
+            logger.info("成功匹配验证询问请求，QQ: {}, need_verify: {}", qq, needVerify);
             request.getCallback().onResponse(needVerify);
         } else {
             logger.warn("No pending verify check request found for messageId: {} or QQ: {}. Response may be delayed or duplicate.", 
@@ -358,7 +358,7 @@ public class ThirdPartyApiWebSocketService {
         pendingVerifyRequests.put(messageId, request);
         
         sendToAllThirdPartyApis(message);
-        logger.info("Sent QQ verify request for QQ: {}, messageId: {}", qq, messageId);
+        logger.info("已发送QQ验证请求，QQ: {}, 消息ID: {}", qq, messageId);
     }
     
     /**
@@ -378,7 +378,7 @@ public class ThirdPartyApiWebSocketService {
         String status = (String) data.get("status");
         String responseMessage = (String) data.get("message");
         
-        logger.info("Received QQ verify response from ThirdPartyApi [{}], QQ: {}, status: {}", 
+        logger.info("收到第三方API [{}] 的验证响应，QQ: {}, 状态: {}", 
             connector.getSid(), qq, status);
         
         processVerifyResponse(messageId, qq, status, responseMessage);
@@ -401,7 +401,7 @@ public class ThirdPartyApiWebSocketService {
         String status = (String) data.get("status");
         String responseMessage = (String) data.get("message");
         
-        logger.info("Received QQ verify response from user connector, QQ: {}, status: {}", qq, status);
+        logger.info("收到用户连接器的验证响应，QQ: {}, 状态: {}", qq, status);
         
         processVerifyResponse(messageId, qq, status, responseMessage);
     }
@@ -438,7 +438,7 @@ public class ThirdPartyApiWebSocketService {
         }
         
         if (request != null) {
-            logger.info("Matched verify request for QQ: {}, status: {}", qq, status);
+            logger.info("成功匹配验证请求，QQ: {}, 状态: {}", qq, status);
             request.getCallback().onResponse(status, responseMessage);
         } else {
             logger.warn("No pending verify request found for messageId: {} or QQ: {}. Response may be delayed or duplicate. Status: {}", 
@@ -460,7 +460,7 @@ public class ThirdPartyApiWebSocketService {
         String messageId = message.getMessageId();
         String qq = (String) data.get("qq");
         
-        logger.info("Received exam records query from ThirdPartyApi [{}], QQ: {}, messageId: {}", 
+        logger.info("收到第三方API [{}] 的考试记录查询请求，QQ: {}, 消息ID: {}", 
             connector.getSid(), qq, messageId);
         
         if (qq == null || qq.isBlank()) {
@@ -513,7 +513,7 @@ public class ThirdPartyApiWebSocketService {
                 messageId, responseData);
             sendMessageToConnector(connector, responseMessage);
             
-            logger.info("Sent exam records response to ThirdPartyApi [{}], QQ: {}, count: {}", 
+            logger.info("已发送考试记录响应至第三方API [{}]，QQ: {}, 记录数: {}", 
                 connector.getSid(), qq, records.size());
         } catch (NumberFormatException e) {
             sendMessageToConnector(connector, ThirdPartyApiMessageBuilder.createError(messageId, "QQ号格式错误"));
@@ -537,7 +537,7 @@ public class ThirdPartyApiWebSocketService {
         String messageId = message.getMessageId();
         String paperId = (String) data.get("paper_id");
         
-        logger.info("Received exam invalidate request from ThirdPartyApi [{}], paper_id: {}, messageId: {}", 
+        logger.info("收到第三方API [{}] 的试卷无效化请求，试卷ID: {}, 消息ID: {}", 
             connector.getSid(), paperId, messageId);
         
         if (paperId == null || paperId.isBlank()) {
@@ -565,7 +565,7 @@ public class ThirdPartyApiWebSocketService {
             examData.sendUpdateExamRecord();
             
             sendMessageToConnector(connector, ThirdPartyApiMessageBuilder.createExamInvalidateResponse(messageId, paperId, "success"));
-            logger.info("Exam invalidated successfully, paper_id: {}", paperId);
+            logger.info("试卷无效化处理成功，试卷ID: {}", paperId);
         } catch (Exception e) {
             logger.error("Failed to invalidate exam, paper_id: {}", paperId, e);
             sendMessageToConnector(connector, ThirdPartyApiMessageBuilder.createError(messageId, "无效化考试失败: " + e.getMessage()));
@@ -598,7 +598,7 @@ public class ThirdPartyApiWebSocketService {
         String userQQ, 
         JsonRawMessage requestMessage
     ) {
-        logger.info("Checking QQ verify for QQ: {}", userQQ);
+        logger.info("正在检查QQ验证状态，QQ: {}", userQQ);
         
         // 检查是否有第三方API客户端连接
         if (indi.etern.checkIn.api.thirdPartyApiWebSocket.ThirdPartyApiConnector.CONNECTORS.isEmpty()) {
@@ -660,7 +660,7 @@ public class ThirdPartyApiWebSocketService {
             sendQQVerifyCheck(userQQ, new VerifyCheckRequest.VerifyCheckCallback() {
                 @Override
                 public void onResponse(Boolean needVerify) {
-                    logger.info("QQ verify check response for QQ {}: need_verify = {}", userQQ, needVerify);
+                    logger.info("QQ验证询问响应，QQ: {}, need_verify = {}", userQQ, needVerify);
                     
                     if (needVerify) {
                         // 需要验证，生成验证内容并发送给第三方
@@ -680,7 +680,7 @@ public class ThirdPartyApiWebSocketService {
                                         java.util.concurrent.ConcurrentHashMap<String, Long> cache = 
                                             (java.util.concurrent.ConcurrentHashMap<String, Long>) cacheField.get(null);
                                         cache.put(userQQ, System.currentTimeMillis());
-                                        logger.info("QQ {} verification succeeded, added to cache", userQQ);
+                                        logger.info("QQ验证成功，已添加至缓存，QQ: {}", userQQ);
                                     } catch (Exception e) {
                                         logger.error("Failed to add QQ to verified cache", e);
                                     }
@@ -724,7 +724,7 @@ public class ThirdPartyApiWebSocketService {
         String userQQ, 
         JsonRawMessage requestMessage
     ) {
-        logger.info("Starting QQ verify for QQ: {}", userQQ);
+        logger.info("开始QQ验证流程，QQ: {}", userQQ);
         // 验证流程已经在 checkQQVerify 中启动，这里只需要确认即可
         // 实际验证结果会通过 qq_verify_result 消息推送给前端
         Map<String, Object> data = new HashMap<>();
@@ -811,7 +811,7 @@ public class ThirdPartyApiWebSocketService {
         String userQQ, 
         JsonRawMessage requestMessage
     ) {
-        logger.info("Starting verification flow for QQ: {}", userQQ);
+        logger.info("启动验证流程，QQ: {}", userQQ);
         
         // 检查是否有第三方API客户端连接
         if (indi.etern.checkIn.api.thirdPartyApiWebSocket.ThirdPartyApiConnector.CONNECTORS.isEmpty()) {
@@ -823,7 +823,7 @@ public class ThirdPartyApiWebSocketService {
         sendQQVerifyCheck(userQQ, new VerifyCheckRequest.VerifyCheckCallback() {
             @Override
             public void onResponse(Boolean needVerify) {
-                logger.info("QQ verify check response for QQ {}: need_verify = {}", userQQ, needVerify);
+                logger.info("QQ验证询问响应，QQ: {}, need_verify = {}", userQQ, needVerify);
                 
                 try {
                     if (needVerify) {
@@ -859,7 +859,7 @@ public class ThirdPartyApiWebSocketService {
                                         java.util.concurrent.ConcurrentHashMap<String, Long> cache = 
                                             (java.util.concurrent.ConcurrentHashMap<String, Long>) cacheField.get(null);
                                         cache.put(userQQ, System.currentTimeMillis());
-                                        logger.info("QQ {} verification succeeded, added to cache", userQQ);
+                                        logger.info("QQ验证成功，已添加至缓存，QQ: {}", userQQ);
                                     } catch (Exception e) {
                                         logger.error("Failed to add QQ to verified cache", e);
                                     }
@@ -963,7 +963,7 @@ public class ThirdPartyApiWebSocketService {
     public void sendNotification(String type, Map<String, Object> data) {
         Message<Map<String, Object>> message = ThirdPartyApiMessageBuilder.createNotification(type, data);
         sendToAllThirdPartyApis(message);
-        logger.info("Sent notification to all ThirdPartyApis, type: {}", type);
+        logger.info("已向所有第三方API发送通知，类型: {}", type);
     }
     
     /**
