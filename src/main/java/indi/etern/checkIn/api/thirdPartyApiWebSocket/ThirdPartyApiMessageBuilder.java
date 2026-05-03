@@ -4,6 +4,7 @@ import indi.etern.checkIn.api.webSocket.Message;
 import indi.etern.checkIn.utils.UUIDv7;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -175,14 +176,12 @@ public final class ThirdPartyApiMessageBuilder {
      * 创建考试无效化响应消息
      * 
      * @param messageId 消息ID，与请求保持一致
-     * @param paperId 试卷ID
-     * @param status 操作状态，success 或 failed
+     * @param results 每个试卷的无效化结果列表，每个元素包含paper_id、status、可选error字段
      * @return 考试无效化响应消息
      */
-    public static Message<Map<String, Object>> createExamInvalidateResponse(String messageId, String paperId, String status) {
+    public static Message<Map<String, Object>> createExamInvalidateResponse(String messageId, List<Map<String, Object>> results) {
         Map<String, Object> data = new HashMap<>();
-        data.put("paper_id", paperId);
-        data.put("status", status);
+        data.put("results", results);
         return Message.of(ThirdPartyApiMessageTypes.EXAM_INVALIDATE_RESPONSE, messageId, data);
     }
 }
