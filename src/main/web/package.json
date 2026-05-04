@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.6",
-    "@vue/language-core": "^3.2.7",
+    "@vue/language-core": "^3.2.8",
     "@vue/language-server": "^3.2.7",
     "@ygoe/msgpack": "^1.0.3",
     "unplugin-auto-import": "^21.0.0",
