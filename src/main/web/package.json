@@ -22,7 +22,7 @@
     "uuidv7": "^1.2.1",
     "vite": "^8.0.10",
     "vite-plugin-pwa": "^1.2.0",
-    "vue": "^3.5.33",
+    "vue": "^3.5.34",
     "vue-draggable-plus": "^0.6.0",
     "vue-router": "^5.0.6",
     "vue-turnstile": "^1.0.11",
