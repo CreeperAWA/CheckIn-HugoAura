@@ -14,6 +14,8 @@ import indi.etern.checkIn.entities.question.impl.QuestionGroup;
 import indi.etern.checkIn.service.dao.QuestionService;
 import indi.etern.checkIn.service.dao.VerificationRuleService;
 import indi.etern.checkIn.service.dao.verify.ValidationResult;
+import indi.etern.checkIn.service.question.QuestionVersionService;
+import indi.etern.checkIn.service.question.ScoreRecalculationService;
 import indi.etern.checkIn.service.exam.StatusService;
 import indi.etern.checkIn.utils.QuestionCreateUtils;
 import jakarta.annotation.Nonnull;
@@ -25,6 +27,8 @@ import java.util.Optional;
 @Action(value = "createOrUpdateQuestionGroup",exposed = false)
 public class CreateOrUpdateQuestionGroup extends BaseAction<CreateOrUpdateQuestionGroup.Input, OutputData> {
     private final VerificationRuleService verificationRuleService;
+    private final QuestionVersionService questionVersionService;
+    private final ScoreRecalculationService scoreRecalculationService;
     
     public record Input(@Nonnull QuestionGroupDTO questionGroupDTO) implements InputData {}
     public record SuccessOutput(QuestionGroup questionGroup) implements OutputData {
@@ -41,9 +45,14 @@ public class CreateOrUpdateQuestionGroup extends BaseAction<CreateOrUpdateQuesti
     }
     final QuestionService questionService;
 
-    public CreateOrUpdateQuestionGroup(QuestionService questionService, VerificationRuleService verificationRuleService) {
+    public CreateOrUpdateQuestionGroup(QuestionService questionService,
+                                       VerificationRuleService verificationRuleService,
+                                       QuestionVersionService questionVersionService,
+                                       ScoreRecalculationService scoreRecalculationService) {
         this.questionService = questionService;
         this.verificationRuleService = verificationRuleService;
+        this.questionVersionService = questionVersionService;
+        this.scoreRecalculationService = scoreRecalculationService;
     }
     
     @Override
@@ -56,7 +65,6 @@ public class CreateOrUpdateQuestionGroup extends BaseAction<CreateOrUpdateQuesti
         final ValidationResult result = verificationRuleService.verify(questionGroupDTO, VerificationRuleService.VerifyTargetType.QUESTION_GROUP);
         final Map<String, IssueDTO> errors = result.getErrors();
         if (errors.isEmpty()) {
-            final QuestionGroup questionGroup = QuestionCreateUtils.createQuestionGroup(questionGroupDTO);
             if (authorChanged) {
                 context.requirePermission("change question group author");
             }
@@ -88,8 +96,44 @@ public class CreateOrUpdateQuestionGroup extends BaseAction<CreateOrUpdateQuesti
             }
             
             if (errors.isEmpty()) {
+                // Version management: detect changes and handle version/recalculation
+                if (previousQuestion.isPresent()) {
+                    Long currentUserQq = context.getCurrentUser().getQQNumber();
+                    QuestionVersionService.VersionHandlingResult versionResult = questionVersionService.handleVersionOnUpdate(
+                            previousQuestion.get(), questionGroupDTO, currentUserQq);
+                    
+                    if (versionResult.newVersionCreated()) {
+                        if (versionResult.question() instanceof QuestionGroup newVersionGroup) {
+                            newVersionGroup.setVerificationDigest(verificationRuleService.digest(questionGroupDTO));
+                            newVersionGroup.setValidationResult(result);
+                            questionService.saveAll(newVersionGroup.getQuestionLinks().stream().map(QuestionLinkImpl::getSource).toList());
+                            questionService.save(newVersionGroup);
+                            context.resolve(new SuccessOutput(newVersionGroup));
+                            StatusService.singletonInstance.flush();
+                            return;
+                        }
+                    }
+                    
+                    if (versionResult.recalculationNeeded()) {
+                        final QuestionGroup questionGroup = QuestionCreateUtils.createQuestionGroup(questionGroupDTO);
+                        questionGroup.setVerificationDigest(verificationRuleService.digest(questionGroupDTO));
+                        questionGroup.setValidationResult(result);
+                        questionService.saveAll(questionGroup.getQuestionLinks().stream().map(QuestionLinkImpl::getSource).toList());
+                        questionService.save(questionGroup);
+                        scoreRecalculationService.triggerAsyncRecalculation(questionGroup.getId(), currentUserQq);
+                        context.resolve(new SuccessOutput(questionGroup));
+                        StatusService.singletonInstance.flush();
+                        return;
+                    }
+                }
+                
+                // Default path
+                final QuestionGroup questionGroup = QuestionCreateUtils.createQuestionGroup(questionGroupDTO);
                 questionGroup.setVerificationDigest(verificationRuleService.digest(questionGroupDTO));
                 questionGroup.setValidationResult(result);
+                if (previousQuestion.isEmpty() && questionGroup.getVersionGroupId() == null) {
+                    questionGroup.setVersionGroupId(questionGroup.getId());
+                }
                 questionService.saveAll(questionGroup.getQuestionLinks().stream().map(QuestionLinkImpl::getSource).toList());
                 questionService.save(questionGroup);
                 context.resolve(new SuccessOutput(questionGroup));

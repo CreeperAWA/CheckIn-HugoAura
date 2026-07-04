@@ -85,6 +85,7 @@ public class ExamDataService {
         levelSplitArray[levelSplitArray.length - 1] = examData.getQuestionAmount() * singleQuestionScore;
         
         final ExamResult examResult = examData.checkAnswerMap(answer);
+        examData.setRawAnswerData(answer);
         final int searchResult = Arrays.binarySearch(levelSplitArray, examResult.getScore());
         int levelIndex;
         if (searchResult == levelSplitArray.length - 1) {//max score

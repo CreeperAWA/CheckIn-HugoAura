@@ -868,7 +868,30 @@ const QuestionCache = {
             }
         }
         return ableToDelete;
+    },
+    getVersionHistory(questionId) {
+        return new Promise((resolve, reject) => {
+            WebSocketConnector.send({
+                type: 'getQuestionVersionHistory',
+                data: { questionId }
+            }).then((response) => {
+                resolve(response.data.versions);
+            }, (error) => {
+                reject(error.data || error);
+            });
+        });
+    },
+    getVersionQuestionData(questionId) {
+        return new Promise((resolve, reject) => {
+            WebSocketConnector.send({
+                type: 'getQuestionInfo',
+                data: { questionId }
+            }).then((response) => {
+                resolve(response.data.question);
+            }, (error) => {
+                reject(error.data || error);
+            });
+        });
     }
-
 }
 export default QuestionCache

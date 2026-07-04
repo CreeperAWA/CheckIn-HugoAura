@@ -109,6 +109,13 @@ public class ExamData implements BaseEntity<String> , Comparable<ExamData>{
     @Convert(converter = ObjectJsonConverter.class)
     @Column(name = "oauth2_bindings", columnDefinition = "mediumtext")
     Map<String, String> oAuth2Bindings;
+    
+    @Setter
+    @Getter
+    @Convert(converter = ObjectJsonConverter.class)
+    @Column(name = "raw_answer_data", columnDefinition = "mediumtext")
+    @JsonIgnore
+    Map<String, Object> rawAnswerData;
 
     public ExamResult checkAnswerMap(Map<String, Object> answerMap) {
         List<Question> orderedQuestions =

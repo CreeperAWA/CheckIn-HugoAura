@@ -1,6 +1,7 @@
 package indi.etern.checkIn.repositories;
 
 import indi.etern.checkIn.entities.question.impl.Question;
+import indi.etern.checkIn.entities.question.impl.Question.VersionStatus;
 import indi.etern.checkIn.entities.user.User;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Pageable;
@@ -21,4 +22,7 @@ public interface QuestionRepository extends JpaRepository<Question, String> {
 
     @EntityGraph(value = "Question.LinkWrapper", type = EntityGraph.EntityGraphType.FETCH)
     List<Question> findAllByLastModifiedTimeBeforeAndLinkWrapper_Class(LocalDateTime localDateTime, Class<?> linkClass, Sort sort, Limit limit);
+    
+    List<Question> findByVersionGroupIdAndVersionStatus(String versionGroupId, VersionStatus status);
+    List<Question> findByVersionGroupIdOrderByVersionNumberDesc(String versionGroupId);
 }

@@ -106,6 +106,115 @@ public class QuestionCreateUtils {
         }));
     }
     
+    public static MultipleChoicesQuestion createMultipleChoicesQuestionForNewVersion(MultipleChoicesQuestionDTO questionDTO) {
+        MultipleChoicesQuestion.Builder builder = new MultipleChoicesQuestion.Builder();
+        // Do NOT set ID - let Builder.build() generate a new one
+        
+        final String content = questionDTO.getContent();
+        if (content != null) {
+            builder.setQuestionContent(content);
+        }
+        
+        String explanation = questionDTO.getExplanation();
+        if (explanation != null) {
+            builder.setExplanation(explanation);
+        }
+        
+        Boolean enabled = questionDTO.getEnabled();
+        if (enabled != null) {
+            builder.setEnable(enabled);
+        }
+        
+        List<ChoiceDTO> choices = questionDTO.getChoices();
+        if (choices != null) {
+            builder.getChoices().clear();
+            for (ChoiceDTO choiceDTO : choices) {
+                builder.addChoice(choiceDTO.toChoice());
+            }
+        }
+        
+        List<String> partitionIds = questionDTO.getPartitionIds();
+        if (partitionIds != null) {
+            builder.usePartitionLinks(linkWrapper -> {
+                final Set<Partition> targets = linkWrapper.getTargets();
+                targets.clear();
+                for (String partitionId : partitionIds) {
+                    targets.add(Partition.ofId(partitionId));
+                }
+            });
+        }
+        
+        Long authorQQ = questionDTO.getAuthorQQ();
+        if (authorQQ != null) {
+            builder.setAuthor(UserService.singletonInstance.findByQQNumber(authorQQ).orElse(null));
+        }
+        
+        List<ImageDTO> imageDTOs = questionDTO.getImages();
+        if (imageDTOs != null) {
+            builder.getImageBase64Strings().clear();
+            for (ImageDTO imageDTO : imageDTOs) {
+                builder.addBase64Image(imageDTO.getName(), imageDTO.getUrl());
+            }
+        }
+        return builder.build();
+    }
+    
+    public static QuestionGroup createQuestionGroupForNewVersion(QuestionGroupDTO questionGroupDTO) {
+        QuestionGroup.Builder builder = new QuestionGroup.Builder();
+        // Do NOT set ID - let Builder.build() generate a new one
+        
+        String content = questionGroupDTO.getContent();
+        if (content != null) {
+            builder.setContent(content);
+        }
+        
+        String explanation = questionGroupDTO.getExplanation();
+        if (explanation != null) {
+            builder.setExplanation(explanation);
+        }
+        
+        List<String> partitionIds = questionGroupDTO.getPartitionIds();
+        if (partitionIds != null) {
+            builder.getPartitions().clear();
+            for (String partitionId : partitionIds) {
+                builder.addPartition(Partition.ofId(partitionId));
+            }
+        }
+        
+        Long authorQQ = questionGroupDTO.getAuthorQQ();
+        if (authorQQ != null) {
+            builder.setAuthor(UserService.singletonInstance.findByQQNumber(authorQQ).orElse(null));
+        }
+        
+        Boolean enabled = questionGroupDTO.getEnabled();
+        if (enabled != null) {
+            builder.setEnabled(enabled);
+        }
+        
+        List<ImageDTO> imageDTOS = questionGroupDTO.getImages();
+        if (imageDTOS != null) {
+            builder.getImageBase64Strings().clear();
+            for (ImageDTO imageDTO : imageDTOS) {
+                String key = imageDTO.getName();
+                String value = imageDTO.getUrl();
+                builder.addBase64Image(key, value);
+            }
+        }
+        
+        QuestionGroup questionGroup = builder.build();
+        
+        List<CommonQuestionDTO> questions = questionGroupDTO.getQuestions();
+        if (questions != null) {
+            for (CommonQuestionDTO questionInfoObj : questions) {
+                if (questionInfoObj instanceof MultipleChoicesQuestionDTO multipleChoicesQuestionDTO) {
+                    MultipleChoicesQuestion multipleChoicesQuestion = createSubMultipleChoicesQuestion(multipleChoicesQuestionDTO, questionGroup);
+                    questionGroup.addQuestion(multipleChoicesQuestion);
+                }
+            }
+        }
+        return questionGroup;
+    }
+    
     public static QuestionGroup createQuestionGroup(QuestionGroupDTO questionGroupDTO) {
         String id = questionGroupDTO.getId();
         Optional<Question> questionOptional = QuestionService.singletonInstance.findById(id);

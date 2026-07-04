@@ -35,6 +35,10 @@ public class BasicQuestionDTO {
     protected Map<String, IssueDTO> errors = new HashMap<>();
     protected Map<String, IssueDTO> warnings = new HashMap<>();
     protected Long authorQQ;
+    protected Integer versionNumber;
+    protected String versionStatus;
+    protected String versionGroupId;
+    protected String previousVersionId;
     
     public BasicQuestionDTO(Question question) {
         id = question.getId();
@@ -50,6 +54,10 @@ public class BasicQuestionDTO {
         if (question.getAuthor() != null) {
             authorQQ = question.getAuthor().getQQNumber();
         }
+        versionNumber = question.getVersionNumber();
+        versionStatus = question.getVersionStatus().name();
+        versionGroupId = question.getVersionGroupId();
+        previousVersionId = question.getPreviousVersionId();
     }
     
     public void inheritFrom(Question question) {

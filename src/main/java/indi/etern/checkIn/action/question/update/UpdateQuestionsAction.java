@@ -53,6 +53,7 @@ public class UpdateQuestionsAction extends BaseAction<UpdateQuestionsAction.Inpu
         Map<String, Collection<String>> failedQuestionIdReasons = new HashMap<>();
         Set<Partition> infectedPartitions = new HashSet<>();
         List<String> succeedDeletedQuestionIds = new ArrayList<>();
+        List<String> archivedQuestionIds = new ArrayList<>();
         try {
             TransactionTemplateUtil.getTransactionTemplate().executeWithoutResult((status) -> {
                 if (questionsToUpdate != null)
@@ -87,6 +88,10 @@ public class UpdateQuestionsAction extends BaseAction<UpdateQuestionsAction.Inpu
 
                             if (result != null) {
                                 succeedQuestions.add(result);
+                                // Track if a previous version was archived (new version has different ID than DTO)
+                                if (!result.getId().equals(questionDTO.getId())) {
+                                    archivedQuestionIds.add(questionDTO.getId());
+                                }
                                 final QuestionLinkImpl<?> linkWrapper = result.getLinkWrapper();
                                 if (linkWrapper instanceof ToPartitionsLink link) {
                                     infectedPartitions.addAll(link.getTargets());
@@ -179,7 +184,7 @@ public class UpdateQuestionsAction extends BaseAction<UpdateQuestionsAction.Inpu
             result = OutputData.Result.SUCCESS;
             StatusService.singletonInstance.flush();
         }
-        context.resolve(new Output(result, succeedUpdatedQuestionIds, succeedDeletedQuestionIds, failedQuestionIdReasons));
+        context.resolve(new Output(result, succeedUpdatedQuestionIds, succeedDeletedQuestionIds, archivedQuestionIds, failedQuestionIdReasons));
     }
     
     public record Input(@Nullable List<CommonQuestionDTO> updatedQuestions,
@@ -189,6 +194,7 @@ public class UpdateQuestionsAction extends BaseAction<UpdateQuestionsAction.Inpu
     public record Output(Result result,
                          List<String> succeedUpdatedQuestionIds,
                          List<String> succeedDeletedQuestionIds,
+                         List<String> archivedQuestionIds,
                          Map<String, Collection<String>> failedQuestionIdReason) implements OutputData {
     }
 }

@@ -17,10 +17,12 @@ import Like from "@/components/icons/Like.vue";
 import DisLike from "@/components/icons/DisLike.vue";
 import WebSocketConnector from "@/api/websocket.js";
 import LinkPanel from "@/components/common/LinkPanel.vue";
-import {Check, RefreshLeft} from "@element-plus/icons-vue";
+import {Check, Clock, RefreshLeft} from "@element-plus/icons-vue";
 import UserDataInterface from "@/data/UserDataInterface.js";
 import questionCache from "@/data/QuestionCache.js";
 import Collapse from "@/components/common/Collapse.vue";
+import QuestionVersionHistory from "@/components/question/QuestionVersionHistory.vue";
+import PermissionInfo from "@/auth/PermissionInfo.js";
 
 let questionInfo = ref({});
 
@@ -194,6 +196,9 @@ const routeToRelatedExamRecords = () => {
 
 const page = ref(null);
 
+const versionHistoryVisible = ref(false);
+const canViewVersionHistory = computed(() => PermissionInfo.hasPermission('questionVersion.view'));
+
 const switchType = ref(false);
 onMounted(() => {
     watch(() => page.value, () => {
@@ -300,6 +305,13 @@ onMounted(() => {
                                         </el-button-group>
                                     </div>
                                     <div class="flex-blank-1"></div>
+                                    <transition name="blur-scale">
+                                        <el-button @click="versionHistoryVisible = true" v-if="canViewVersionHistory"
+                                                   :icon="Clock"
+                                                   class="disable-init-animate" link type="info">
+                                            版本历史
+                                        </el-button>
+                                    </transition>
                                     <transition name="blur-scale">
                                         <el-button @click="restoreCurrent" v-if="questionInfo.dirty"
                                                    :icon="RefreshLeft"
@@ -483,6 +495,9 @@ onMounted(() => {
             </router-view>
         </div>
     </el-watermark>
+    <QuestionVersionHistory v-if="questionInfo.question"
+                            v-model="versionHistoryVisible"
+                            :question-id="questionInfo.question.id"/>
 </template>
 
 <style scoped>

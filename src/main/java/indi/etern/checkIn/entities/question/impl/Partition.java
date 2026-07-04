@@ -61,7 +61,9 @@ public class Partition implements Serializable, LinkTarget, BaseEntity<String> {
     
     @JsonProperty("enabledQuestionCount")
     public int getEnabledQuestionCount() {
-        return questionLinks.stream().filter(questionLink -> questionLink.getSource().isEnabled())
+        return questionLinks.stream()
+                .filter(questionLink -> questionLink.getSource().isEnabled()
+                        && questionLink.getSource().getVersionStatus() == Question.VersionStatus.ACTIVE)
                 .mapToInt(questionLink -> questionLink.getSource() instanceof QuestionGroup questionGroup ? questionGroup.getQuestionLinks().size() : 1)
                 .sum();
     }
@@ -89,7 +91,7 @@ public class Partition implements Serializable, LinkTarget, BaseEntity<String> {
         Set<Question> questionList = new HashSet<>();
         for (ToPartitionsLink questionLink : questionLinks) {
             Question question = questionLink.getSource();
-            if (question.isEnabled()) {
+            if (question.isEnabled() && question.getVersionStatus() == Question.VersionStatus.ACTIVE) {
                 questionList.add(question);
             }
         }

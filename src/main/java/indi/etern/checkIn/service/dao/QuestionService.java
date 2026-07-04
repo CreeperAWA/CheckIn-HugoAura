@@ -119,5 +119,13 @@ public class QuestionService {
         return questionRepository.findAllByLastModifiedTimeBeforeAndLinkWrapper_Class(
                 LocalDateTime.now(), ToPartitionsLink.class, Sort.by(Sort.Direction.DESC,"lastModifiedTime"), Limit.of(20));
     }
+    
+    public List<Question> findByVersionGroupIdAndVersionStatus(String versionGroupId, Question.VersionStatus status) {
+        return questionRepository.findByVersionGroupIdAndVersionStatus(versionGroupId, status);
+    }
+    
+    public List<Question> findByVersionGroupIdOrderByVersionNumberDesc(String versionGroupId) {
+        return questionRepository.findByVersionGroupIdOrderByVersionNumberDesc(versionGroupId);
+    }
 }
 

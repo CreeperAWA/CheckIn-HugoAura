@@ -28,6 +28,10 @@ import java.util.Set;
         @NamedEntityGraph(name = "Question.LinkWrapper", attributeNodes = {@NamedAttributeNode("linkWrapper")})
 })
 public class Question implements LinkSource<QuestionLinkImpl<?>>, BaseEntity<String> {
+    
+    public enum VersionStatus {
+        ACTIVE, ARCHIVED
+    }
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss");
     @Id
     @Getter
@@ -115,6 +119,27 @@ public class Question implements LinkSource<QuestionLinkImpl<?>>, BaseEntity<Str
     @JsonIgnore
     @Column(name = "explanation", columnDefinition = "text")
     String explanation;
+    
+    @Getter
+    @Setter
+    @Column(name = "version_number", nullable = false)
+    int versionNumber = 1;
+    
+    @Getter
+    @Setter
+    @Enumerated(EnumType.STRING)
+    @Column(name = "version_status", nullable = false, length = 20)
+    VersionStatus versionStatus = VersionStatus.ACTIVE;
+    
+    @Getter
+    @Setter
+    @Column(name = "version_group_id", columnDefinition = "char(36)")
+    String versionGroupId;
+    
+    @Getter
+    @Setter
+    @Column(name = "previous_version_id", columnDefinition = "char(36)")
+    String previousVersionId;
 
     protected Question() {
         lastModifiedTime = LocalDateTime.now();

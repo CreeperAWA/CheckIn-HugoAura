@@ -11,6 +11,8 @@ import indi.etern.checkIn.entities.question.impl.Question;
 import indi.etern.checkIn.service.dao.QuestionService;
 import indi.etern.checkIn.service.dao.VerificationRuleService;
 import indi.etern.checkIn.service.dao.verify.ValidationResult;
+import indi.etern.checkIn.service.question.QuestionVersionService;
+import indi.etern.checkIn.service.question.ScoreRecalculationService;
 import indi.etern.checkIn.utils.QuestionCreateUtils;
 import jakarta.annotation.Nonnull;
 
@@ -21,6 +23,8 @@ import java.util.Optional;
 @Action(value = "createOrUpdateQuestion", exposed = false)
 public class CreateOrUpdateMultipleChoicesQuestion extends BaseAction<CreateOrUpdateMultipleChoicesQuestion.Input, OutputData> {
     private final VerificationRuleService verificationRuleService;
+    private final QuestionVersionService questionVersionService;
+    private final ScoreRecalculationService scoreRecalculationService;
     
     public record Input(@Nonnull MultipleChoicesQuestionDTO multipleChoicesQuestionDTO) implements InputData {}
     public record SuccessOutput(Question question) implements OutputData {
@@ -38,9 +42,14 @@ public class CreateOrUpdateMultipleChoicesQuestion extends BaseAction<CreateOrUp
     
     final QuestionService questionService;
     
-    public CreateOrUpdateMultipleChoicesQuestion(QuestionService questionService, VerificationRuleService verificationRuleService) {
+    public CreateOrUpdateMultipleChoicesQuestion(QuestionService questionService,
+                                                 VerificationRuleService verificationRuleService,
+                                                 QuestionVersionService questionVersionService,
+                                                 ScoreRecalculationService scoreRecalculationService) {
         this.questionService = questionService;
         this.verificationRuleService = verificationRuleService;
+        this.questionVersionService = questionVersionService;
+        this.scoreRecalculationService = scoreRecalculationService;
     }
     
     @Override
@@ -53,7 +62,6 @@ public class CreateOrUpdateMultipleChoicesQuestion extends BaseAction<CreateOrUp
         final ValidationResult result = verificationRuleService.verify(multipleChoicesQuestionDTO, VerificationRuleService.VerifyTargetType.MULTIPLE_CHOICES_QUESTION);
         final Map<String, IssueDTO> errors = result.getErrors();
         if (errors.isEmpty()) {
-            Question question = QuestionCreateUtils.createMultipleChoicesQuestion(multipleChoicesQuestionDTO);
             if (authorChanged) {
                 context.requirePermission("change question author");
             }
@@ -71,8 +79,42 @@ public class CreateOrUpdateMultipleChoicesQuestion extends BaseAction<CreateOrUp
             ) {
                 context.requirePermission("enable and disable questions");
             }
+            
+            // Version management: detect changes and handle version/recalculation
+            if (previousQuestion.isPresent()) {
+                Long currentUserQq = context.getCurrentUser().getQQNumber();
+                QuestionVersionService.VersionHandlingResult versionResult = questionVersionService.handleVersionOnUpdate(
+                        previousQuestion.get(), multipleChoicesQuestionDTO, currentUserQq);
+                
+                if (versionResult.newVersionCreated()) {
+                    // New version was created and saved by VersionService
+                    versionResult.question().setVerificationDigest(verificationRuleService.digest(multipleChoicesQuestionDTO));
+                    versionResult.question().setValidationResult(result);
+                    questionService.save(versionResult.question());
+                    context.resolve(new SuccessOutput(versionResult.question()));
+                    return;
+                }
+                
+                if (versionResult.recalculationNeeded()) {
+                    // Update in-place then trigger async recalculation
+                    Question question = QuestionCreateUtils.createMultipleChoicesQuestion(multipleChoicesQuestionDTO);
+                    question.setVerificationDigest(verificationRuleService.digest(multipleChoicesQuestionDTO));
+                    question.setValidationResult(result);
+                    questionService.save(question);
+                    scoreRecalculationService.triggerAsyncRecalculation(question.getId(), currentUserQq);
+                    context.resolve(new SuccessOutput(question));
+                    return;
+                }
+            }
+            
+            // Default path: no version management needed (new question or no historical answers)
+            Question question = QuestionCreateUtils.createMultipleChoicesQuestion(multipleChoicesQuestionDTO);
             question.setVerificationDigest(verificationRuleService.digest(multipleChoicesQuestionDTO));
             question.setValidationResult(result);
+            // Set versionGroupId for new questions
+            if (previousQuestion.isEmpty() && question.getVersionGroupId() == null) {
+                question.setVersionGroupId(question.getId());
+            }
             questionService.save(question);
             context.resolve(new SuccessOutput(question));
         } else {
