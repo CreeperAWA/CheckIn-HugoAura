@@ -55,16 +55,23 @@ const PermissionInfo = {
     },
     requirePageAccess: function (permissionName, customMessage) {
         const permissions = Array.isArray(permissionName) ? permissionName : [permissionName];
-        const hasAny = permissions.some(p => this.hasPermission(p));
-        if (!hasAny) {
-            ElMessage({
-                type: "error",
-                message: customMessage || "无权限访问此页面"
-            });
-            router.push("/");
-            return false;
+        const doCheck = () => {
+            const hasAny = permissions.some(p => this.hasPermission(p));
+            if (!hasAny) {
+                ElMessage({
+                    type: "error",
+                    message: customMessage || "无权限访问此页面"
+                });
+                router.push("/");
+                return false;
+            }
+            return true;
+        };
+        if (this.initialized) {
+            return doCheck();
         }
-        return true;
+        this.waitingForInitialize().then(() => doCheck());
+        return false;
     },
     waitingForInitialize: async function () {
         if (PermissionInfo.initialized) {
