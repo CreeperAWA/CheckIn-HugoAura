@@ -8,14 +8,10 @@ import getAvatarUrlOf from "@/utils/Avatar.js";
 import router from "@/router/index.js";
 
 // 检查权限
-if (!PermissionInfo.hasPermission('answerLimit.view.setting') && 
-    !PermissionInfo.hasPermission('answerLimit.view.count') && 
-    !PermissionInfo.hasPermission('answerLimit.view.whitelist')) {
-    ElMessage({
-        type: "error",
-        message: "无权限访问答题次数限制管理页面"
-    });
-}
+PermissionInfo.requirePageAccess(
+    ['answerLimit.view.setting', 'answerLimit.view.count', 'answerLimit.view.whitelist'],
+    '无权限访问答题次数限制管理页面'
+);
 
 const hasSettingPermission = ref(false);
 const hasManageSettingPermission = ref(false);

@@ -8,12 +8,7 @@ import getAvatarUrlOf from "@/utils/Avatar.js";
 import router from "@/router/index.js";
 
 // 检查权限
-if (!PermissionInfo.hasPermission('blacklist.view')) {
-    ElMessage({
-        type: "error",
-        message: "无权限访问黑名单管理页面"
-    });
-}
+PermissionInfo.requirePageAccess('blacklist.view', '无权限访问黑名单管理页面');
 
 const hasManagePermission = ref(false);
 const loading = ref(true);

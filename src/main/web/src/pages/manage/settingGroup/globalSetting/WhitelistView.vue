@@ -7,12 +7,7 @@ import getAvatarUrlOf from "@/utils/Avatar.js";
 import router from "@/router/index.js";
 import WebSocketConnector from "@/api/websocket.js";
 
-if (!PermissionInfo.hasPermission('thirdPartyApi.view.whitelist')) {
-    ElMessage({
-        type: "error",
-        message: "无权限访问白名单管理页面"
-    });
-}
+PermissionInfo.requirePageAccess('thirdPartyApi.view.whitelist', '无权限访问白名单管理页面');
 
 const hasManagePermission = ref(false);
 const loading = ref(true);

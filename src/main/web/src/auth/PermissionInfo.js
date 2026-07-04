@@ -1,3 +1,6 @@
+import {ElMessage} from "element-plus";
+import router from "@/router/index.js";
+
 let waitingTasks = [];
 const PermissionInfo = {
     permissions: ref({}),
@@ -49,6 +52,19 @@ const PermissionInfo = {
             const regExp = new RegExp(name, "i");
             return permissions1 instanceof Array && Boolean(permissions1.find(item => regExp.test(item.name)));
         }
+    },
+    requirePageAccess: function (permissionName, customMessage) {
+        const permissions = Array.isArray(permissionName) ? permissionName : [permissionName];
+        const hasAny = permissions.some(p => this.hasPermission(p));
+        if (!hasAny) {
+            ElMessage({
+                type: "error",
+                message: customMessage || "无权限访问此页面"
+            });
+            router.push("/");
+            return false;
+        }
+        return true;
     },
     waitingForInitialize: async function () {
         if (PermissionInfo.initialized) {
