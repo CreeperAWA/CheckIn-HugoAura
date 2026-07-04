@@ -53,25 +53,21 @@ const PermissionInfo = {
             return permissions1 instanceof Array && Boolean(permissions1.find(item => regExp.test(item.name)));
         }
     },
-    requirePageAccess: function (permissionName, customMessage) {
+    requirePageAccess: async function (permissionName, customMessage) {
         const permissions = Array.isArray(permissionName) ? permissionName : [permissionName];
-        const doCheck = () => {
-            const hasAny = permissions.some(p => this.hasPermission(p));
-            if (!hasAny) {
-                ElMessage({
-                    type: "error",
-                    message: customMessage || "无权限访问此页面"
-                });
-                router.push("/");
-                return false;
-            }
-            return true;
-        };
-        if (this.initialized) {
-            return doCheck();
+        if (!this.initialized) {
+            await this.waitingForInitialize();
         }
-        this.waitingForInitialize().then(() => doCheck());
-        return false;
+        const hasAny = permissions.some(p => this.hasPermission(p));
+        if (!hasAny) {
+            ElMessage({
+                type: "error",
+                message: customMessage || "无权限访问此页面"
+            });
+            router.push("/");
+            return false;
+        }
+        return true;
     },
     waitingForInitialize: async function () {
         if (PermissionInfo.initialized) {
