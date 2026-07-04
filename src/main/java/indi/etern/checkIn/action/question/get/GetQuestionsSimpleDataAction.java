@@ -52,6 +52,9 @@ public class GetQuestionsSimpleDataAction extends BaseAction<GetQuestionsSimpleD
                 Set<ToPartitionsLink> questionLinks = Set.copyOf(partition.getQuestionLinks());
                 for (var questionLink : questionLinks) {
                     final Question question = questionLink.getSource();
+                    if (question.getVersionStatus() == Question.VersionStatus.ARCHIVED) {
+                        continue;
+                    }
                     final BasicQuestionDTO questionInfo = ManageDTOUtils.ofQuestionBasic(question);
                     final CommonQuestionDTO questionInfoForVerify = ManageDTOUtils.ofQuestion(question);
                     

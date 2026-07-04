@@ -23,7 +23,13 @@ const pageGroups = [
             {pathName: 'rate-limit-monitor', name: '限流监控', icon: "Warning",
                 show: PermissionInfo.hasPermission('VIEW_RATE_LIMIT_MONITOR')
             },
-            {pathName: 'questions', name: '题库', icon: "Finished"}
+            {pathName: 'questions', name: '题库', icon: "Finished"},
+            {
+                pathName: 'grade-calculation',
+                name: '成绩核算',
+                icon: "DataAnalysis",
+                show: PermissionInfo.hasPermission('questionVersion.approveRecalculation')
+            }
         ]
     }, {
         groupName: "管理",

@@ -1,5 +1,6 @@
 package indi.etern.checkIn.service.question;
 
+import indi.etern.checkIn.api.webSocket.Message;
 import indi.etern.checkIn.entities.exam.ExamData;
 import indi.etern.checkIn.entities.question.impl.MultipleChoicesQuestion;
 import indi.etern.checkIn.entities.question.impl.Question;
@@ -16,6 +17,7 @@ import indi.etern.checkIn.service.dao.GradingLevelService;
 import indi.etern.checkIn.service.dao.QuestionService;
 import indi.etern.checkIn.service.dao.SettingService;
 import indi.etern.checkIn.service.exam.ExamResult;
+import indi.etern.checkIn.service.web.WebSocketService;
 import indi.etern.checkIn.utils.UUIDv7;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +40,7 @@ public class ScoreRecalculationService {
     private final ScoreChangeDetailRepository changeDetailRepository;
     private final SettingService settingService;
     private final ApplicationContext applicationContext;
+    private final WebSocketService webSocketService;
     private final Logger logger = LoggerFactory.getLogger(ScoreRecalculationService.class);
     
     public ScoreRecalculationService(ExamDataService examDataService,
@@ -46,7 +49,8 @@ public class ScoreRecalculationService {
                                      ScoreRecalculationLogRepository recalcLogRepository,
                                      ScoreChangeDetailRepository changeDetailRepository,
                                      SettingService settingService,
-                                     ApplicationContext applicationContext) {
+                                     ApplicationContext applicationContext,
+                                     WebSocketService webSocketService) {
         this.examDataService = examDataService;
         this.questionService = questionService;
         this.gradingLevelService = gradingLevelService;
@@ -54,20 +58,34 @@ public class ScoreRecalculationService {
         this.changeDetailRepository = changeDetailRepository;
         this.settingService = settingService;
         this.applicationContext = applicationContext;
+        this.webSocketService = webSocketService;
     }
     
     public String triggerAsyncRecalculation(String questionId, Long triggeredByQq) {
+        List<ExamData> affectedExams = examDataService.getExamDataContainsQuestionById(questionId)
+                .stream()
+                .filter(ed -> ed.getStatus() == ExamData.Status.SUBMITTED)
+                .toList();
+        
+        String contentPreview = questionService.findById(questionId)
+                .map(q -> q.getContent() != null && q.getContent().length() > 100
+                        ? q.getContent().substring(0, 100) + "..." : q.getContent())
+                .orElse(null);
+        
         ScoreRecalculationLog log = ScoreRecalculationLog.builder()
                 .id(UUIDv7.randomUUID().toString())
                 .questionId(questionId)
                 .triggerType(ScoreRecalculationLog.TriggerType.ANSWER_KEY_CHANGE)
                 .triggeredAt(LocalDateTime.now())
                 .triggeredByQq(triggeredByQq)
-                .status(ScoreRecalculationLog.RecalculationStatus.PENDING)
+                .affectedExamCount(affectedExams.size())
+                .questionContentPreview(contentPreview)
+                .status(ScoreRecalculationLog.RecalculationStatus.AWAITING_APPROVAL)
                 .build();
         recalcLogRepository.save(log);
         
-        applicationContext.publishEvent(new ScoreRecalculationEvent(questionId, log.getId(), triggeredByQq));
+        webSocketService.sendMessageToAllUsers(Message.of("recalculationAwaitingApproval", log.getId()));
+        
         return log.getId();
     }
     
@@ -84,6 +102,45 @@ public class ScoreRecalculationService {
         
         applicationContext.publishEvent(new ScoreRecalculationEvent(questionId, log.getId(), triggeredByQq));
         return log.getId();
+    }
+    
+    @Transactional
+    public void approveRecalculation(String logId, Long approvedByQq) {
+        ScoreRecalculationLog log = recalcLogRepository.findById(logId).orElseThrow();
+        if (log.getStatus() != ScoreRecalculationLog.RecalculationStatus.AWAITING_APPROVAL) {
+            throw new IllegalStateException("Log is not in AWAITING_APPROVAL status");
+        }
+        log.setStatus(ScoreRecalculationLog.RecalculationStatus.PENDING);
+        log.setApprovedByQq(approvedByQq);
+        log.setApprovedAt(LocalDateTime.now());
+        recalcLogRepository.save(log);
+        
+        applicationContext.publishEvent(new ScoreRecalculationEvent(log.getQuestionId(), log.getId(), approvedByQq));
+    }
+    
+    @Transactional
+    public void rejectRecalculation(String logId, Long rejectedByQq) {
+        ScoreRecalculationLog log = recalcLogRepository.findById(logId).orElseThrow();
+        if (log.getStatus() != ScoreRecalculationLog.RecalculationStatus.AWAITING_APPROVAL) {
+            throw new IllegalStateException("Log is not in AWAITING_APPROVAL status");
+        }
+        log.setStatus(ScoreRecalculationLog.RecalculationStatus.REJECTED);
+        log.setRejectedByQq(rejectedByQq);
+        log.setRejectedAt(LocalDateTime.now());
+        recalcLogRepository.save(log);
+    }
+    
+    public List<ScoreRecalculationLog> getPendingRecalculations() {
+        return recalcLogRepository.findByStatusOrderByTriggeredAtDesc(
+                ScoreRecalculationLog.RecalculationStatus.AWAITING_APPROVAL);
+    }
+    
+    public List<String> getAffectedExamIds(String questionId) {
+        return examDataService.getExamDataContainsQuestionById(questionId)
+                .stream()
+                .filter(ed -> ed.getStatus() == ExamData.Status.SUBMITTED)
+                .map(ExamData::getId)
+                .toList();
     }
     
     @Transactional(propagation = Propagation.REQUIRES_NEW)

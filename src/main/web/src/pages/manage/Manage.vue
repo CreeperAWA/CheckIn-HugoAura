@@ -42,7 +42,8 @@ const breadcrumbMap = {
     "blacklist": "黑名单管理",
     "answer-limit": "答题次数限制",
     "whitelist": "白名单管理",
-    "third-party-api-setting": "第三方 API 设置"
+    "third-party-api-setting": "第三方 API 设置",
+    "grade-calculation": "成绩核算"
 }
 
 let breadcrumbPathArray = reactive([]);

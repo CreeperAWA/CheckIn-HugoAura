@@ -12,4 +12,5 @@ import java.util.List;
 public interface ScoreRecalculationLogRepository extends JpaRepository<ScoreRecalculationLog, String> {
     List<ScoreRecalculationLog> findByQuestionIdOrderByTriggeredAtDesc(String questionId);
     Page<ScoreRecalculationLog> findAllByOrderByTriggeredAtDesc(Pageable pageable);
+    List<ScoreRecalculationLog> findByStatusOrderByTriggeredAtDesc(ScoreRecalculationLog.RecalculationStatus status);
 }

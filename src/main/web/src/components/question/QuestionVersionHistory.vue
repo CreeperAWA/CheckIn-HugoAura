@@ -244,6 +244,10 @@ function getVersionSelectionLabel(version) {
                                             <el-text size="small">{{ version.modifiedByQq }}</el-text>
                                         </el-button>
                                     </template>
+                                    <template v-if="version.examCount > 0">
+                                        <el-text type="info" size="small">&nbsp;|&nbsp;</el-text>
+                                        <el-text type="info" size="small">{{ version.examCount }} 个题目使用</el-text>
+                                    </template>
                                 </div>
                             </div>
                             <div v-if="version.contentPreview" class="version-preview">

@@ -15,4 +15,5 @@ public interface ExamDataRepository extends JpaRepository<ExamData,String> {
     List<ExamData> findAllByQqNumberAndStatus(long qqNumber, ExamData.Status status);
     
     List<ExamData> findAllByQuestionIdsContains(String questionIds);
+    long countByQuestionIdsContains(String questionId);
 }

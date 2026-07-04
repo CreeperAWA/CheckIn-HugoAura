@@ -7,6 +7,7 @@ import indi.etern.checkIn.dto.manage.question.VersionInfoDTO;
 import indi.etern.checkIn.entities.exam.ExamData;
 import indi.etern.checkIn.entities.question.impl.Question;
 import indi.etern.checkIn.entities.question.version.QuestionVersionChain;
+import indi.etern.checkIn.repositories.ExamDataRepository;
 import indi.etern.checkIn.repositories.QuestionVersionChainRepository;
 import indi.etern.checkIn.service.dao.ExamDataService;
 import indi.etern.checkIn.service.dao.QuestionService;
@@ -24,15 +25,18 @@ public class QuestionVersionService {
     private final QuestionService questionService;
     private final QuestionVersionChainRepository versionChainRepository;
     private final ExamDataService examDataService;
+    private final ExamDataRepository examDataRepository;
     private final QuestionChangeDetector changeDetector;
     
     public QuestionVersionService(QuestionService questionService,
                                   QuestionVersionChainRepository versionChainRepository,
                                   ExamDataService examDataService,
+                                  ExamDataRepository examDataRepository,
                                   QuestionChangeDetector changeDetector) {
         this.questionService = questionService;
         this.versionChainRepository = versionChainRepository;
         this.examDataService = examDataService;
+        this.examDataRepository = examDataRepository;
         this.changeDetector = changeDetector;
     }
     
@@ -167,7 +171,8 @@ public class QuestionVersionService {
         List<VersionInfoDTO> result = new ArrayList<>();
         for (Question version : allVersions) {
             QuestionVersionChain chain = chainByToVersionId.get(version.getId());
-            result.add(VersionInfoDTO.from(version, chain));
+            long examCount = examDataRepository.countByQuestionIdsContains(version.getId());
+            result.add(VersionInfoDTO.from(version, chain, examCount));
         }
         return result;
     }

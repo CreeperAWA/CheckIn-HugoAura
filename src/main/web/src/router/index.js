@@ -239,6 +239,11 @@ const router = createRouter({
                             meta: {
                                 warning: warning1
                             }
+                        },
+                        {
+                            path: 'grade-calculation',
+                            name: 'grade-calculation',
+                            component: () => import("@/pages/manage/serverGroup/gradeCalculation/GradeCalculationView.vue")
                         }
                     ]
                 },

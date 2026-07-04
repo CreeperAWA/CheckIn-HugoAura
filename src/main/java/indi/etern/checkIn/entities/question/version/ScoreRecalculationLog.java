@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class ScoreRecalculationLog implements BaseEntity<String> {
     
     public enum TriggerType { ANSWER_KEY_CHANGE, MANUAL }
-    public enum RecalculationStatus { PENDING, IN_PROGRESS, COMPLETED, FAILED }
+    public enum RecalculationStatus { AWAITING_APPROVAL, PENDING, IN_PROGRESS, COMPLETED, FAILED, REJECTED }
     
     @Id
     @Column(columnDefinition = "char(36)")
@@ -52,4 +52,19 @@ public class ScoreRecalculationLog implements BaseEntity<String> {
     
     @Column(name = "error_message", columnDefinition = "text")
     String errorMessage;
+    
+    @Column(name = "approved_by_qq")
+    Long approvedByQq;
+    
+    @Column(name = "approved_at")
+    LocalDateTime approvedAt;
+    
+    @Column(name = "rejected_by_qq")
+    Long rejectedByQq;
+    
+    @Column(name = "rejected_at")
+    LocalDateTime rejectedAt;
+    
+    @Column(name = "question_content_preview")
+    String questionContentPreview;
 }

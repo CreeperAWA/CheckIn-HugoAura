@@ -13,9 +13,10 @@ public record VersionInfoDTO(
         LocalDateTime lastModifiedTime,
         String changeType,
         String changeDescription,
-        Long modifiedByQq
+        Long modifiedByQq,
+        long examCount
 ) {
-    public static VersionInfoDTO from(Question question, QuestionVersionChain chain) {
+    public static VersionInfoDTO from(Question question, QuestionVersionChain chain, long examCount) {
         String contentPreview = null;
         if (question.getContent() != null) {
             contentPreview = question.getContent().length() > 100
@@ -30,7 +31,8 @@ public record VersionInfoDTO(
                 question.getLastModifiedTime(),
                 chain != null ? chain.getChangeType().name() : null,
                 chain != null ? chain.getChangeDescription() : null,
-                chain != null ? chain.getCreatedByQq() : null
+                chain != null ? chain.getCreatedByQq() : null,
+                examCount
         );
     }
 }
