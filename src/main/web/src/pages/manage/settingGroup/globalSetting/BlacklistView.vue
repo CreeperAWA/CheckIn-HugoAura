@@ -7,8 +7,7 @@ import UserDataInterface from "@/data/UserDataInterface.js";
 import getAvatarUrlOf from "@/utils/Avatar.js";
 import router from "@/router/index.js";
 
-// 检查权限
-PermissionInfo.requirePageAccess('blacklist.view', '无权限访问黑名单管理页面');
+
 
 const hasManagePermission = ref(false);
 const loading = ref(true);
@@ -148,8 +147,11 @@ const formatTime = (timeStr) => {
     }
 };
 
-onMounted(() => {
-    getBlacklist();
+onMounted(async () => {
+    const hasAccess = await PermissionInfo.requirePageAccess('blacklist.view', '无权限访问黑名单管理页面');
+    if (hasAccess) {
+        getBlacklist();
+    }
 });
 </script>
 

@@ -42,6 +42,13 @@ public class CreateOrUpdateMultipleChoicesQuestion extends BaseAction<CreateOrUp
     
     final QuestionService questionService;
     
+    private static void copyVersionFields(Question target, Question source) {
+        target.setVersionGroupId(source.getVersionGroupId());
+        target.setVersionNumber(source.getVersionNumber());
+        target.setVersionStatus(source.getVersionStatus());
+        target.setPreviousVersionId(source.getPreviousVersionId());
+    }
+    
     public CreateOrUpdateMultipleChoicesQuestion(QuestionService questionService,
                                                  VerificationRuleService verificationRuleService,
                                                  QuestionVersionService questionVersionService,
@@ -100,6 +107,7 @@ public class CreateOrUpdateMultipleChoicesQuestion extends BaseAction<CreateOrUp
                     Question question = QuestionCreateUtils.createMultipleChoicesQuestion(multipleChoicesQuestionDTO);
                     question.setVerificationDigest(verificationRuleService.digest(multipleChoicesQuestionDTO));
                     question.setValidationResult(result);
+                    copyVersionFields(question, previousQuestion.get());
                     questionService.save(question);
                     scoreRecalculationService.triggerAsyncRecalculation(question.getId(), currentUserQq);
                     context.resolve(new SuccessOutput(question));
@@ -111,8 +119,9 @@ public class CreateOrUpdateMultipleChoicesQuestion extends BaseAction<CreateOrUp
             Question question = QuestionCreateUtils.createMultipleChoicesQuestion(multipleChoicesQuestionDTO);
             question.setVerificationDigest(verificationRuleService.digest(multipleChoicesQuestionDTO));
             question.setValidationResult(result);
-            // Set versionGroupId for new questions
-            if (previousQuestion.isEmpty() && question.getVersionGroupId() == null) {
+            if (previousQuestion.isPresent()) {
+                copyVersionFields(question, previousQuestion.get());
+            } else if (question.getVersionGroupId() == null) {
                 question.setVersionGroupId(question.getId());
             }
             questionService.save(question);

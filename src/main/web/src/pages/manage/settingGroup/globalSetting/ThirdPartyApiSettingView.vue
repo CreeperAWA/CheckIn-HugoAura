@@ -10,7 +10,7 @@ import UserDataInterface from "@/data/UserDataInterface.js";
 import getAvatarUrlOf from "@/utils/Avatar.js";
 import router from "@/router/index.js";
 
-PermissionInfo.requirePageAccess('thirdPartyApi.view.setting', '无权限访问第三方 API 设置页面');
+
 
 const hasManagePermission = ref(false);
 const loading = ref(true);
@@ -216,8 +216,11 @@ const getSettings = () => {
     });
 };
 
-onMounted(() => {
-    getSettings();
+onMounted(async () => {
+    const hasAccess = await PermissionInfo.requirePageAccess('thirdPartyApi.view.setting', '无权限访问第三方 API 设置页面');
+    if (hasAccess) {
+        getSettings();
+    }
 });
 </script>
 

@@ -7,7 +7,7 @@ import getAvatarUrlOf from "@/utils/Avatar.js";
 import router from "@/router/index.js";
 import WebSocketConnector from "@/api/websocket.js";
 
-PermissionInfo.requirePageAccess('thirdPartyApi.view.whitelist', '无权限访问白名单管理页面');
+
 
 const hasManagePermission = ref(false);
 const loading = ref(true);
@@ -146,8 +146,11 @@ const formatTime = (timeStr) => {
     }
 };
 
-onMounted(() => {
-    getWhitelist();
+onMounted(async () => {
+    const hasAccess = await PermissionInfo.requirePageAccess('thirdPartyApi.view.whitelist', '无权限访问白名单管理页面');
+    if (hasAccess) {
+        getWhitelist();
+    }
 });
 </script>
 

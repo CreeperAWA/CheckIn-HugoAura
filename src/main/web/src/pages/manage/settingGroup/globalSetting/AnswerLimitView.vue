@@ -7,11 +7,7 @@ import UserDataInterface from "@/data/UserDataInterface.js";
 import getAvatarUrlOf from "@/utils/Avatar.js";
 import router from "@/router/index.js";
 
-// 检查权限
-PermissionInfo.requirePageAccess(
-    ['answerLimit.view.setting', 'answerLimit.view.count', 'answerLimit.view.whitelist'],
-    '无权限访问答题次数限制管理页面'
-);
+
 
 const hasSettingPermission = ref(false);
 const hasManageSettingPermission = ref(false);
@@ -288,8 +284,14 @@ const refresh = () => {
     getWhitelist();
 };
 
-onMounted(() => {
-    refresh();
+onMounted(async () => {
+    const hasAccess = await PermissionInfo.requirePageAccess(
+        ['answerLimit.view.setting', 'answerLimit.view.count', 'answerLimit.view.whitelist'],
+        '无权限访问答题次数限制管理页面'
+    );
+    if (hasAccess) {
+        refresh();
+    }
 });
 </script>
 

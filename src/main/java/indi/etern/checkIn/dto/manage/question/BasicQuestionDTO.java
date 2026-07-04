@@ -27,6 +27,7 @@ public class BasicQuestionDTO {
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     protected LocalDateTime lastModifiedTime;
+    @Setter
     protected List<String> partitionIds = null;
     @Setter
     protected boolean showError = false;

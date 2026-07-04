@@ -306,7 +306,7 @@ onMounted(() => {
                                     </div>
                                     <div class="flex-blank-1"></div>
                                     <transition name="blur-scale">
-                                        <el-button @click="versionHistoryVisible = true" v-if="canViewVersionHistory"
+                                        <el-button @click="versionHistoryVisible = true" v-if="canViewVersionHistory && !questionInfo.localNew"
                                                    :icon="Clock"
                                                    class="disable-init-animate" link type="info">
                                             版本历史

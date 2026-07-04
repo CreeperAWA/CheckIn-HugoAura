@@ -44,6 +44,13 @@ public class CreateOrUpdateQuestionGroup extends BaseAction<CreateOrUpdateQuesti
         }
     }
     final QuestionService questionService;
+    
+    private static void copyVersionFields(Question target, Question source) {
+        target.setVersionGroupId(source.getVersionGroupId());
+        target.setVersionNumber(source.getVersionNumber());
+        target.setVersionStatus(source.getVersionStatus());
+        target.setPreviousVersionId(source.getPreviousVersionId());
+    }
 
     public CreateOrUpdateQuestionGroup(QuestionService questionService,
                                        VerificationRuleService verificationRuleService,
@@ -118,6 +125,7 @@ public class CreateOrUpdateQuestionGroup extends BaseAction<CreateOrUpdateQuesti
                         final QuestionGroup questionGroup = QuestionCreateUtils.createQuestionGroup(questionGroupDTO);
                         questionGroup.setVerificationDigest(verificationRuleService.digest(questionGroupDTO));
                         questionGroup.setValidationResult(result);
+                        copyVersionFields(questionGroup, previousQuestion.get());
                         questionService.saveAll(questionGroup.getQuestionLinks().stream().map(QuestionLinkImpl::getSource).toList());
                         questionService.save(questionGroup);
                         scoreRecalculationService.triggerAsyncRecalculation(questionGroup.getId(), currentUserQq);
@@ -131,7 +139,9 @@ public class CreateOrUpdateQuestionGroup extends BaseAction<CreateOrUpdateQuesti
                 final QuestionGroup questionGroup = QuestionCreateUtils.createQuestionGroup(questionGroupDTO);
                 questionGroup.setVerificationDigest(verificationRuleService.digest(questionGroupDTO));
                 questionGroup.setValidationResult(result);
-                if (previousQuestion.isEmpty() && questionGroup.getVersionGroupId() == null) {
+                if (previousQuestion.isPresent()) {
+                    copyVersionFields(questionGroup, previousQuestion.get());
+                } else if (questionGroup.getVersionGroupId() == null) {
                     questionGroup.setVersionGroupId(questionGroup.getId());
                 }
                 questionService.saveAll(questionGroup.getQuestionLinks().stream().map(QuestionLinkImpl::getSource).toList());

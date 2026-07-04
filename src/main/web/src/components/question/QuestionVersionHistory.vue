@@ -41,8 +41,26 @@ function getChangeTypeTagType(changeType) {
 
 function formatTime(time) {
     if (!time) return '';
-    if (typeof time === 'string') return time.replace('T', ' ').substring(0, 19);
-    return time;
+    try {
+        let date;
+        if (Array.isArray(time) && time.length >= 5) {
+            date = new Date(time[0], time[1] - 1, time[2], time[3] || 0, time[4] || 0, time[5] || 0, Math.floor((time[6] || 0) / 1000000));
+        } else if (typeof time === 'string') {
+            return time.replace('T', ' ').substring(0, 19);
+        } else {
+            return time;
+        }
+        if (isNaN(date.getTime())) return time;
+        const y = date.getFullYear();
+        const M = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        const h = String(date.getHours()).padStart(2, '0');
+        const m = String(date.getMinutes()).padStart(2, '0');
+        const s = String(date.getSeconds()).padStart(2, '0');
+        return `${y}-${M}-${d} ${h}:${m}:${s}`;
+    } catch (e) {
+        return time;
+    }
 }
 
 function onDialogOpen() {

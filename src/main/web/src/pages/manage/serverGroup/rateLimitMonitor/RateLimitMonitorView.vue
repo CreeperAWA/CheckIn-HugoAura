@@ -4,8 +4,7 @@ import {ElMessage} from "element-plus";
 import {ref, onMounted, onUnmounted} from "vue";
 import PermissionInfo from "@/auth/PermissionInfo.js";
 
-// 检查权限
-PermissionInfo.requirePageAccess('VIEW_RATE_LIMIT_MONITOR', '无权限访问限流监控页面');
+
 
 const loading = ref(true);
 const statistics = ref({
@@ -32,9 +31,12 @@ const getStatistics = () => {
     });
 };
 
-onMounted(() => {
-    getStatistics();
-    refreshInterval = setInterval(getStatistics, 10000);
+onMounted(async () => {
+    const hasAccess = await PermissionInfo.requirePageAccess('VIEW_RATE_LIMIT_MONITOR', '无权限访问限流监控页面');
+    if (hasAccess) {
+        getStatistics();
+        refreshInterval = setInterval(getStatistics, 10000);
+    }
 });
 
 onUnmounted(() => {

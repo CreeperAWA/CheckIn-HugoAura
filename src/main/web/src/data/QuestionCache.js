@@ -153,8 +153,13 @@ WebSocketConnector.registerAction("updateQuestions", (response) => {
         for (const question of response.data) {
             if (localUploadedQuestionIds.has(question.id)) {
                 console.debug("update by local upload: " + question.id);
-                QuestionCache.originalQuestionInfos[question.id].question.lastModifiedTime = question.lastModifiedTime;
-                QuestionCache.reactiveQuestionInfos.value[question.id].question.lastModifiedTime = question.lastModifiedTime;
+                if (QuestionCache.originalQuestionInfos[question.id] && QuestionCache.reactiveQuestionInfos.value[question.id]) {
+                    QuestionCache.originalQuestionInfos[question.id].question.lastModifiedTime = question.lastModifiedTime;
+                    QuestionCache.reactiveQuestionInfos.value[question.id].question.lastModifiedTime = question.lastModifiedTime;
+                } else {
+                    // New version with different ID — load as new question
+                    newQuestionIds.push(question.id);
+                }
                 localUploadedQuestionIds.delete(question.id);
                 continue;
             }
@@ -541,32 +546,54 @@ const QuestionCache = {
         const handleResponse = (response) => {
             const succeedUpdatedQuestionIds = response.data.succeedUpdatedQuestionIds;
             const succeedDeletedQuestionIds = response.data.succeedDeletedQuestionIds;
+            const archivedQuestionIds = response.data.archivedQuestionIds;
             const failedQuestionIdReasons = response.data.failedQuestionIdReason;
+
+            // Map archived IDs to new version IDs
+            const oldToNewIdMap = {};
+            if (archivedQuestionIds && archivedQuestionIds.length > 0) {
+                const matchedOldIds = new Set(questionInfos.map(qi => qi.question.id).filter(id => succeedUpdatedQuestionIds.includes(id)));
+                const newVersionIds = succeedUpdatedQuestionIds.filter(id => !matchedOldIds.has(id));
+                for (let i = 0; i < archivedQuestionIds.length && i < newVersionIds.length; i++) {
+                    oldToNewIdMap[archivedQuestionIds[i]] = newVersionIds[i];
+                }
+            }
+
             for (const questionInfo of questionInfos) {
-                if (succeedUpdatedQuestionIds.includes(questionInfo.question.id)) {
+                const oldId = questionInfo.question.id;
+                if (succeedUpdatedQuestionIds.includes(oldId)) {
                     delete questionInfo.localNew;
                     delete questionInfo.question.localDeleted;
                     delete questionInfo.remoteDeleted;
                     delete questionInfo.remoteUpdated;
                     delete questionInfo.downloadRemoteUpdated;
-                    QuestionCache.originalQuestionInfos[questionInfo.question.id] = JSON.parse(JSON.stringify(questionInfo));
-                    // questionInfo.verify();
-                    localUploadedQuestionIds.add(questionInfo.question.id);
+                    QuestionCache.originalQuestionInfos[oldId] = JSON.parse(JSON.stringify(questionInfo));
+                    localUploadedQuestionIds.add(oldId);
                     QuestionCache.update(questionInfo);
-                } else if (succeedDeletedQuestionIds.includes(questionInfo.question.id)) {
+                } else if (archivedQuestionIds && archivedQuestionIds.includes(oldId)) {
+                    // Version update — question was archived, new version created with different ID
+                    const newId = oldToNewIdMap[oldId];
+                    if (newId) {
+                        delete QuestionCache.reactiveQuestionInfos.value[oldId];
+                        delete QuestionCache.originalQuestionInfos[oldId];
+                        delete QuestionCache.dirtyQuestionInfos[oldId];
+                        localUploadedQuestionIds.add(newId);
+                        if (router.currentRoute.value.params.id === oldId) {
+                            router.replace({
+                                name: router.currentRoute.value.name,
+                                params: { ...router.currentRoute.value.params, id: newId },
+                            });
+                        }
+                    }
+                } else if (succeedDeletedQuestionIds.includes(oldId)) {
                     QuestionCache.completelyRemove(questionInfo);
                 } else {
-                    const failedReasons = failedQuestionIdReasons[questionInfo.question.id];
-                    console.warn(questionInfo.question.id, failedReasons);
+                    const failedReasons = failedQuestionIdReasons[oldId];
+                    console.warn(oldId, failedReasons);
                 }
             }
-            /*
-                        if (questionInfos.length === 0) {
-                            QuestionCache.dirtyQuestionInfos = {};
-                            QuestionCache.dirty = false;
-                            QuestionCache.reactiveDirty.value = false;
-                        }
-            */
+            QuestionCache.dirty = Object.keys(QuestionCache.dirtyQuestionInfos).length > 0;
+            QuestionCache.reactiveDirty.value = QuestionCache.dirty;
             uploading.value = false;
         }
         return new Promise((resolve, reject) => {

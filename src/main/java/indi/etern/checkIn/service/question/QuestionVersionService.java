@@ -125,6 +125,17 @@ public class QuestionVersionService {
     }
     
     private Question buildNewVersionFromDTO(CommonQuestionDTO dto, Question previousQuestion) {
+        // Ensure partitionIds are set — fallback to previous version if missing
+        if (dto.getPartitionIds() == null || dto.getPartitionIds().isEmpty()) {
+            if (previousQuestion.getLinkWrapper() instanceof indi.etern.checkIn.entities.linkUtils.impl.ToPartitionsLink toPartitionsLink) {
+                List<String> previousPartitionIds = toPartitionsLink.getTargets().stream()
+                        .map(indi.etern.checkIn.entities.question.impl.Partition::getId)
+                        .toList();
+                if (!previousPartitionIds.isEmpty()) {
+                    dto.setPartitionIds(previousPartitionIds);
+                }
+            }
+        }
         if (dto instanceof MultipleChoicesQuestionDTO mcqDTO) {
             return QuestionCreateUtils.createMultipleChoicesQuestionForNewVersion(mcqDTO);
         } else if (dto instanceof QuestionGroupDTO qgDTO) {
