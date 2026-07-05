@@ -11,7 +11,9 @@ import indi.etern.checkIn.entities.question.impl.QuestionGroup;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class QuestionChangeDetector {
@@ -51,20 +53,25 @@ public class QuestionChangeDetector {
             List<Choice> oldChoices = old.getChoices();
             
             if (newChoices.size() != oldChoices.size()) {
+                // Option count changed — always content change, never triggers recalculation
                 contentChanged = true;
             } else {
-                for (int i = 0; i < newChoices.size(); i++) {
-                    ChoiceDTO newChoice = newChoices.get(i);
-                    Choice oldChoice = oldChoices.get(i);
-                    
-                    if (!Objects.equals(newChoice.getContent(), oldChoice.getContent())) {
+                // Same count: compare by ID to properly detect answer key changes
+                Map<String, Choice> oldChoiceMap = oldChoices.stream()
+                        .collect(Collectors.toMap(Choice::getId, c -> c));
+                
+                for (ChoiceDTO newChoice : newChoices) {
+                    if (newChoice.getId() != null && oldChoiceMap.containsKey(newChoice.getId())) {
+                        Choice oldChoice = oldChoiceMap.get(newChoice.getId());
+                        if (!Objects.equals(newChoice.getContent(), oldChoice.getContent())) {
+                            contentChanged = true;
+                        }
+                        if (newChoice.isCorrect() != oldChoice.isCorrect()) {
+                            answerKeyChanged = true;
+                        }
+                    } else {
+                        // ID mismatch — content changed (option replaced)
                         contentChanged = true;
-                    }
-                    if (newChoice.getOrderIndex() != oldChoice.getOrderIndex()) {
-                        contentChanged = true;
-                    }
-                    if (newChoice.isCorrect() != oldChoice.isCorrect()) {
-                        answerKeyChanged = true;
                     }
                 }
             }

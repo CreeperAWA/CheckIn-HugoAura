@@ -154,6 +154,7 @@ public class QuestionVersionService {
                 .anyMatch(ed -> ed.getStatus() == ExamData.Status.SUBMITTED);
     }
     
+    @Transactional(readOnly = true)
     public List<VersionInfoDTO> getVersionHistory(String questionId) {
         Question question = questionService.findById(questionId).orElseThrow();
         String groupId = question.getVersionGroupId() != null

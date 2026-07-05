@@ -1,9 +1,10 @@
 <script setup>
 import QuestionCache from "@/data/QuestionCache.js";
 import QuestionDiffViewer from "@/components/question/QuestionDiffViewer.vue";
+import ToastMarkdownViewer from "@/components/common/ToastMarkdownViewer.vue";
 import PermissionInfo from "@/auth/PermissionInfo.js";
 import getAvatarUrlOf from "@/utils/Avatar.js";
-import {Clock, Document, Switch} from "@element-plus/icons-vue";
+import {Clock, Document, Switch, View} from "@element-plus/icons-vue";
 
 const props = defineProps({
     questionId: {
@@ -22,6 +23,9 @@ const selectedNewVersion = ref(null);
 const oldQuestionData = ref(null);
 const newQuestionData = ref(null);
 const diffLoading = ref(false);
+const viewingVersion = ref(null);
+const viewingQuestionData = ref(null);
+const viewLoading = ref(false);
 
 const canView = computed(() => PermissionInfo.hasPermission('questionVersion.view'));
 
@@ -76,6 +80,8 @@ function onDialogClose() {
     selectedNewVersion.value = null;
     oldQuestionData.value = null;
     newQuestionData.value = null;
+    viewingVersion.value = null;
+    viewingQuestionData.value = null;
 }
 
 function loadVersions() {
@@ -123,6 +129,26 @@ function backToList() {
     selectedNewVersion.value = null;
     oldQuestionData.value = null;
     newQuestionData.value = null;
+    viewingVersion.value = null;
+    viewingQuestionData.value = null;
+}
+
+function viewVersion(version) {
+    viewingVersion.value = version;
+    mode.value = 'view';
+    viewLoading.value = true;
+    QuestionCache.getVersionQuestionData(version.questionId).then((data) => {
+        viewingQuestionData.value = data;
+    }).catch((err) => {
+        console.error('Failed to load version data:', err);
+    }).finally(() => {
+        viewLoading.value = false;
+    });
+}
+
+function getCorrectRate(stat) {
+    if (!stat || !stat.submittedCount || stat.submittedCount === 0) return 'N/A';
+    return Math.round(stat.correctCount / stat.submittedCount * 100) + '%';
 }
 
 function toggleVersionSelection(version) {
@@ -154,7 +180,7 @@ function getVersionSelectionLabel(version) {
 
 <template>
     <el-dialog v-model="dialogVisible"
-               width="720"
+               :width="mode === 'view' ? 800 : 720"
                @open="onDialogOpen"
                @close="onDialogClose"
                align-center
@@ -248,6 +274,13 @@ function getVersionSelectionLabel(version) {
                                         <el-text type="info" size="small">&nbsp;|&nbsp;</el-text>
                                         <el-text type="info" size="small">{{ version.examCount }} 个题目使用</el-text>
                                     </template>
+                                    <template v-if="version.submittedCount > 0">
+                                        <el-text type="info" size="small">&nbsp;|&nbsp;</el-text>
+                                        <el-text type="info" size="small">
+                                            提交{{ version.submittedCount }}次
+                                            正确率{{ Math.round(version.correctCount / version.submittedCount * 100) + '%' }}
+                                        </el-text>
+                                    </template>
                                 </div>
                             </div>
                             <div v-if="version.contentPreview" class="version-preview">
@@ -257,6 +290,13 @@ function getVersionSelectionLabel(version) {
                             </div>
                             <div v-if="version.changeDescription" class="version-description">
                                 <el-text size="small">{{ version.changeDescription }}</el-text>
+                            </div>
+                            <div class="version-actions">
+                                <el-button link type="primary" size="small"
+                                           @click.stop="viewVersion(version)"
+                                           :icon="View">
+                                    查看
+                                </el-button>
                             </div>
                         </div>
                     </div>
@@ -280,6 +320,116 @@ function getVersionSelectionLabel(version) {
                     <QuestionDiffViewer v-if="oldQuestionData && newQuestionData"
                                         :old-question="oldQuestionData"
                                         :new-question="newQuestionData"/>
+                </div>
+            </template>
+
+            <!-- View Mode -->
+            <template v-if="mode === 'view'">
+                <div class="view-header">
+                    <el-button @click="backToList" link type="info" style="margin-right: 12px;">
+                        返回列表
+                    </el-button>
+                    <el-text>
+                        <el-text tag="b">V{{ viewingVersion?.versionNumber }}</el-text>
+                        <el-tag size="small" :type="viewingVersion?.versionStatus === 'ACTIVE' ? 'success' : 'info'"
+                                style="margin-left: 6px;">
+                            {{ viewingVersion?.versionStatus === 'ACTIVE' ? '当前' : '归档' }}
+                        </el-tag>
+                    </el-text>
+                    <el-text type="info" style="margin-left: 12px;">
+                        {{ formatTime(viewingVersion?.lastModifiedTime) }}
+                    </el-text>
+                </div>
+
+                <div v-loading="viewLoading" style="min-height: 200px;">
+                    <template v-if="viewingQuestionData">
+                        <!-- 题目内容 -->
+                        <div class="view-section">
+                            <div class="view-section-title">
+                                <el-text tag="b">题目内容</el-text>
+                            </div>
+                            <div class="view-question-content">
+                                <ToastMarkdownViewer
+                                    :model-value="viewingQuestionData.content || ''"
+                                    style="padding: 12px;"/>
+                                <template v-if="viewingQuestionData.type === 'MultipleChoicesQuestion' && viewingQuestionData.choices">
+                                    <div class="view-choices">
+                                        <div v-for="(choice, idx) in viewingQuestionData.choices" :key="idx"
+                                             class="view-choice-item">
+                                            <span class="view-choice-label" :class="{ correct: choice.correct }">
+                                                {{ choice.correct ? '正确' : '错误' }}
+                                            </span>
+                                            <span>{{ choice.content }}</span>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template v-if="viewingQuestionData.type === 'QuestionGroup' && viewingQuestionData.questions">
+                                    <div class="view-sub-questions">
+                                        <div v-for="(subQ, idx) in viewingQuestionData.questions" :key="idx"
+                                             class="view-sub-question-item">
+                                            <div class="view-sub-question-header">
+                                                <el-text tag="b" size="small">子题目 #{{ idx + 1 }}</el-text>
+                                            </div>
+                                            <div class="view-sub-question-content">{{ subQ.content }}</div>
+                                            <template v-if="subQ.choices">
+                                                <div class="view-choices" style="margin-top: 4px;">
+                                                    <div v-for="(choice, ci) in subQ.choices" :key="ci"
+                                                         class="view-choice-item">
+                                                        <span class="view-choice-label" :class="{ correct: choice.correct }">
+                                                            {{ choice.correct ? '正确' : '错误' }}
+                                                        </span>
+                                                        <span>{{ choice.content }}</span>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- 解析 -->
+                        <div v-if="viewingQuestionData.explanation" class="view-section" style="margin-top: 12px;">
+                            <div class="view-section-title">
+                                <el-text tag="b">题目解析</el-text>
+                            </div>
+                            <div class="view-explanation">
+                                <ToastMarkdownViewer
+                                    :model-value="viewingQuestionData.explanation"
+                                    style="padding: 12px;"/>
+                            </div>
+                        </div>
+
+                        <!-- 统计信息 -->
+                        <div class="view-section" style="margin-top: 12px;">
+                            <div class="view-section-title">
+                                <el-text tag="b">统计信息</el-text>
+                            </div>
+                            <div class="view-statistics">
+                                <div class="view-statistics-grid">
+                                    <el-statistic title="抽取次数"
+                                        :value="viewingQuestionData.statistic ? viewingQuestionData.statistic.drewCount : 0"/>
+                                    <el-statistic title="提交次数"
+                                        :value="viewingQuestionData.statistic ? viewingQuestionData.statistic.submittedCount : 0"/>
+                                    <el-statistic title="答对次数"
+                                        :value="viewingQuestionData.statistic ? viewingQuestionData.statistic.correctCount : 0"/>
+                                    <el-statistic title="答错次数"
+                                        :value="viewingQuestionData.statistic ? viewingQuestionData.statistic.wrongCount : 0"/>
+                                    <el-statistic title="正确率">
+                                        <template #default>
+                                            {{ getCorrectRate(viewingQuestionData.statistic) }}
+                                        </template>
+                                    </el-statistic>
+                                </div>
+                                <div v-if="viewingVersion && viewingVersion.examCount > 0"
+                                     style="margin-top: 8px; padding: 8px 12px; background: var(--el-fill-color-lighter); border-radius: 6px;">
+                                    <el-text type="info" size="small">
+                                        {{ viewingVersion.examCount }} 个题目使用了此版本
+                                    </el-text>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
                 </div>
             </template>
         </div>
@@ -387,11 +537,110 @@ function getVersionSelectionLabel(version) {
     margin-top: 2px;
 }
 
+.version-actions {
+    margin-top: 4px;
+}
+
 .diff-header {
     display: flex;
     align-items: center;
     margin-bottom: 16px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+.view-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+.view-section {
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.view-section-title {
+    padding: 8px 12px;
+    background: var(--el-fill-color-lighter);
+    border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+.view-question-content {
+    padding: 8px;
+}
+
+.view-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 12px;
+}
+
+.view-choice-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    background: var(--el-fill-color-lighter);
+}
+
+.view-choice-label {
+    font-size: 12px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: var(--el-fill-color);
+    color: var(--el-color-danger);
+    flex-shrink: 0;
+}
+
+.view-choice-label.correct {
+    color: var(--el-color-success);
+}
+
+.view-sub-questions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 12px;
+}
+
+.view-sub-question-item {
+    padding: 8px;
+    border-radius: 4px;
+    background: var(--el-fill-color-lighter);
+}
+
+.view-sub-question-header {
+    margin-bottom: 4px;
+}
+
+.view-sub-question-content {
+    font-size: 13px;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.view-explanation {
+    padding: 8px;
+}
+
+.view-statistics {
+    padding: 12px;
+}
+
+.view-statistics-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.view-statistics-grid .el-statistic {
+    min-width: 100px;
 }
 </style>

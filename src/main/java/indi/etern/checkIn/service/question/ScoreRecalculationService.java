@@ -106,7 +106,7 @@ public class ScoreRecalculationService {
     
     @Transactional
     public void approveRecalculation(String logId, Long approvedByQq) {
-        ScoreRecalculationLog log = recalcLogRepository.findById(logId).orElseThrow();
+        ScoreRecalculationLog log = recalcLogRepository.findById(logId).orElseThrow(() -> new IllegalArgumentException("Recalculation log not found: " + logId));
         if (log.getStatus() != ScoreRecalculationLog.RecalculationStatus.AWAITING_APPROVAL) {
             throw new IllegalStateException("Log is not in AWAITING_APPROVAL status");
         }
@@ -120,7 +120,7 @@ public class ScoreRecalculationService {
     
     @Transactional
     public void rejectRecalculation(String logId, Long rejectedByQq) {
-        ScoreRecalculationLog log = recalcLogRepository.findById(logId).orElseThrow();
+        ScoreRecalculationLog log = recalcLogRepository.findById(logId).orElseThrow(() -> new IllegalArgumentException("Recalculation log not found: " + logId));
         if (log.getStatus() != ScoreRecalculationLog.RecalculationStatus.AWAITING_APPROVAL) {
             throw new IllegalStateException("Log is not in AWAITING_APPROVAL status");
         }
@@ -145,7 +145,7 @@ public class ScoreRecalculationService {
     
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void executeRecalculation(String questionId, String logId) {
-        ScoreRecalculationLog recalcLog = recalcLogRepository.findById(logId).orElseThrow();
+        ScoreRecalculationLog recalcLog = recalcLogRepository.findById(logId).orElseThrow(() -> new IllegalArgumentException("Recalculation log not found: " + logId));
         recalcLog.setStatus(ScoreRecalculationLog.RecalculationStatus.IN_PROGRESS);
         recalcLogRepository.save(recalcLog);
         
