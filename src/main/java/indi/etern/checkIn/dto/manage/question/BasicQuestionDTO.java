@@ -40,6 +40,7 @@ public class BasicQuestionDTO {
     protected String versionStatus;
     protected String versionGroupId;
     protected String previousVersionId;
+    @Setter
     protected Boolean forceNewVersion = false;
     
     public BasicQuestionDTO(Question question) {
