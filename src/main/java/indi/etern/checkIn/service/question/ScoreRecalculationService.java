@@ -94,6 +94,7 @@ public class ScoreRecalculationService {
         ScoreRecalculationLog log = ScoreRecalculationLog.builder()
                 .id(UUIDv7.randomUUID().toString())
                 .questionId(questionId)
+                .triggerVersionId(null)  // Manual trigger has no version change
                 .triggerType(ScoreRecalculationLog.TriggerType.MANUAL)
                 .triggeredAt(LocalDateTime.now())
                 .triggeredByQq(triggeredByQq)
