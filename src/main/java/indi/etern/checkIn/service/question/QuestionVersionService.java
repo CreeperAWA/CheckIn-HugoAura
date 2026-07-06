@@ -51,9 +51,6 @@ public class QuestionVersionService {
         public static VersionHandlingResult noAction(Question q) {
             return new VersionHandlingResult(q, false, false);
         }
-        public static VersionHandlingResult recalculationNeeded(Question q) {
-            return new VersionHandlingResult(q, false, true);
-        }
         public static VersionHandlingResult newVersionCreated(Question q, boolean recalc) {
             return new VersionHandlingResult(q, true, recalc);
         }
