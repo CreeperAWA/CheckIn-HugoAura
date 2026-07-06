@@ -108,18 +108,6 @@ public class CreateOrUpdateMultipleChoicesQuestion extends BaseAction<CreateOrUp
                     context.resolve(new SuccessOutput(versionResult.question()));
                     return;
                 }
-                
-                if (versionResult.recalculationNeeded()) {
-                    // Update in-place then trigger async recalculation
-                    Question question = QuestionCreateUtils.createMultipleChoicesQuestion(multipleChoicesQuestionDTO);
-                    question.setVerificationDigest(verificationRuleService.digest(multipleChoicesQuestionDTO));
-                    question.setValidationResult(result);
-                    copyVersionFields(question, previousQuestion.get());
-                    questionService.save(question);
-                    scoreRecalculationService.triggerAsyncRecalculation(question.getId(), currentUserQq);
-                    context.resolve(new SuccessOutput(question));
-                    return;
-                }
             }
             
             // Default path: no version management needed (new question or no historical answers)

@@ -128,19 +128,6 @@ public class CreateOrUpdateQuestionGroup extends BaseAction<CreateOrUpdateQuesti
                             return;
                         }
                     }
-                    
-                    if (versionResult.recalculationNeeded()) {
-                        final QuestionGroup questionGroup = QuestionCreateUtils.createQuestionGroup(questionGroupDTO);
-                        questionGroup.setVerificationDigest(verificationRuleService.digest(questionGroupDTO));
-                        questionGroup.setValidationResult(result);
-                        copyVersionFields(questionGroup, previousQuestion.get());
-                        questionService.saveAll(questionGroup.getQuestionLinks().stream().map(QuestionLinkImpl::getSource).toList());
-                        questionService.save(questionGroup);
-                        scoreRecalculationService.triggerAsyncRecalculation(questionGroup.getId(), currentUserQq);
-                        context.resolve(new SuccessOutput(questionGroup));
-                        StatusService.singletonInstance.flush();
-                        return;
-                    }
                 }
                 
                 // Default path
