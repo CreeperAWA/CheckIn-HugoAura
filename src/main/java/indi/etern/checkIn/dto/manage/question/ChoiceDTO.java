@@ -21,6 +21,7 @@ public class ChoiceDTO {
     
     public Choice toChoice() {
         final Choice choice = new Choice(content, correct);
+        choice.id = this.id;  // Preserve original ID to avoid false content-change detection
         choice.setOrderIndex(orderIndex);
         return choice;
     }
