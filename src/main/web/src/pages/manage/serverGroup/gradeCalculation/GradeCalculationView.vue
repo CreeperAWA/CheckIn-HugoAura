@@ -213,6 +213,16 @@ onUnmounted(() => {
                             </el-text>
                         </template>
                     </el-table-column>
+                    <el-table-column label="考试版本" width="100" align="center">
+                        <template #default="{ row }">
+                            <el-text type="info">{{ row.questionVersionNumber || '-' }}</el-text>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="触发版本" width="100" align="center">
+                        <template #default="{ row }">
+                            <el-text type="primary">{{ row.triggerVersionNumber || '-' }}</el-text>
+                        </template>
+                    </el-table-column>
                     <el-table-column label="触发类型" width="120" align="center">
                         <template #default="{ row }">
                             <el-tag :type="getTriggerTypeTagType(row.triggerType)" size="small">
@@ -307,6 +317,16 @@ onUnmounted(() => {
                             <el-text :truncated="true" style="max-width: 100%">
                                 {{ row.questionContentPreview || row.questionId }}
                             </el-text>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="考试版本" width="100" align="center">
+                        <template #default="{ row }">
+                            <el-text type="info">{{ row.questionVersionNumber || '-' }}</el-text>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="触发版本" width="100" align="center">
+                        <template #default="{ row }">
+                            <el-text type="primary">{{ row.triggerVersionNumber || '-' }}</el-text>
                         </template>
                     </el-table-column>
                     <el-table-column label="触发类型" width="120" align="center">

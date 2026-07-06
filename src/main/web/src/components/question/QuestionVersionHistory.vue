@@ -214,10 +214,10 @@ function getVersionSelectionLabel(version) {
                     <el-text type="info" size="small">
                         已选旧版: {{ selectedOldVersion.versionNumber }}
                         <template v-if="selectedNewVersion">
-                            &nbsp;|&nbsp;已选新版: {{ selectedNewVersion.versionNumber }}
+                            &nbsp;| 已选新版: {{ selectedNewVersion.versionNumber }}
                         </template>
                         <template v-else>
-                            &nbsp;|&nbsp;请点击选择新版
+                            &nbsp;| 请点击选择新版
                         </template>
                     </el-text>
                     <div style="display: flex;gap: 16px;margin-left: auto;">
@@ -232,8 +232,9 @@ function getVersionSelectionLabel(version) {
                     </div>
                 </div>
 
-                <div class="version-list" style="max-height: 400px; overflow-y: auto;">
-                    <div v-for="(version, idx) in versions" :key="version.questionId"
+                <div class="version-list-wrapper">
+                    <div class="version-list">
+                        <div v-for="(version, idx) in versions" :key="version.questionId"
                          class="version-item"
                          :class="{
                              'version-selected': isVersionSelected(version),
@@ -301,6 +302,7 @@ function getVersionSelectionLabel(version) {
                             </div>
                         </div>
                     </div>
+                </div>
                 </div>
             </template>
 
@@ -451,6 +453,15 @@ function getVersionSelectionLabel(version) {
     background: var(--el-fill-color-lighter);
     border-radius: 6px;
     border: 1px solid var(--el-border-color-lighter);
+    min-height: 40px;
+}
+
+.version-list-wrapper {
+    max-height: 400px;
+    min-height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .version-list {

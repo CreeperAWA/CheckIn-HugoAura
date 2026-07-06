@@ -121,7 +121,12 @@ public class CreateOrUpdateQuestionGroup extends BaseAction<CreateOrUpdateQuesti
                             questionService.saveAll(newVersionGroup.getQuestionLinks().stream().map(QuestionLinkImpl::getSource).toList());
                             questionService.save(newVersionGroup);
                             if (versionResult.recalculationNeeded()) {
-                                scoreRecalculationService.triggerAsyncRecalculation(newVersionGroup.getId(), currentUserQq);
+                                // Use previous (archived) question ID for finding affected exams
+                                // Use new version ID for triggerVersionId
+                                scoreRecalculationService.triggerAsyncRecalculation(
+                                        previousQuestion.get().getId(),
+                                        newVersionGroup.getId(),
+                                        currentUserQq);
                             }
                             context.resolve(new SuccessOutput(newVersionGroup));
                             StatusService.singletonInstance.flush();

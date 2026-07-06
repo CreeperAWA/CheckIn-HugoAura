@@ -25,6 +25,9 @@ public class ScoreRecalculationLog implements BaseEntity<String> {
     @Column(name = "question_id", nullable = false, columnDefinition = "char(36)")
     String questionId;
     
+    @Column(name = "trigger_version_id", columnDefinition = "char(36)")
+    String triggerVersionId;
+    
     @Enumerated(EnumType.STRING)
     @Column(name = "trigger_type", nullable = false, length = 20)
     TriggerType triggerType;

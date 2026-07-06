@@ -64,20 +64,22 @@ public class QuestionCreateUtils {
                 }
                 
                 builder.getChoices().clear();
+                int orderIndex = 0;
                 for (ChoiceDTO choiceDTO : choices) {
                     Choice choice;
                     if (choiceDTO.getId() != null && existingChoiceMap.containsKey(choiceDTO.getId())) {
                         // Reuse existing Choice to avoid ID conflict
                         choice = existingChoiceMap.get(choiceDTO.getId());
-                        choice.content = choiceDTO.getContent();
-                        choice.isCorrect = choiceDTO.isCorrect();
-                        choice.setOrderIndex(choiceDTO.getOrderIndex());
+                        choice.setContent(choiceDTO.getContent());
+                        choice.setIsCorrect(choiceDTO.isCorrect());
+                        choice.setOrderIndex(orderIndex);  // Use array index for correct ordering
                     } else {
                         // Create new Choice for new option - always generate new ID
                         choice = new Choice(choiceDTO.getContent(), choiceDTO.isCorrect());
-                        choice.setOrderIndex(choiceDTO.getOrderIndex());
+                        choice.setOrderIndex(orderIndex);  // Use array index for correct ordering
                     }
                     builder.addChoice(choice);
+                    orderIndex++;
                 }
             }
         }
@@ -151,11 +153,13 @@ public class QuestionCreateUtils {
         List<ChoiceDTO> choices = multipleChoicesQuestionDTO.getChoices();
         if (choices != null) {
             builder.getChoices().clear();
+            int orderIndex = 0;
             for (ChoiceDTO choiceDTO : choices) {
                 // Create new Choice with new ID for new version
                 Choice choice = new Choice(choiceDTO.getContent(), choiceDTO.isCorrect());
-                choice.setOrderIndex(choiceDTO.getOrderIndex());
+                choice.setOrderIndex(orderIndex);  // Use array index for correct ordering
                 builder.addChoice(choice);
+                orderIndex++;
             }
         }
         
@@ -193,12 +197,14 @@ public class QuestionCreateUtils {
         List<ChoiceDTO> choices = questionDTO.getChoices();
         if (choices != null) {
             builder.getChoices().clear();
+            int orderIndex = 0;
             for (ChoiceDTO choiceDTO : choices) {
                 // Create new Choice with new ID for new version
                 // Do NOT preserve old Choice ID to avoid unique constraint conflict
                 Choice choice = new Choice(choiceDTO.getContent(), choiceDTO.isCorrect());
-                choice.setOrderIndex(choiceDTO.getOrderIndex());
+                choice.setOrderIndex(orderIndex);  // Use array index for correct ordering
                 builder.addChoice(choice);
+                orderIndex++;
             }
         }
         

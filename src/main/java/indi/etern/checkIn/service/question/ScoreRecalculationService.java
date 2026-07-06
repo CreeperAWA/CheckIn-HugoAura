@@ -61,7 +61,7 @@ public class ScoreRecalculationService {
         this.webSocketService = webSocketService;
     }
     
-    public String triggerAsyncRecalculation(String questionId, Long triggeredByQq) {
+    public String triggerAsyncRecalculation(String questionId, String triggerVersionId, Long triggeredByQq) {
         List<ExamData> affectedExams = examDataService.getExamDataContainsQuestionById(questionId)
                 .stream()
                 .filter(ed -> ed.getStatus() == ExamData.Status.SUBMITTED)
@@ -75,6 +75,7 @@ public class ScoreRecalculationService {
         ScoreRecalculationLog log = ScoreRecalculationLog.builder()
                 .id(UUIDv7.randomUUID().toString())
                 .questionId(questionId)
+                .triggerVersionId(triggerVersionId)
                 .triggerType(ScoreRecalculationLog.TriggerType.ANSWER_KEY_CHANGE)
                 .triggeredAt(LocalDateTime.now())
                 .triggeredByQq(triggeredByQq)

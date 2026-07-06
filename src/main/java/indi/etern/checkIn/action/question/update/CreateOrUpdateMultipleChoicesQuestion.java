@@ -103,7 +103,12 @@ public class CreateOrUpdateMultipleChoicesQuestion extends BaseAction<CreateOrUp
                     versionResult.question().setValidationResult(result);
                     questionService.save(versionResult.question());
                     if (versionResult.recalculationNeeded()) {
-                        scoreRecalculationService.triggerAsyncRecalculation(versionResult.question().getId(), currentUserQq);
+                        // Use previous (archived) question ID for finding affected exams
+                        // Use new version ID for triggerVersionId
+                        scoreRecalculationService.triggerAsyncRecalculation(
+                                previousQuestion.get().getId(),
+                                versionResult.question().getId(),
+                                currentUserQq);
                     }
                     context.resolve(new SuccessOutput(versionResult.question()));
                     return;
