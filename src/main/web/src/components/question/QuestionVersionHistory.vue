@@ -212,9 +212,9 @@ function getVersionSelectionLabel(version) {
 
                 <div v-if="selectedOldVersion" class="compare-hint">
                     <el-text type="info" size="small">
-                        已选旧版: V{{ selectedOldVersion.versionNumber }}
+                        已选旧版: {{ selectedOldVersion.versionNumber }}
                         <template v-if="selectedNewVersion">
-                            &nbsp;|&nbsp;已选新版: V{{ selectedNewVersion.versionNumber }}
+                            &nbsp;|&nbsp;已选新版: {{ selectedNewVersion.versionNumber }}
                         </template>
                         <template v-else>
                             &nbsp;|&nbsp;请点击选择新版
@@ -249,7 +249,7 @@ function getVersionSelectionLabel(version) {
                         <div class="version-content">
                             <div class="version-header">
                                 <div class="version-title-row">
-                                    <el-text tag="b">V{{ version.versionNumber }}</el-text>
+                                    <el-text tag="b">{{ version.versionNumber }}</el-text>
                                     <el-tag size="small" :type="version.versionStatus === 'ACTIVE' ? 'success' : 'info'">
                                         {{ version.versionStatus === 'ACTIVE' ? '当前' : '归档' }}
                                     </el-tag>
@@ -311,7 +311,7 @@ function getVersionSelectionLabel(version) {
                         返回列表
                     </el-button>
                     <el-text>
-                        <el-text tag="b">V{{ selectedOldVersion?.versionNumber }}</el-text>
+                        <el-text tag="b">{{ selectedOldVersion?.versionNumber }}</el-text>
                         <el-text type="info"> → </el-text>
                         <el-text tag="b">V{{ selectedNewVersion?.versionNumber }}</el-text>
                         对比
@@ -331,7 +331,7 @@ function getVersionSelectionLabel(version) {
                         返回列表
                     </el-button>
                     <el-text>
-                        <el-text tag="b">V{{ viewingVersion?.versionNumber }}</el-text>
+                        <el-text tag="b">{{ viewingVersion?.versionNumber }}</el-text>
                         <el-tag size="small" :type="viewingVersion?.versionStatus === 'ACTIVE' ? 'success' : 'info'"
                                 style="margin-left: 6px;">
                             {{ viewingVersion?.versionStatus === 'ACTIVE' ? '当前' : '归档' }}
