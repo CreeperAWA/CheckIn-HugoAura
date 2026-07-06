@@ -16,6 +16,9 @@ import indi.etern.checkIn.utils.UUIDv7;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -57,6 +60,25 @@ public class QuestionVersionService {
     }
     
     @Transactional
+    public void initializeNewQuestionVersion(Question question, Long creatorQq) {
+        String versionNumber = generateSha1Short(question.getId() + "|" + System.nanoTime());
+        question.setVersionNumber(versionNumber);
+        question.setVersionGroupId(question.getId());
+        question.setVersionStatus(Question.VersionStatus.ACTIVE);
+        
+        QuestionVersionChain chain = QuestionVersionChain.builder()
+                .id(UUIDv7.randomUUID().toString())
+                .versionGroupId(question.getId())
+                .fromVersionId(question.getId())
+                .toVersionId(question.getId())
+                .changeType(QuestionVersionChain.ChangeType.INITIAL)
+                .createdAt(LocalDateTime.now())
+                .createdByQq(creatorQq)
+                .build();
+        versionChainRepository.save(chain);
+    }
+    
+    @Transactional
     public VersionHandlingResult handleVersionOnUpdate(
             Question previousQuestion,
             CommonQuestionDTO newQuestionDTO,
@@ -80,7 +102,9 @@ public class QuestionVersionService {
         
         switch (changeType) {
             case ANSWER_KEY_CHANGE -> {
-                return VersionHandlingResult.recalculationNeeded(previousQuestion);
+                Question newVersion = archiveAndCreateNewVersion(
+                        previousQuestion, newQuestionDTO, changeType, currentUserQq);
+                return VersionHandlingResult.newVersionCreated(newVersion, true);
             }
             case CONTENT_CHANGE, MIXED_CHANGE -> {
                 Question newVersion = archiveAndCreateNewVersion(
@@ -99,7 +123,7 @@ public class QuestionVersionService {
         
         String versionGroupId = previousQuestion.getVersionGroupId() != null
                 ? previousQuestion.getVersionGroupId() : previousQuestion.getId();
-        int newVersionNumber = previousQuestion.getVersionNumber() + 1;
+        String newVersionNumber = generateSha1Short(previousQuestion.getId() + "|" + System.nanoTime());
         
         // 1. Archive old version
         previousQuestion.setVersionStatus(Question.VersionStatus.ARCHIVED);
@@ -126,6 +150,20 @@ public class QuestionVersionService {
         versionChainRepository.save(chain);
         
         return newVersion;
+    }
+    
+    private String generateSha1Short(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
+            byte[] digest = md.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : digest) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.substring(0, 7);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-1 algorithm not available", e);
+        }
     }
     
     private Question buildNewVersionFromDTO(CommonQuestionDTO dto, Question previousQuestion) {
@@ -160,7 +198,7 @@ public class QuestionVersionService {
         String groupId = question.getVersionGroupId() != null
                 ? question.getVersionGroupId() : question.getId();
         
-        List<Question> allVersions = questionService.findByVersionGroupIdOrderByVersionNumberDesc(groupId);
+        List<Question> allVersions = questionService.findByVersionGroupIdOrderByLastModifiedTimeDesc(groupId);
         List<QuestionVersionChain> chains = versionChainRepository
                 .findByVersionGroupIdOrderByCreatedAtDesc(groupId);
         

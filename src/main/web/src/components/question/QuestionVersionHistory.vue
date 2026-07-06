@@ -30,6 +30,7 @@ const viewLoading = ref(false);
 const canView = computed(() => PermissionInfo.hasPermission('questionVersion.view'));
 
 const changeTypeMap = {
+    INITIAL: { label: '初始版本', type: 'info' },
     CONTENT_CHANGE: { label: '内容变更', type: 'warning' },
     ANSWER_KEY_CHANGE: { label: '答案变更', type: 'danger' },
     MIXED_CHANGE: { label: '混合变更', type: 'danger' }
@@ -278,7 +279,7 @@ function getVersionSelectionLabel(version) {
                                         <el-text type="info" size="small">&nbsp;|&nbsp;</el-text>
                                         <el-text type="info" size="small">
                                             提交{{ version.submittedCount }}次
-                                            正确率{{ Math.round(version.correctCount / version.submittedCount * 100) + '%' }}
+                                            正确率{{ getCorrectRate(version) }}
                                         </el-text>
                                     </template>
                                 </div>

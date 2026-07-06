@@ -124,8 +124,8 @@ public class QuestionService {
         return questionRepository.findByVersionGroupIdAndVersionStatus(versionGroupId, status);
     }
     
-    public List<Question> findByVersionGroupIdOrderByVersionNumberDesc(String versionGroupId) {
-        return questionRepository.findByVersionGroupIdOrderByVersionNumberDesc(versionGroupId);
+    public List<Question> findByVersionGroupIdOrderByLastModifiedTimeDesc(String versionGroupId) {
+        return questionRepository.findByVersionGroupIdOrderByLastModifiedTimeDesc(versionGroupId);
     }
 }
 

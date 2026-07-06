@@ -39,6 +39,10 @@ public class DeleteQuestionAction extends BaseAction<DeleteQuestionAction.Input,
         
         if (optionalQuestion.isPresent()) {
             Question question = optionalQuestion.get();
+            if (question.getVersionStatus() == Question.VersionStatus.ARCHIVED) {
+                context.resolve(MessageOutput.error("无法修改已归档题目"));
+                return;
+            }
             final User currentUser = context.getCurrentUser();
             if (currentUser.equals(question.getAuthor())) {
                 if (question instanceof QuestionGroup)

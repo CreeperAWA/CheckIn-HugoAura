@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class QuestionVersionChain implements BaseEntity<String> {
     
     public enum ChangeType {
-        CONTENT_CHANGE, ANSWER_KEY_CHANGE, MIXED_CHANGE
+        INITIAL, CONTENT_CHANGE, ANSWER_KEY_CHANGE, MIXED_CHANGE
     }
     
     @Id

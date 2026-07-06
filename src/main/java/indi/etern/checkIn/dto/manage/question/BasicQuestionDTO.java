@@ -36,7 +36,7 @@ public class BasicQuestionDTO {
     protected Map<String, IssueDTO> errors = new HashMap<>();
     protected Map<String, IssueDTO> warnings = new HashMap<>();
     protected Long authorQQ;
-    protected Integer versionNumber;
+    protected String versionNumber;
     protected String versionStatus;
     protected String versionGroupId;
     protected String previousVersionId;

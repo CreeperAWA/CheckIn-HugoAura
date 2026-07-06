@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 public record VersionInfoDTO(
         String questionId,
-        int versionNumber,
+        String versionNumber,
         String versionStatus,
         String contentPreview,
         LocalDateTime lastModifiedTime,

@@ -122,8 +122,8 @@ public class Question implements LinkSource<QuestionLinkImpl<?>>, BaseEntity<Str
     
     @Getter
     @Setter
-    @Column(name = "version_number", nullable = false)
-    int versionNumber = 1;
+    @Column(name = "version_number", nullable = false, length = 7)
+    String versionNumber = "1";
     
     @Getter
     @Setter

@@ -17,6 +17,7 @@ import indi.etern.checkIn.utils.QuestionCreateUtils;
 import jakarta.annotation.Nonnull;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -64,6 +65,10 @@ public class CreateOrUpdateMultipleChoicesQuestion extends BaseAction<CreateOrUp
         final Input input = context.getInput();
         final var multipleChoicesQuestionDTO = input.multipleChoicesQuestionDTO;
         Optional<Question> previousQuestion = questionService.findById(multipleChoicesQuestionDTO.getId());
+        if (previousQuestion.isPresent() && previousQuestion.get().getVersionStatus() == Question.VersionStatus.ARCHIVED) {
+            context.resolve(new ErrorOutput(List.of("无法修改已归档题目")));
+            return;
+        }
         final boolean authorChanged = previousQuestion.isPresent() && multipleChoicesQuestionDTO.getAuthorQQ() != null;
         previousQuestion.ifPresent(multipleChoicesQuestionDTO::inheritFrom);
         final ValidationResult result = verificationRuleService.verify(multipleChoicesQuestionDTO, VerificationRuleService.VerifyTargetType.MULTIPLE_CHOICES_QUESTION);
@@ -88,16 +93,18 @@ public class CreateOrUpdateMultipleChoicesQuestion extends BaseAction<CreateOrUp
             }
             
             // Version management: detect changes and handle version/recalculation
+            Long currentUserQq = context.getCurrentUser().getQQNumber();
             if (previousQuestion.isPresent()) {
-                Long currentUserQq = context.getCurrentUser().getQQNumber();
                 QuestionVersionService.VersionHandlingResult versionResult = questionVersionService.handleVersionOnUpdate(
                         previousQuestion.get(), multipleChoicesQuestionDTO, currentUserQq);
                 
                 if (versionResult.newVersionCreated()) {
-                    // New version was created and saved by VersionService
                     versionResult.question().setVerificationDigest(verificationRuleService.digest(multipleChoicesQuestionDTO));
                     versionResult.question().setValidationResult(result);
                     questionService.save(versionResult.question());
+                    if (versionResult.recalculationNeeded()) {
+                        scoreRecalculationService.triggerAsyncRecalculation(versionResult.question().getId(), currentUserQq);
+                    }
                     context.resolve(new SuccessOutput(versionResult.question()));
                     return;
                 }
@@ -121,8 +128,9 @@ public class CreateOrUpdateMultipleChoicesQuestion extends BaseAction<CreateOrUp
             question.setValidationResult(result);
             if (previousQuestion.isPresent()) {
                 copyVersionFields(question, previousQuestion.get());
-            } else if (question.getVersionGroupId() == null) {
+            } else {
                 question.setVersionGroupId(question.getId());
+                questionVersionService.initializeNewQuestionVersion(question, currentUserQq);
             }
             questionService.save(question);
             context.resolve(new SuccessOutput(question));

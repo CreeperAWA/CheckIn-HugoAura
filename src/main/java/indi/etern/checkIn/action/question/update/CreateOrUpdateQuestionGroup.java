@@ -21,6 +21,7 @@ import indi.etern.checkIn.utils.QuestionCreateUtils;
 import jakarta.annotation.Nonnull;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -67,6 +68,10 @@ public class CreateOrUpdateQuestionGroup extends BaseAction<CreateOrUpdateQuesti
         final Input input = context.getInput();
         final var questionGroupDTO = input.questionGroupDTO;
         Optional<Question> previousQuestion = questionService.findById(questionGroupDTO.getId());
+        if (previousQuestion.isPresent() && previousQuestion.get().getVersionStatus() == Question.VersionStatus.ARCHIVED) {
+            context.resolve(new ErrorOutput(List.of("无法修改已归档题目")));
+            return;
+        }
         final boolean authorChanged = previousQuestion.isPresent() && questionGroupDTO.getAuthorQQ() != null;
         previousQuestion.ifPresent(questionGroupDTO::inheritFrom);
         final ValidationResult result = verificationRuleService.verify(questionGroupDTO, VerificationRuleService.VerifyTargetType.QUESTION_GROUP);
@@ -104,8 +109,8 @@ public class CreateOrUpdateQuestionGroup extends BaseAction<CreateOrUpdateQuesti
             
             if (errors.isEmpty()) {
                 // Version management: detect changes and handle version/recalculation
+                Long currentUserQq = context.getCurrentUser().getQQNumber();
                 if (previousQuestion.isPresent()) {
-                    Long currentUserQq = context.getCurrentUser().getQQNumber();
                     QuestionVersionService.VersionHandlingResult versionResult = questionVersionService.handleVersionOnUpdate(
                             previousQuestion.get(), questionGroupDTO, currentUserQq);
                     
@@ -115,6 +120,9 @@ public class CreateOrUpdateQuestionGroup extends BaseAction<CreateOrUpdateQuesti
                             newVersionGroup.setValidationResult(result);
                             questionService.saveAll(newVersionGroup.getQuestionLinks().stream().map(QuestionLinkImpl::getSource).toList());
                             questionService.save(newVersionGroup);
+                            if (versionResult.recalculationNeeded()) {
+                                scoreRecalculationService.triggerAsyncRecalculation(newVersionGroup.getId(), currentUserQq);
+                            }
                             context.resolve(new SuccessOutput(newVersionGroup));
                             StatusService.singletonInstance.flush();
                             return;
@@ -141,8 +149,9 @@ public class CreateOrUpdateQuestionGroup extends BaseAction<CreateOrUpdateQuesti
                 questionGroup.setValidationResult(result);
                 if (previousQuestion.isPresent()) {
                     copyVersionFields(questionGroup, previousQuestion.get());
-                } else if (questionGroup.getVersionGroupId() == null) {
+                } else {
                     questionGroup.setVersionGroupId(questionGroup.getId());
+                    questionVersionService.initializeNewQuestionVersion(questionGroup, currentUserQq);
                 }
                 questionService.saveAll(questionGroup.getQuestionLinks().stream().map(QuestionLinkImpl::getSource).toList());
                 questionService.save(questionGroup);

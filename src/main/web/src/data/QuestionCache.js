@@ -919,6 +919,18 @@ const QuestionCache = {
                 reject(error.data || error);
             });
         });
+    },
+    getActiveVersionIdByVersionGroupId(versionGroupId) {
+        return new Promise((resolve, reject) => {
+            WebSocketConnector.send({
+                type: 'getActiveVersionByGroupId',
+                data: { versionGroupId }
+            }).then((response) => {
+                resolve(response.data.questionId);
+            }, (error) => {
+                reject(error.data || error);
+            });
+        });
     }
 }
 export default QuestionCache

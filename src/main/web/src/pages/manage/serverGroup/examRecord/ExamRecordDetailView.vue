@@ -98,6 +98,19 @@ onBeforeUnmount(() => {
     channel.unsubscribe();
 });
 
+const navigateToQuestion = async (questionInfo) => {
+    if (questionInfo.question.versionStatus === 'ARCHIVED' && questionInfo.question.versionGroupId) {
+        try {
+            const activeId = await QuestionCache.getActiveVersionIdByVersionGroupId(questionInfo.question.versionGroupId);
+            router.push({name: 'question-detail', params: {id: activeId}, query: {fromArchived: 'true'}});
+        } catch (e) {
+            router.push({name: 'question-detail', params: {id: questionInfo.question.id}});
+        }
+    } else {
+        router.push({name: 'question-detail', params: {id: questionInfo.question.id}});
+    }
+};
+
 const getDisplayAnswerData = (questionInfo, answer) => {
     const answerChoicesMap = {};
     if (answer && answer.selectedChoices) {
@@ -354,12 +367,19 @@ onBeforeUnmount(() => {
                                             style="display: flex;flex-direction: row;flex-wrap: wrap;margin-bottom: 8px"
                                             v-for="[id,questionInfo] of Object.entries(questionInfos)">
                                             <template v-if="questionInfo">
-                                                <question-info-panel style="flex: 1;margin: 4px;min-width: 240px"
-                                                                     @click="router.push({name:'question-detail',params: {id:questionInfo.question.id}})"
-                                                                     class="clickable"
-                                                                     :questionInfo="questionInfo"
-                                                                     :sub-question-expanded="true"
-                                                                     disable-error-and-warning/>
+                                                <div style="position: relative;flex: 1;margin: 4px;min-width: 240px">
+                                                    <el-tag v-if="questionInfo.question.versionStatus === 'ARCHIVED'"
+                                                            type="warning" size="small"
+                                                            style="position: absolute;top: 4px;right: 4px;z-index: 10;">
+                                                        已归档
+                                                    </el-tag>
+                                                    <question-info-panel style="min-width: 240px"
+                                                                         @click="navigateToQuestion(questionInfo)"
+                                                                         class="clickable"
+                                                                         :questionInfo="questionInfo"
+                                                                         :sub-question-expanded="true"
+                                                                         disable-error-and-warning/>
+                                                </div>
                                                 <div class="panel-1"
                                                      style="flex: 1;margin: 4px;padding: 4px;display: flex;flex-direction: column;min-width: 50%;"
                                                      v-if="data.answers">

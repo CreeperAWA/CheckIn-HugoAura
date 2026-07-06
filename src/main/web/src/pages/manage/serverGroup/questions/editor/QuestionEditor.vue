@@ -12,6 +12,7 @@ import MultipleChoicesEditorPlugin
     from "@/pages/manage/serverGroup/questions/editor/module/MultipleChoicesEditorModule.vue";
 import QuestionPreview from "@/components/question/QuestionPreview.vue";
 import router from "@/router/index.js";
+import {useRoute} from "vue-router";
 import UIMeta from "@/utils/UI_Meta.js";
 import Like from "@/components/icons/Like.vue";
 import DisLike from "@/components/icons/DisLike.vue";
@@ -25,6 +26,9 @@ import QuestionVersionHistory from "@/components/question/QuestionVersionHistory
 import PermissionInfo from "@/auth/PermissionInfo.js";
 
 let questionInfo = ref({});
+
+const route = useRoute();
+const showArchivedRedirectWarning = computed(() => route.query.fromArchived === 'true');
 
 const error = ref(false);
 const errorMessage = ref("");
@@ -264,6 +268,15 @@ onMounted(() => {
                                                     {{ warningButton.content }}
                                                 </el-button>
                                             </el-button-group>
+                                        </div>
+                                    </el-tag>
+                                </div>
+                                <div v-if="showArchivedRedirectWarning" key="archived-redirect-warning" class="alert-item">
+                                    <el-tag type="warning" :closable="true" @close="router.replace({query: {}})">
+                                        <div style="display: flex;flex-direction: row;align-items: center;">
+                                            <el-text type="warning" style="margin: 4px">
+                                                您正在查看的是已归档题目，已为您自动跳转到最新版本
+                                            </el-text>
                                         </div>
                                     </el-tag>
                                 </div>

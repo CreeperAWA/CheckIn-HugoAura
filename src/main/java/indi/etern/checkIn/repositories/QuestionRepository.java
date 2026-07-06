@@ -24,5 +24,5 @@ public interface QuestionRepository extends JpaRepository<Question, String> {
     List<Question> findAllByLastModifiedTimeBeforeAndLinkWrapper_Class(LocalDateTime localDateTime, Class<?> linkClass, Sort sort, Limit limit);
     
     List<Question> findByVersionGroupIdAndVersionStatus(String versionGroupId, VersionStatus status);
-    List<Question> findByVersionGroupIdOrderByVersionNumberDesc(String versionGroupId);
+    List<Question> findByVersionGroupIdOrderByLastModifiedTimeDesc(String versionGroupId);
 }

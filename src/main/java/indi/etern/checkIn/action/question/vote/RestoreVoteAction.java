@@ -30,6 +30,10 @@ public class RestoreVoteAction extends BaseAction<RestoreVoteAction.Input, Messa
         Optional<Question> optionalQuestion = QuestionService.singletonInstance.findById(questionId);
         if (optionalQuestion.isPresent()) {
             Question question = optionalQuestion.get();
+            if (question.getVersionStatus() == Question.VersionStatus.ARCHIVED) {
+                context.resolve(MessageOutput.error("无法修改已归档题目"));
+                return;
+            }
             question.getUpVoters().remove(currentUser);
             question.getDownVoters().remove(currentUser);
             questionService.save(question);
