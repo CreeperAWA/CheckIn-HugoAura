@@ -313,7 +313,7 @@ function getVersionSelectionLabel(version) {
                     <el-text>
                         <el-text tag="b">{{ selectedOldVersion?.versionNumber }}</el-text>
                         <el-text type="info"> → </el-text>
-                        <el-text tag="b">V{{ selectedNewVersion?.versionNumber }}</el-text>
+                        <el-text tag="b">{{ selectedNewVersion?.versionNumber }}</el-text>
                         对比
                     </el-text>
                 </div>
