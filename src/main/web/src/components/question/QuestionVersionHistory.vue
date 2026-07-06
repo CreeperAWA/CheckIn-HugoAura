@@ -220,7 +220,7 @@ function getVersionSelectionLabel(version) {
                             &nbsp;|&nbsp;请点击选择新版
                         </template>
                     </el-text>
-                    <div style="display: flex;gap: 8px;margin-left: auto;">
+                    <div style="display: flex;gap: 16px;margin-left: auto;">
                         <el-button v-if="selectedOldVersion && selectedNewVersion"
                                    type="primary" size="small" @click="startCompare"
                                    :icon="Switch">
@@ -232,7 +232,7 @@ function getVersionSelectionLabel(version) {
                     </div>
                 </div>
 
-                <div class="version-list">
+                <div class="version-list" style="max-height: 400px; overflow-y: auto;">
                     <div v-for="(version, idx) in versions" :key="version.questionId"
                          class="version-item"
                          :class="{
@@ -436,7 +436,8 @@ function getVersionSelectionLabel(version) {
         </div>
 
         <template #footer>
-            <el-button @click="dialogVisible = false">关闭</el-button>
+            <el-button v-if="mode !== 'list'" @click="backToList">返回</el-button>
+            <el-button v-else @click="dialogVisible = false">关闭</el-button>
         </template>
     </el-dialog>
 </template>

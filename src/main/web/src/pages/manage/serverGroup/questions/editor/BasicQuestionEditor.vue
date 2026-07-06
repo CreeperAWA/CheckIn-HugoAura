@@ -315,6 +315,13 @@ const newImageLoaded = () => {
                     启用
                 </el-text>
                 <el-switch v-model="questionInfo.question.enabled" :disabled="!ableToSwitchEnable(questionInfo)"/>
+                <el-divider direction="vertical" style="margin: 0 12px;" v-if="!questionInfo.localNew"/>
+                <template v-if="!questionInfo.localNew">
+                    <el-text style="margin: 0 8px;">
+                        记录为新版本
+                    </el-text>
+                    <el-checkbox v-model="questionInfo.question.forceNewVersion"/>
+                </template>
             </div>
         </div>
     </div>

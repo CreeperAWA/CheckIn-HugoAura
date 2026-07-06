@@ -40,6 +40,7 @@ public class BasicQuestionDTO {
     protected String versionStatus;
     protected String versionGroupId;
     protected String previousVersionId;
+    protected Boolean forceNewVersion = false;
     
     public BasicQuestionDTO(Question question) {
         id = question.getId();

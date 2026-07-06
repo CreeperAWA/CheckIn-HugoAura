@@ -91,9 +91,12 @@ public class QuestionVersionService {
             return VersionHandlingResult.noAction(previousQuestion);
         }
         
+        boolean forceNewVersion = newQuestionDTO.getForceNewVersion() != null 
+                && newQuestionDTO.getForceNewVersion();
         boolean hasHistoricalAnswers = hasHistoricalAnswers(previousQuestion.getId());
         
-        if (!hasHistoricalAnswers) {
+        // If forceNewVersion is true, always create new version regardless of historical answers
+        if (!hasHistoricalAnswers && !forceNewVersion) {
             return VersionHandlingResult.noAction(previousQuestion);
         }
         
