@@ -2,6 +2,7 @@ package indi.etern.checkIn.utils;
 
 import indi.etern.checkIn.dto.manage.question.*;
 import indi.etern.checkIn.entities.linkUtils.impl.ToPartitionsLink;
+import indi.etern.checkIn.entities.question.impl.Choice;
 import indi.etern.checkIn.entities.question.impl.MultipleChoicesQuestion;
 import indi.etern.checkIn.entities.question.impl.Partition;
 import indi.etern.checkIn.entities.question.impl.Question;
@@ -9,8 +10,10 @@ import indi.etern.checkIn.entities.question.impl.QuestionGroup;
 import indi.etern.checkIn.service.dao.QuestionService;
 import indi.etern.checkIn.service.dao.UserService;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -52,9 +55,29 @@ public class QuestionCreateUtils {
         if (commonQuestionDTO instanceof MultipleChoicesQuestionDTO multipleChoicesQuestionDTO) {
             List<ChoiceDTO> choices = multipleChoicesQuestionDTO.getChoices();
             if (choices != null) {
+                // Build map of existing choices by ID for reuse
+                Map<String, Choice> existingChoiceMap = new HashMap<>();
+                if (multipleChoicesQuestion != null && multipleChoicesQuestion.getChoices() != null) {
+                    for (Choice existingChoice : multipleChoicesQuestion.getChoices()) {
+                        existingChoiceMap.put(existingChoice.id, existingChoice);
+                    }
+                }
+                
                 builder.getChoices().clear();
                 for (ChoiceDTO choiceDTO : choices) {
-                    builder.addChoice(choiceDTO.toChoice());
+                    Choice choice;
+                    if (choiceDTO.getId() != null && existingChoiceMap.containsKey(choiceDTO.getId())) {
+                        // Reuse existing Choice to avoid ID conflict
+                        choice = existingChoiceMap.get(choiceDTO.getId());
+                        choice.content = choiceDTO.getContent();
+                        choice.isCorrect = choiceDTO.isCorrect();
+                        choice.setOrderIndex(choiceDTO.getOrderIndex());
+                    } else {
+                        // Create new Choice for new option - always generate new ID
+                        choice = new Choice(choiceDTO.getContent(), choiceDTO.isCorrect());
+                        choice.setOrderIndex(choiceDTO.getOrderIndex());
+                    }
+                    builder.addChoice(choice);
                 }
             }
         }
@@ -106,6 +129,48 @@ public class QuestionCreateUtils {
         }));
     }
     
+    protected static MultipleChoicesQuestion createSubMultipleChoicesQuestionForNewVersion(MultipleChoicesQuestionDTO multipleChoicesQuestionDTO, QuestionGroup questionGroup) {
+        MultipleChoicesQuestion.Builder builder = new MultipleChoicesQuestion.Builder();
+        // Do NOT set ID - let Builder.build() generate a new one
+        
+        final String content = multipleChoicesQuestionDTO.getContent();
+        if (content != null) {
+            builder.setQuestionContent(content);
+        }
+        
+        String explanation = multipleChoicesQuestionDTO.getExplanation();
+        if (explanation != null) {
+            builder.setExplanation(explanation);
+        }
+        
+        Boolean enabled = multipleChoicesQuestionDTO.getEnabled();
+        if (enabled != null) {
+            builder.setEnable(enabled);
+        }
+        
+        List<ChoiceDTO> choices = multipleChoicesQuestionDTO.getChoices();
+        if (choices != null) {
+            builder.getChoices().clear();
+            for (ChoiceDTO choiceDTO : choices) {
+                // Create new Choice with new ID for new version
+                Choice choice = new Choice(choiceDTO.getContent(), choiceDTO.isCorrect());
+                choice.setOrderIndex(choiceDTO.getOrderIndex());
+                builder.addChoice(choice);
+            }
+        }
+        
+        builder.useQuestionGroupLinks(linkWrapper -> {
+            linkWrapper.setTarget(questionGroup);
+        });
+        
+        Long authorQQ = multipleChoicesQuestionDTO.getAuthorQQ();
+        if (authorQQ != null) {
+            builder.setAuthor(UserService.singletonInstance.findByQQNumber(authorQQ).orElse(null));
+        }
+        
+        return builder.build();
+    }
+    
     public static MultipleChoicesQuestion createMultipleChoicesQuestionForNewVersion(MultipleChoicesQuestionDTO questionDTO) {
         MultipleChoicesQuestion.Builder builder = new MultipleChoicesQuestion.Builder();
         // Do NOT set ID - let Builder.build() generate a new one
@@ -129,7 +194,11 @@ public class QuestionCreateUtils {
         if (choices != null) {
             builder.getChoices().clear();
             for (ChoiceDTO choiceDTO : choices) {
-                builder.addChoice(choiceDTO.toChoice());
+                // Create new Choice with new ID for new version
+                // Do NOT preserve old Choice ID to avoid unique constraint conflict
+                Choice choice = new Choice(choiceDTO.getContent(), choiceDTO.isCorrect());
+                choice.setOrderIndex(choiceDTO.getOrderIndex());
+                builder.addChoice(choice);
             }
         }
         
@@ -207,7 +276,8 @@ public class QuestionCreateUtils {
         if (questions != null) {
             for (CommonQuestionDTO questionInfoObj : questions) {
                 if (questionInfoObj instanceof MultipleChoicesQuestionDTO multipleChoicesQuestionDTO) {
-                    MultipleChoicesQuestion multipleChoicesQuestion = createSubMultipleChoicesQuestion(multipleChoicesQuestionDTO, questionGroup);
+                    // Use ForNewVersion method to create new Choice IDs for sub-questions
+                    MultipleChoicesQuestion multipleChoicesQuestion = createSubMultipleChoicesQuestionForNewVersion(multipleChoicesQuestionDTO, questionGroup);
                     questionGroup.addQuestion(multipleChoicesQuestion);
                 }
             }

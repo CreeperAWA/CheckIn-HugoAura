@@ -16,9 +16,11 @@ public class Choice implements Serializable {
     public String id;
     
     @Column(columnDefinition = "varchar(256)")
+    @Setter
     private String content;
     
     @JsonIgnore
+    @Setter
     private Boolean isCorrect;
     
     @Setter

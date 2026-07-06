@@ -20,10 +20,9 @@ public class ChoiceDTO {
     }
     
     public Choice toChoice() {
+        // Always create new Choice with new ID
+        // ID preservation is handled explicitly in QuestionCreateUtils.create()
         final Choice choice = new Choice(content, correct);
-        if (this.id != null) {
-            choice.id = this.id;  // Preserve original ID to avoid false content-change detection
-        }
         choice.setOrderIndex(orderIndex);
         return choice;
     }
