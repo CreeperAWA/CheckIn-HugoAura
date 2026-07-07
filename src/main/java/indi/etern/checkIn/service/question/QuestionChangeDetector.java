@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -52,27 +51,24 @@ public class QuestionChangeDetector {
         if (newChoices != null) {
             List<Choice> oldChoices = old.getChoices();
             
-            if (newChoices.size() != oldChoices.size()) {
-                // Option count changed — always content change, never triggers recalculation
+            // Order-independent comparison by choice content (robust: no dependency on IDs or order).
+            // Reordering options only changes order, not the set of contents or the content->correct
+            // mapping, so it is correctly detected as NO_CHANGE.
+            Map<String, Boolean> oldContentToCorrect = oldChoices.stream()
+                    .collect(Collectors.toMap(Choice::getContent, Choice::isCorrect, (a, b) -> a));
+            Map<String, Boolean> newContentToCorrect = newChoices.stream()
+                    .collect(Collectors.toMap(ChoiceDTO::getContent, ChoiceDTO::isCorrect, (a, b) -> a));
+            
+            // Content change: the set of option contents differs (added/removed/edited option)
+            if (!oldContentToCorrect.keySet().equals(newContentToCorrect.keySet())) {
                 contentChanged = true;
-            } else {
-                // Same count: compare by ID to properly detect answer key changes
-                Map<String, Choice> oldChoiceMap = oldChoices.stream()
-                        .collect(Collectors.toMap(Choice::getId, c -> c));
-                
-                for (ChoiceDTO newChoice : newChoices) {
-                    if (newChoice.getId() != null && oldChoiceMap.containsKey(newChoice.getId())) {
-                        Choice oldChoice = oldChoiceMap.get(newChoice.getId());
-                        if (!Objects.equals(newChoice.getContent(), oldChoice.getContent())) {
-                            contentChanged = true;
-                        }
-                        if (newChoice.isCorrect() != oldChoice.isCorrect()) {
-                            answerKeyChanged = true;
-                        }
-                    } else {
-                        // ID mismatch — content changed (option replaced)
-                        contentChanged = true;
-                    }
+            }
+            
+            // Answer key change: same content exists but its correctness flag flipped
+            for (Map.Entry<String, Boolean> entry : oldContentToCorrect.entrySet()) {
+                Boolean newCorrect = newContentToCorrect.get(entry.getKey());
+                if (newCorrect != null && !newCorrect.equals(entry.getValue())) {
+                    answerKeyChanged = true;
                 }
             }
         }
