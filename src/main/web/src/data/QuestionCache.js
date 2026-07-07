@@ -595,6 +595,8 @@ const QuestionCache = {
                         // to skip node creation and leave the new version missing from the tree.
                         QuestionCache.getAsync(newId).then((newInfo) => {
                             QuestionCache.update(newInfo);
+                        }).catch((err) => {
+                            console.warn(`Failed to load new version ${newId}:`, err);
                         });
                     }
                 } else if (succeedDeletedQuestionIds.includes(oldId)) {
