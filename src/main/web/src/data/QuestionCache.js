@@ -585,10 +585,17 @@ const QuestionCache = {
                         delete QuestionCache.originalQuestionInfos[oldId];
                         delete QuestionCache.dirtyQuestionInfos[oldId];
                         // Remove the archived question's stale tree node from all partition views,
-                        // otherwise re-entering the page rebuilds it and shows both old and new versions
+                        // otherwise re-entering the page rebuilds it and shows the old version
                         for (const action of onDelete) {
                             action(oldId, true);
                         }
+                        // Deterministically load the new version and register its node now.
+                        // Relying on the broadcast "updateQuestions" event is racy: router.replace
+                        // above may pre-populate the cache for newId, causing the broadcast handler
+                        // to skip node creation and leave the new version missing from the tree.
+                        QuestionCache.getAsync(newId).then((newInfo) => {
+                            QuestionCache.update(newInfo);
+                        });
                     }
                 } else if (succeedDeletedQuestionIds.includes(oldId)) {
                     QuestionCache.completelyRemove(questionInfo);
