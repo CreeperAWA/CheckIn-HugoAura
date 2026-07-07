@@ -574,15 +574,20 @@ const QuestionCache = {
                     // Version update — question was archived, new version created with different ID
                     const newId = oldToNewIdMap[oldId];
                     if (newId) {
-                        delete QuestionCache.reactiveQuestionInfos.value[oldId];
-                        delete QuestionCache.originalQuestionInfos[oldId];
-                        delete QuestionCache.dirtyQuestionInfos[oldId];
                         localUploadedQuestionIds.add(newId);
                         if (router.currentRoute.value.params.id === oldId) {
                             router.replace({
                                 name: router.currentRoute.value.name,
                                 params: { ...router.currentRoute.value.params, id: newId },
                             });
+                        }
+                        delete QuestionCache.reactiveQuestionInfos.value[oldId];
+                        delete QuestionCache.originalQuestionInfos[oldId];
+                        delete QuestionCache.dirtyQuestionInfos[oldId];
+                        // Remove the archived question's stale tree node from all partition views,
+                        // otherwise re-entering the page rebuilds it and shows both old and new versions
+                        for (const action of onDelete) {
+                            action(oldId, true);
                         }
                     }
                 } else if (succeedDeletedQuestionIds.includes(oldId)) {
