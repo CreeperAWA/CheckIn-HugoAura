@@ -10,8 +10,10 @@ import indi.etern.checkIn.entities.question.impl.Question;
 import indi.etern.checkIn.entities.question.impl.QuestionGroup;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,20 +56,34 @@ public class QuestionChangeDetector {
             // Order-independent comparison by choice content (robust: no dependency on IDs or order).
             // Reordering options only changes order, not the set of contents or the content->correct
             // mapping, so it is correctly detected as NO_CHANGE.
-            Map<String, Boolean> oldContentToCorrect = oldChoices.stream()
-                    .collect(Collectors.toMap(Choice::getContent, Choice::isCorrect, (a, b) -> a));
-            Map<String, Boolean> newContentToCorrect = newChoices.stream()
-                    .collect(Collectors.toMap(ChoiceDTO::getContent, ChoiceDTO::isCorrect, (a, b) -> a));
+            //
+            // Group correctness flags by content instead of collapsing into a single-value map, so
+            // that options sharing identical content (duplicates) do not silently lose their
+            // correctness information.
+            Map<String, List<Boolean>> oldContentToCorrect = oldChoices.stream()
+                    .collect(Collectors.groupingBy(Choice::getContent,
+                            Collectors.mapping(Choice::isCorrect, Collectors.toList())));
+            Map<String, List<Boolean>> newContentToCorrect = newChoices.stream()
+                    .collect(Collectors.groupingBy(ChoiceDTO::getContent,
+                            Collectors.mapping(ChoiceDTO::isCorrect, Collectors.toList())));
             
-            // Content change: the set of option contents differs (added/removed/edited option)
-            if (!oldContentToCorrect.keySet().equals(newContentToCorrect.keySet())) {
-                contentChanged = true;
-            }
+            Set<String> allContents = new HashSet<>(oldContentToCorrect.keySet());
+            allContents.addAll(newContentToCorrect.keySet());
             
-            // Answer key change: same content exists but its correctness flag flipped
-            for (Map.Entry<String, Boolean> entry : oldContentToCorrect.entrySet()) {
-                Boolean newCorrect = newContentToCorrect.get(entry.getKey());
-                if (newCorrect != null && !newCorrect.equals(entry.getValue())) {
+            for (String content : allContents) {
+                List<Boolean> oldCorrects = oldContentToCorrect.get(content);
+                List<Boolean> newCorrects = newContentToCorrect.get(content);
+                
+                // Content change: option added/removed, or its multiplicity (duplicate count) changed
+                if (oldCorrects == null || newCorrects == null || oldCorrects.size() != newCorrects.size()) {
+                    contentChanged = true;
+                    continue;
+                }
+                
+                // Answer key change: same content and multiplicity, but correctness distribution flipped
+                List<Boolean> sortedOld = oldCorrects.stream().sorted().toList();
+                List<Boolean> sortedNew = newCorrects.stream().sorted().toList();
+                if (!sortedOld.equals(sortedNew)) {
                     answerKeyChanged = true;
                 }
             }
