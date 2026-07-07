@@ -573,12 +573,18 @@ const QuestionCache = {
                     QuestionCache.update(questionInfo);
                 } else if (archivedQuestionIds && archivedQuestionIds.includes(oldId)) {
                     // Version update — the old question was archived and a new version was
-                    // created with a different ID. The server is authoritative about which
-                    // questions belong to a partition (archived versions are excluded), so we
-                    // invalidate the affected partitions' cached node maps and let the tree
-                    // re-fetch from the server. This is the same recovery a hard refresh does,
-                    // but scoped, and avoids the fragile mount-only callback patching that left
-                    // the stale old node (or a missing new node) in the persistent cache.
+                    // created with a different ID.
+                    //
+                    // Live (mounted) tree: the old node is removed via the onDelete listeners
+                    // below, and the new node is appended by the global "updateQuestions"
+                    // broadcast handler, which fetches only the single new version (not the
+                    // whole partition). No full-partition reload is triggered here.
+                    //
+                    // Persistent cache: PartitionCache.questionNodes survives navigation and is
+                    // reused on remount. The broadcast's tree-append listener is unregistered
+                    // while QuestionsView is unmounted, so it cannot patch this map. We therefore
+                    // swap the node here directly, rebuilt from the just-submitted local data so
+                    // no extra server round-trip is needed even for large partitions.
                     const newId = oldToNewIdMap[oldId];
                     if (newId) {
                         localUploadedQuestionIds.add(newId);
@@ -589,6 +595,11 @@ const QuestionCache = {
                             });
                         }
                         const affectedPartitionIds = questionInfo.question.partitionIds || [];
+                        // Build the new-version question from the local copy; only the id differs.
+                        const newQuestion = JSON.parse(JSON.stringify(questionInfo.question));
+                        newQuestion.id = newId;
+                        delete newQuestion.localDeleted;
+
                         delete QuestionCache.reactiveQuestionInfos.value[oldId];
                         delete QuestionCache.originalQuestionInfos[oldId];
                         delete QuestionCache.dirtyQuestionInfos[oldId];
@@ -596,17 +607,17 @@ const QuestionCache = {
                         for (const action of onDelete) {
                             action(oldId, true);
                         }
-                        // Force affected partitions to reload their question nodes from the
-                        // server on next access, so both the removal of the archived version
-                        // and the appearance of the new version are always consistent.
+                        // Swap the node in each affected partition's persistent cache (no server
+                        // call). The mounted tree is handled by the broadcast; guard against
+                        // overwriting a richer node it may have already inserted.
                         for (const partitionId of affectedPartitionIds) {
                             const partition = PartitionCache.refPartitions.value[partitionId];
-                            if (partition) {
-                                if (partition.questionNodes) {
-                                    delete partition.questionNodes[oldId];
-                                    delete partition.questionNodes[newId];
+                            if (partition && partition.questionNodes) {
+                                delete partition.questionNodes[oldId];
+                                if (!partition.questionNodes[newId]) {
+                                    partition.questionNodes[newId] =
+                                        QuestionCache.getQuestionNodeObjOf(newQuestion, partitionId);
                                 }
-                                partition.loaded = false;
                             }
                         }
                     }
