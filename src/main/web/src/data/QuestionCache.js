@@ -4,6 +4,7 @@ import WebSocketConnector from "@/api/websocket.js";
 import PermissionInfo from "@/auth/PermissionInfo.js";
 import UserDataInterface from "@/data/UserDataInterface.js";
 import verifier from "@/utils/Verifier.js";
+import PartitionCache from "@/data/PartitionCache.js";
 
 // import {ref} from "vue";
 
@@ -571,7 +572,13 @@ const QuestionCache = {
                     localUploadedQuestionIds.add(oldId);
                     QuestionCache.update(questionInfo);
                 } else if (archivedQuestionIds && archivedQuestionIds.includes(oldId)) {
-                    // Version update — question was archived, new version created with different ID
+                    // Version update — the old question was archived and a new version was
+                    // created with a different ID. The server is authoritative about which
+                    // questions belong to a partition (archived versions are excluded), so we
+                    // invalidate the affected partitions' cached node maps and let the tree
+                    // re-fetch from the server. This is the same recovery a hard refresh does,
+                    // but scoped, and avoids the fragile mount-only callback patching that left
+                    // the stale old node (or a missing new node) in the persistent cache.
                     const newId = oldToNewIdMap[oldId];
                     if (newId) {
                         localUploadedQuestionIds.add(newId);
@@ -581,23 +588,27 @@ const QuestionCache = {
                                 params: { ...router.currentRoute.value.params, id: newId },
                             });
                         }
+                        const affectedPartitionIds = questionInfo.question.partitionIds || [];
                         delete QuestionCache.reactiveQuestionInfos.value[oldId];
                         delete QuestionCache.originalQuestionInfos[oldId];
                         delete QuestionCache.dirtyQuestionInfos[oldId];
-                        // Remove the archived question's stale tree node from all partition views,
-                        // otherwise re-entering the page rebuilds it and shows the old version
+                        // Remove the stale old node from any currently mounted tree immediately.
                         for (const action of onDelete) {
                             action(oldId, true);
                         }
-                        // Deterministically load the new version and register its node now.
-                        // Relying on the broadcast "updateQuestions" event is racy: router.replace
-                        // above may pre-populate the cache for newId, causing the broadcast handler
-                        // to skip node creation and leave the new version missing from the tree.
-                        QuestionCache.getAsync(newId).then((newInfo) => {
-                            QuestionCache.update(newInfo);
-                        }).catch((err) => {
-                            console.warn(`Failed to load new version ${newId}:`, err);
-                        });
+                        // Force affected partitions to reload their question nodes from the
+                        // server on next access, so both the removal of the archived version
+                        // and the appearance of the new version are always consistent.
+                        for (const partitionId of affectedPartitionIds) {
+                            const partition = PartitionCache.refPartitions.value[partitionId];
+                            if (partition) {
+                                if (partition.questionNodes) {
+                                    delete partition.questionNodes[oldId];
+                                    delete partition.questionNodes[newId];
+                                }
+                                partition.loaded = false;
+                            }
+                        }
                     }
                 } else if (succeedDeletedQuestionIds.includes(oldId)) {
                     QuestionCache.completelyRemove(questionInfo);
