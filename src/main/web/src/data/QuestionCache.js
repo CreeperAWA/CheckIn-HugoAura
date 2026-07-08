@@ -560,6 +560,7 @@ const QuestionCache = {
                 }
             }
 
+            try {
             for (const questionInfo of questionInfos) {
                 const oldId = questionInfo.question.id;
                 if (succeedUpdatedQuestionIds.includes(oldId)) {
@@ -573,50 +574,63 @@ const QuestionCache = {
                     QuestionCache.update(questionInfo);
                 } else if (archivedQuestionIds && archivedQuestionIds.includes(oldId)) {
                     // Version update — the old question was archived and a new version was
-                    // created with a different ID.
-                    //
-                    // Live (mounted) tree: the old node is removed via the onDelete listeners
-                    // below, and the new node is appended by the global "updateQuestions"
-                    // broadcast handler, which fetches only the single new version (not the
-                    // whole partition). No full-partition reload is triggered here.
-                    //
-                    // Persistent cache: PartitionCache.questionNodes survives navigation and is
-                    // reused on remount. The broadcast's tree-append listener is unregistered
-                    // while QuestionsView is unmounted, so it cannot patch this map. We therefore
-                    // swap the node here directly, rebuilt from the just-submitted local data so
-                    // no extra server round-trip is needed even for large partitions.
+                    // created with a different ID. We reconcile everything locally from the
+                    // just-submitted data (only the id changed), so there is no extra server
+                    // round-trip even for large partitions. The new version is registered as a
+                    // normal loaded question and pushed through the standard QuestionCache.update
+                    // path, which keeps the mounted tree and the persistent questionNodes cache
+                    // consistent. The unmounted case is handled by the direct cache patch below.
                     const newId = oldToNewIdMap[oldId];
                     if (newId) {
+                        // Build the new-version question from the local submitted copy; only the
+                        // id differs, so no server round-trip is needed even for large partitions.
+                        const newQuestion = JSON.parse(JSON.stringify(questionInfo.question));
+                        newQuestion.id = newId;
+                        delete newQuestion.localDeleted;
+                        const affectedPartitionIds = Array.isArray(newQuestion.partitionIds)
+                            ? [...newQuestion.partitionIds] : [];
+
+                        // Drop the archived old version from all caches and remove its node from
+                        // any currently mounted tree.
+                        delete QuestionCache.reactiveQuestionInfos.value[oldId];
+                        delete QuestionCache.originalQuestionInfos[oldId];
+                        delete QuestionCache.dirtyQuestionInfos[oldId];
+                        for (const action of onDelete) {
+                            action(oldId, true);
+                        }
+
+                        // Register the new version as a clean, non-dirty loaded question using the
+                        // same initialization path as server-loaded questions.
+                        const newInfo = initInfoWithoutCaching(undefined, JSON.parse(JSON.stringify(newQuestion)));
+                        QuestionCache.reactiveQuestionInfos.value[newId] = newInfo;
+                        QuestionCache.originalQuestionInfos[newId] = JSON.parse(JSON.stringify(newInfo));
+                        // Mark as locally uploaded so the deferred "updateQuestions" broadcast takes
+                        // its no-op branch (id already registered) instead of re-fetching it.
                         localUploadedQuestionIds.add(newId);
+
+                        // Redirect the editor to the new id if it was showing the archived one.
                         if (router.currentRoute.value.params.id === oldId) {
                             router.replace({
                                 name: router.currentRoute.value.name,
                                 params: { ...router.currentRoute.value.params, id: newId },
                             });
                         }
-                        const affectedPartitionIds = questionInfo.question.partitionIds || [];
-                        // Build the new-version question from the local copy; only the id differs.
-                        const newQuestion = JSON.parse(JSON.stringify(questionInfo.question));
-                        newQuestion.id = newId;
-                        delete newQuestion.localDeleted;
 
-                        delete QuestionCache.reactiveQuestionInfos.value[oldId];
-                        delete QuestionCache.originalQuestionInfos[oldId];
-                        delete QuestionCache.dirtyQuestionInfos[oldId];
-                        // Remove the stale old node from any currently mounted tree immediately.
-                        for (const action of onDelete) {
-                            action(oldId, true);
-                        }
-                        // Swap the node in each affected partition's persistent cache (no server
-                        // call). The mounted tree is handled by the broadcast; guard against
-                        // overwriting a richer node it may have already inserted.
+                        // Fire the standard update path: when QuestionsView is mounted its
+                        // onUpdateLocal listener appends the new node to the live tree and writes
+                        // it into partition.questionNodes.
+                        QuestionCache.update(newInfo);
+
+                        // When QuestionsView is unmounted its listeners are inactive, so patch the
+                        // persistent questionNodes cache directly. Guarded so it never overwrites a
+                        // node the mounted listener already inserted.
                         for (const partitionId of affectedPartitionIds) {
                             const partition = PartitionCache.refPartitions.value[partitionId];
                             if (partition && partition.questionNodes) {
                                 delete partition.questionNodes[oldId];
                                 if (!partition.questionNodes[newId]) {
                                     partition.questionNodes[newId] =
-                                        QuestionCache.getQuestionNodeObjOf(newQuestion, partitionId);
+                                        QuestionCache.getQuestionNodeObjOf(newInfo, partitionId);
                                 }
                             }
                         }
@@ -630,7 +644,11 @@ const QuestionCache = {
             }
             QuestionCache.dirty = Object.keys(QuestionCache.dirtyQuestionInfos).length > 0;
             QuestionCache.reactiveDirty.value = QuestionCache.dirty;
-            uploading.value = false;
+            } finally {
+                // Always release the upload lock, otherwise the deferred "updateQuestions"
+                // broadcast waits forever and the partition renders no questions.
+                uploading.value = false;
+            }
         }
         return new Promise((resolve, reject) => {
             WebSocketConnector.send({
