@@ -147,12 +147,21 @@ const unregister2 = PartitionCache.registerOnPartitionDeleted((partition) => {
 });
 const unregister3 = QuestionCache.registerOnQuestionUpdateLocal((questionInfo, differFromOriginal) => {
     for (let partitionId of questionInfo.question.partitionIds) {
-        if (tree.value.getNode(partitionId + "/" + questionInfo.question.id) === null) {
+        const treeId = partitionId + "/" + questionInfo.question.id;
+        if (tree.value.getNode(treeId) === null) {
             const partitionNode = tree.value.getNode(partitionId);
             const questionNodeObj = QuestionCache.getQuestionNodeObjOf(questionInfo, partitionId);
             if (partitionNode !== null)
                 tree.value.append(questionNodeObj, partitionNode);
             partitionNode.data.data.partition.questionNodes[questionNodeObj.data.question.id] = questionNodeObj;
+            // A version swap replaces the node's key (partitionId/id). If the editor is showing
+            // this question, re-apply the tree's current-node highlight to the new key, which
+            // would otherwise be lost when the old node was removed.
+            if (router.currentRoute.value.params.id === questionInfo.question.id) {
+                nextTick(() => {
+                    tree.value.setCurrentKey(treeId);
+                });
+            }
         }
     }
     for (const [id, partition] of Object.entries(PartitionCache.refPartitions.value)) {
