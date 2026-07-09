@@ -91,8 +91,9 @@ public class StatusService {
                         Question source = toPartitionsLink.getSource();
                         if (source.isEnabled() &&
                                 uniqueValues.add(source)) {
-                            if (limit == null || limit.checkMax(partitionQuestionsCount + 1)) {
-                                partitionQuestionsCount += source instanceof QuestionGroup questionGroup ? questionGroup.getQuestionLinks().size() : 1;
+                            int questionCount = source instanceof QuestionGroup questionGroup ? questionGroup.getQuestionLinks().size() : 1;
+                            if (limit == null || limit.checkMax(partitionQuestionsCount + questionCount)) {
+                                partitionQuestionsCount += questionCount;
                             } else {
                                 break;
                             }
@@ -138,13 +139,13 @@ public class StatusService {
                 for (ToPartitionsLink mostLink : mostLinks) {
                     Question source = mostLink.getSource();
                     if (source.isEnabled() && uniqueValues1.add(source) && maxLimit > 0) {
-                        countMax++;
+                        countMax += source instanceof QuestionGroup questionGroup ? questionGroup.getQuestionLinks().size() : 1;
                     }
                 }
                 for (ToPartitionsLink leastLink : leastLinks) {
                     Question source = leastLink.getSource();
                     if (source.isEnabled() && uniqueValues2.add(source) && minLimit > 0) {
-                        countMin++;
+                        countMin += source instanceof QuestionGroup questionGroup ? questionGroup.getQuestionLinks().size() : 1;
                     }
                 }
                 if (minLimit-- <= 0 && maxLimit-- <= 0) break;
