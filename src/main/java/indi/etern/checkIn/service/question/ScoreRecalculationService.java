@@ -204,6 +204,9 @@ public class ScoreRecalculationService {
         }
         Question oldQuestion = questionService.findById(oldQuestionId)
                 .orElseThrow(() -> new IllegalStateException("Question not found: " + oldQuestionId));
+        if (oldQuestion.getVersionStatus() == Question.VersionStatus.ACTIVE) {
+            return oldQuestion;
+        }
         if (oldQuestion.getVersionGroupId() != null) {
             List<Question> activeVersions = questionService.findByVersionGroupIdAndVersionStatus(
                     oldQuestion.getVersionGroupId(), Question.VersionStatus.ACTIVE);
