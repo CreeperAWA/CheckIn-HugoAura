@@ -149,6 +149,7 @@ public class ExamData implements BaseEntity<String> , Comparable<ExamData>{
     private Optional<QuestionGroupAnswer> handleAnswerItemMap(List<Question> orderedQuestions, Map<String, Object> answer, QuestionGroup questionGroup) {
         List<SingleQuestionAnswer> questionGroupSubQuestionAnswers = new ArrayList<>();
         List<Map.Entry<String, Object>> sortedEntries = answer.entrySet().stream()
+                .filter(e -> e.getKey().matches("\\d+"))
                 .sorted(Comparator.comparingInt(e -> Integer.parseInt(e.getKey())))
                 .toList();
         for (Map.Entry<String, Object> entry : sortedEntries) {
