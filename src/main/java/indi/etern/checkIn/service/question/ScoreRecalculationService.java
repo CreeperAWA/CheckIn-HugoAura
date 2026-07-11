@@ -2,10 +2,15 @@ package indi.etern.checkIn.service.question;
 
 import indi.etern.checkIn.api.webSocket.Message;
 import indi.etern.checkIn.entities.exam.ExamData;
+import indi.etern.checkIn.entities.linkUtils.impl.ToQuestionGroupLink;
+import indi.etern.checkIn.entities.question.impl.Choice;
+import indi.etern.checkIn.entities.question.impl.MultipleChoiceAnswer;
 import indi.etern.checkIn.entities.question.impl.MultipleChoicesQuestion;
 import indi.etern.checkIn.entities.question.impl.Question;
 import indi.etern.checkIn.entities.question.impl.QuestionGroup;
+import indi.etern.checkIn.entities.question.impl.QuestionGroupAnswer;
 import indi.etern.checkIn.entities.question.interfaces.answer.Answer;
+import indi.etern.checkIn.entities.question.interfaces.answer.SingleQuestionAnswer;
 import indi.etern.checkIn.entities.question.version.ScoreChangeDetail;
 import indi.etern.checkIn.entities.question.version.ScoreRecalculationLog;
 import indi.etern.checkIn.entities.setting.SettingItem;
@@ -163,8 +168,11 @@ public class ScoreRecalculationService {
             List<GradingLevel> gradingLevels = gradingLevelService.findAll();
             Float[] levelSplitArray = buildLevelSplitArray();
             
+            // Resolve the new version question for answer checking
+            Question newVersionQuestion = resolveNewVersionQuestion(questionId, recalcLog.getTriggerVersionId());
+            
             for (ExamData examData : affectedExams) {
-                ScoreChangeDetail detail = recalculateExamScore(examData, questionId, gradingLevels, levelSplitArray);
+                ScoreChangeDetail detail = recalculateExamScore(examData, questionId, newVersionQuestion, gradingLevels, levelSplitArray);
                 if (detail.isScoreChanged()) {
                     scoreChangedCount++;
                 }
@@ -189,9 +197,25 @@ public class ScoreRecalculationService {
         }
     }
     
+    private Question resolveNewVersionQuestion(String oldQuestionId, String triggerVersionId) {
+        if (triggerVersionId != null) {
+            return questionService.findById(triggerVersionId)
+                    .orElseThrow(() -> new IllegalStateException("New version question not found: " + triggerVersionId));
+        }
+        Question oldQuestion = questionService.findById(oldQuestionId)
+                .orElseThrow(() -> new IllegalStateException("Question not found: " + oldQuestionId));
+        if (oldQuestion.getVersionGroupId() != null) {
+            List<Question> activeVersions = questionService.findByVersionGroupIdAndVersionStatus(
+                    oldQuestion.getVersionGroupId(), Question.VersionStatus.ACTIVE);
+            if (!activeVersions.isEmpty()) return activeVersions.getFirst();
+        }
+        throw new IllegalStateException("No active version found for question: " + oldQuestionId);
+    }
+    
     private ScoreChangeDetail recalculateExamScore(
             ExamData examData,
             String changedQuestionId,
+            Question newVersionQuestion,
             List<GradingLevel> gradingLevels,
             Float[] levelSplitArray) {
         
@@ -200,16 +224,19 @@ public class ScoreRecalculationService {
         String oldLevel = oldResult != null ? oldResult.getLevel() : null;
         String oldLevelId = oldResult != null ? oldResult.getLevelId() : null;
         
-        // Try to recalculate using raw answer data for reliability
+        // Build answers from raw data if available (produces proper Answer objects)
         Map<String, Object> rawAnswerData = examData.getRawAnswerData();
         if (rawAnswerData != null) {
-            ExamResult newExamResult = examData.checkAnswerMap(rawAnswerData);
-            assignGradingLevel(newExamResult, gradingLevels, levelSplitArray, examData);
-            examData.setExamResult(newExamResult);
-        } else {
-            rebuildSingleAnswerInExam(examData, changedQuestionId);
-            recomputeExamResultFromAnswers(examData, gradingLevels, levelSplitArray);
+            examData.checkAnswerMap(rawAnswerData);
         }
+        
+        // Rebuild the changed question's answer using the new version question
+        if (newVersionQuestion != null) {
+            rebuildAnswerWithNewVersion(examData, changedQuestionId, newVersionQuestion);
+        }
+        
+        // Recalculate exam result from the updated answers
+        recomputeExamResultFromAnswers(examData, gradingLevels, levelSplitArray);
         
         examDataService.save(examData);
         
@@ -231,43 +258,144 @@ public class ScoreRecalculationService {
                 .build();
     }
     
-    @SuppressWarnings("unchecked")
-    private void rebuildSingleAnswerInExam(ExamData examData, String changedQuestionId) {
+    private void rebuildAnswerWithNewVersion(ExamData examData, String changedQuestionId, Question newVersion) {
         Map<String, Answer<?, ?>> answersMap = examData.getAnswersMap();
         if (answersMap == null) return;
         
-        // Extract choice IDs from the deserialized answer JSON
-        Object answerObj = answersMap.get(changedQuestionId);
-        if (answerObj == null) return;
+        Object oldAnswerObj = answersMap.get(changedQuestionId);
+        if (oldAnswerObj == null) return;
         
-        List<String> choiceIds = extractChoiceIdsFromAnswer(answerObj);
-        
-        Optional<Question> questionOpt = questionService.findById(changedQuestionId);
-        if (questionOpt.isPresent() && questionOpt.get() instanceof MultipleChoicesQuestion mcq) {
-            var newAnswer = mcq.newAnswerFrom(choiceIds);
-            newAnswer.check();
-            answersMap.put(changedQuestionId, newAnswer);
+        if (newVersion instanceof MultipleChoicesQuestion newMCQ) {
+            rebuildMCQAnswer(answersMap, changedQuestionId, newMCQ, oldAnswerObj);
+        } else if (newVersion instanceof QuestionGroup newQG) {
+            rebuildQGAnswer(answersMap, changedQuestionId, newQG, oldAnswerObj);
         }
     }
     
-    @SuppressWarnings("unchecked")
-    private List<String> extractChoiceIdsFromAnswer(Object answerObj) {
-        if (answerObj instanceof Map<?, ?> map) {
+    private void rebuildMCQAnswer(Map<String, Answer<?, ?>> answersMap, String changedQuestionId,
+                                   MultipleChoicesQuestion newMCQ, Object oldAnswerObj) {
+        // Load old MCQ to build position mapping for choice IDs
+        Question oldQuestion = questionService.findById(changedQuestionId).orElse(null);
+        if (!(oldQuestion instanceof MultipleChoicesQuestion oldMCQ)) return;
+        
+        Map<String, Integer> oldChoiceIdToPos = buildChoiceIdToPositionMap(oldMCQ);
+        
+        // Extract selected choice positions from old answer
+        List<Integer> selectedPositions = extractSelectedPositions(oldAnswerObj, oldChoiceIdToPos);
+        
+        // Map positions to new choice IDs
+        List<String> newChoiceIds = mapPositionsToNewChoiceIds(selectedPositions, newMCQ);
+        
+        var newAnswer = newMCQ.newAnswerFrom(newChoiceIds);
+        newAnswer.check();
+        answersMap.put(changedQuestionId, newAnswer);
+    }
+    
+    private void rebuildQGAnswer(Map<String, Answer<?, ?>> answersMap, String changedQuestionId,
+                                  QuestionGroup newQG, Object oldAnswerObj) {
+        // Load old QG to build position mapping
+        Question oldQuestion = questionService.findById(changedQuestionId).orElse(null);
+        if (!(oldQuestion instanceof QuestionGroup oldQG)) return;
+        
+        List<Question> oldSubQuestions = oldQG.getQuestionLinks().stream()
+                .sorted(Comparator.comparingInt(ToQuestionGroupLink::getOrderIndex))
+                .map(link -> (Question) link.getSource())
+                .toList();
+        List<Question> newSubQuestions = newQG.getQuestionLinks().stream()
+                .sorted(Comparator.comparingInt(ToQuestionGroupLink::getOrderIndex))
+                .map(link -> (Question) link.getSource())
+                .toList();
+        
+        if (oldSubQuestions.size() != newSubQuestions.size()) return;
+        
+        List<SingleQuestionAnswer> newSubAnswers = new ArrayList<>();
+        
+        if (oldAnswerObj instanceof QuestionGroupAnswer qgAnswer) {
+            // Proper Answer object case (after checkAnswerMap)
+            List<SingleQuestionAnswer> oldSubAnswers = qgAnswer.getAnswers();
+            for (int i = 0; i < oldSubAnswers.size() && i < newSubQuestions.size(); i++) {
+                Question newSubQ = newSubQuestions.get(i);
+                Question oldSubQ = oldSubQuestions.get(i);
+                if (newSubQ instanceof MultipleChoicesQuestion newSubMCQ
+                        && oldSubQ instanceof MultipleChoicesQuestion oldSubMCQ
+                        && oldSubAnswers.get(i) instanceof MultipleChoiceAnswer oldSubAnswer) {
+                    Map<String, Integer> oldChoiceIdToPos = buildChoiceIdToPositionMap(oldSubMCQ);
+                    List<Integer> selectedPositions = new ArrayList<>();
+                    for (Choice selected : oldSubAnswer.getSelectedChoices()) {
+                        Integer pos = oldChoiceIdToPos.get(selected.getId());
+                        if (pos != null) selectedPositions.add(pos);
+                    }
+                    List<String> newChoiceIds = mapPositionsToNewChoiceIds(selectedPositions, newSubMCQ);
+                    newSubAnswers.add(newSubMCQ.newAnswerFrom(newChoiceIds));
+                }
+            }
+        } else if (oldAnswerObj instanceof Map<?, ?> map) {
+            // Deserialized JSON case
+            Object answersList = map.get("answers");
+            if (answersList instanceof List<?> list) {
+                for (int i = 0; i < list.size() && i < newSubQuestions.size(); i++) {
+                    Question newSubQ = newSubQuestions.get(i);
+                    Question oldSubQ = oldSubQuestions.get(i);
+                    if (newSubQ instanceof MultipleChoicesQuestion newSubMCQ
+                            && oldSubQ instanceof MultipleChoicesQuestion oldSubMCQ) {
+                        Map<String, Integer> oldChoiceIdToPos = buildChoiceIdToPositionMap(oldSubMCQ);
+                        List<Integer> selectedPositions = extractSelectedPositions(list.get(i), oldChoiceIdToPos);
+                        List<String> newChoiceIds = mapPositionsToNewChoiceIds(selectedPositions, newSubMCQ);
+                        newSubAnswers.add(newSubMCQ.newAnswerFrom(newChoiceIds));
+                    }
+                }
+            }
+        }
+        
+        var newQGAnswer = newQG.newAnswerFrom(newSubAnswers);
+        newQGAnswer.check();
+        answersMap.put(changedQuestionId, newQGAnswer);
+    }
+    
+    private Map<String, Integer> buildChoiceIdToPositionMap(MultipleChoicesQuestion mcq) {
+        Map<String, Integer> map = new HashMap<>();
+        for (int i = 0; i < mcq.getChoices().size(); i++) {
+            map.put(mcq.getChoices().get(i).getId(), i);
+        }
+        return map;
+    }
+    
+    private List<Integer> extractSelectedPositions(Object answerObj, Map<String, Integer> oldChoiceIdToPos) {
+        if (answerObj instanceof MultipleChoiceAnswer mcqAnswer) {
+            List<Integer> positions = new ArrayList<>();
+            for (Choice selected : mcqAnswer.getSelectedChoices()) {
+                Integer pos = oldChoiceIdToPos.get(selected.getId());
+                if (pos != null) positions.add(pos);
+            }
+            return positions;
+        } else if (answerObj instanceof Map<?, ?> map) {
+            // Deserialized JSON case
             Object selectedChoices = map.get("selectedChoices");
             if (selectedChoices instanceof List<?> list) {
-                List<String> ids = new ArrayList<>();
+                List<Integer> positions = new ArrayList<>();
                 for (Object item : list) {
                     if (item instanceof Map<?, ?> choiceMap) {
                         Object id = choiceMap.get("id");
                         if (id instanceof String s) {
-                            ids.add(s);
+                            Integer pos = oldChoiceIdToPos.get(s);
+                            if (pos != null) positions.add(pos);
                         }
                     }
                 }
-                return ids;
+                return positions;
             }
         }
         return List.of();
+    }
+    
+    private List<String> mapPositionsToNewChoiceIds(List<Integer> positions, MultipleChoicesQuestion newMCQ) {
+        List<String> newChoiceIds = new ArrayList<>();
+        for (int pos : positions) {
+            if (pos < newMCQ.getChoices().size()) {
+                newChoiceIds.add(newMCQ.getChoices().get(pos).getId());
+            }
+        }
+        return newChoiceIds;
     }
     
     private void recomputeExamResultFromAnswers(
@@ -283,7 +411,8 @@ public class ScoreRecalculationService {
         int wrongCount = 0;
         float score = 0;
         
-        for (Answer<?, ?> answer : answersMap.values()) {
+        for (Object answerObj : answersMap.values()) {
+            if (!(answerObj instanceof Answer<?, ?> answer)) continue;
             var checkedResult = answer.check();
             switch (checkedResult.checkedResultType()) {
                 case CORRECT -> correctCount++;
