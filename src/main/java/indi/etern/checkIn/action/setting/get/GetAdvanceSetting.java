@@ -32,7 +32,7 @@ public class GetAdvanceSetting extends BaseAction<NullInput, GetAdvanceSetting.S
     
     @Override
     public void execute(ExecuteContext<NullInput, SuccessOutput> context) {
-        context.requirePermission("get advance setting");
+        context.requirePermission("setting.getAdvance");
         GetSettingCommon getSettingCommon = new GetSettingCommon(SaveAdvanceSetting.KEYS,"advance");
         final LinkedHashMap<String, Object> settings = getSettingCommon.doGet();
         final List<HttpApiTokenItem> all = httpApiTokenService.findAll();

@@ -31,7 +31,7 @@ public class SaveOAuth2Setting extends BaseAction<SaveOAuth2Setting.Input,Messag
     @Transactional
     @Override
     public void execute(ExecuteContext<SaveOAuth2Setting.Input, MessageOutput> context) {
-        context.requirePermission("save OAuth2 setting");
+        context.requirePermission("setting.saveOAuth2");
         Input input = context.getInput();
         SettingItem settingItem = new SettingItem("oauth2.appDomainURI",
                 input.data.appDomainURI, String.class);

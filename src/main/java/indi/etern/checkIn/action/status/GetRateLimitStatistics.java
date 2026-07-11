@@ -27,7 +27,7 @@ public class GetRateLimitStatistics extends BaseAction<NullInput, GetRateLimitSt
     
     @Override
     public void execute(ExecuteContext<NullInput, SuccessOutput> context) {
-        context.requirePermission("get advance setting");
+        context.requirePermission("setting.getAdvance");
         
         LocalDateTime startTime = LocalDateTime.now().minusHours(24);
         Map<String, Object> statistics = logService.getStatistics(startTime);

@@ -22,7 +22,7 @@ public class UpdateRoleLevelsAction extends BaseAction<UpdateRoleLevelsAction.In
     
     @Override
     public void execute(ExecuteContext<Input, MessageOutput> context) {
-        context.requirePermission("update role level");
+        context.requirePermission("role.updateLevel");
         List<Role> roles = roleService.findAll();
         final List<String> levels = context.getInput().levels;
         for (Role role : roles) {

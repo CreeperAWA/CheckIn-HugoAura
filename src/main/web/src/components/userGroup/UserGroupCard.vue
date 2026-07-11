@@ -2,6 +2,7 @@
 import {MoreFilled} from "@element-plus/icons-vue";
 import WebSocketConnector from "@/api/websocket.js";
 import PermissionInfo from "@/auth/PermissionInfo.js";
+import {capitalizeWords} from "@/auth/PermissionInfo.js";
 import {ElMessage, ElMessageBox} from "element-plus";
 import CustomDialog from "@/components/common/CustomDialog.vue";
 import UserDataInterface from "@/data/UserDataInterface.js";
@@ -134,9 +135,9 @@ const buttonsOption = ref([{
                 <el-text>对于用户组中用户</el-text>
                 <el-select style="margin-top: 8px;" placeholder="选择操作" v-model="optionType">
                     <el-option value="delete" label="删除"
-                               :disabled="!PermissionInfo.hasPermission('manage user','delete user')"/>
+                               :disabled="!PermissionInfo.hasPermission('manageUser.delete')"/>
                     <el-option value="move" label="移动到"
-                               :disabled="!PermissionInfo.hasPermission('role','operate role ' + userGroup.type)"/>
+                               :disabled="!PermissionInfo.hasPermission('role.operate' + capitalizeWords(userGroup.type))"/>
                 </el-select>
                 <transition name="blur-scale">
                     <el-select filterable v-if="optionType === 'move'"
@@ -144,7 +145,7 @@ const buttonsOption = ref([{
                                style="margin-top: 8px;" placeholder="用户组">
                         <template v-for="(userGroup1,i) in UserDataInterface.roles">
                             <el-option v-if="userGroup1.type !== userGroup.type"
-                                       :disabled="!PermissionInfo.hasPermission('role','operate role ' + userGroup1.type)"
+                                       :disabled="!PermissionInfo.hasPermission('role.operate' + capitalizeWords(userGroup1.type))"
                                        :value="userGroup1.type" :label="userGroup1.type"></el-option>
                         </template>
                     </el-select>
@@ -156,7 +157,7 @@ const buttonsOption = ref([{
             }}
         </el-text>
         <div class="flex-blank-1"></div>
-        <el-dropdown trigger="click" v-if="PermissionInfo.hasPermission('role','delete role')">
+        <el-dropdown trigger="click" v-if="PermissionInfo.hasPermission('role.delete')">
             <el-button link @click.stop class="disable-init-animate">
                 <el-icon>
                     <more-filled/>

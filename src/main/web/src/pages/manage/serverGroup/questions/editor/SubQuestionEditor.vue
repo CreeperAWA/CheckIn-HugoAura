@@ -159,8 +159,8 @@ const onPreview = (file) => {
 }
 
 const ableToChangeAuthor = () => {
-    let ableToChangeQuestionAuthor = PermissionInfo.hasPermission('question', 'change question author')
-    let ableToChangeQuestionGroupAuthor = PermissionInfo.hasPermission('question group', 'change question group author')
+    let ableToChangeQuestionAuthor = PermissionInfo.hasPermission('question.changeAuthor')
+    let ableToChangeQuestionGroupAuthor = PermissionInfo.hasPermission('questionGroup.changeAuthor')
     let ableToChangeAuthor;
     if (questionInfo.value.question.type === "QuestionGroup") {
         ableToChangeAuthor = ableToChangeQuestionGroupAuthor;

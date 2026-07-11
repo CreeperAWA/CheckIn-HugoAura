@@ -25,15 +25,15 @@ const showAnswerLimit = ref(false);
 const showWhitelist = ref(false);
 const showThirdPartyApiSetting = ref(false);
 watch(() => PermissionInfo.permissions.value, () => {
-    showGeneratingSetting.value = PermissionInfo.hasPermission('setting', 'get generating setting');
-    showAdvanceSetting.value = PermissionInfo.hasPermission('setting', 'get advance setting');
-    showOAuth2Setting.value = PermissionInfo.hasPermission('setting', 'get OAuth2 setting');
+    showGeneratingSetting.value = PermissionInfo.hasPermission('setting.getGenerating');
+    showAdvanceSetting.value = PermissionInfo.hasPermission('setting.getAdvance');
+    showOAuth2Setting.value = PermissionInfo.hasPermission('setting.getOAuth2');
     showBlacklist.value = PermissionInfo.hasPermission('blacklist.view');
-    showAnswerLimit.value = PermissionInfo.hasPermission('answerLimit.view.setting') || 
-                        PermissionInfo.hasPermission('answerLimit.view.count') || 
-                        PermissionInfo.hasPermission('answerLimit.view.whitelist');
-    showWhitelist.value = PermissionInfo.hasPermission('thirdPartyApi.view.whitelist');
-    showThirdPartyApiSetting.value = PermissionInfo.hasPermission('thirdPartyApi.view.setting');
+    showAnswerLimit.value = PermissionInfo.hasPermission('answerLimit.viewSetting') ||
+                        PermissionInfo.hasPermission('answerLimit.viewCount') ||
+                        PermissionInfo.hasPermission('answerLimit.viewWhitelist');
+    showWhitelist.value = PermissionInfo.hasPermission('thirdPartyApi.viewWhitelist');
+    showThirdPartyApiSetting.value = PermissionInfo.hasPermission('thirdPartyApi.viewSetting');
 }, {immediate: true, deep: true});
 
 const isGroupVisible = (group) => {

@@ -18,7 +18,7 @@ public class DeleteExamRecordAction extends BaseAction<DeleteExamRecordAction.In
     
     @Override
     public void execute(ExecuteContext<Input, OutputData> context) {
-        context.requirePermission("answerLimit.manage.record");
+        context.requirePermission("answerLimit.manageRecord");
         final Input input = context.getInput();
         
         answerLimitService.deleteExamRecord(input.examId);

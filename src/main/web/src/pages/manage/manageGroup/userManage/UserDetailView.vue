@@ -12,6 +12,7 @@ import router from "@/router/index.js";
 import HarmonyOSIcon_Rename from "@/components/icons/HarmonyOSIcon_Rename.vue";
 import {ElMessage, ElMessageBox} from "element-plus";
 import PermissionInfo from "@/auth/PermissionInfo.js";
+import {capitalizeWords} from "@/auth/PermissionInfo.js";
 
 const route = useRoute();
 const user = ref(undefined);
@@ -176,7 +177,7 @@ const routeToExamRecords = () => {
                     <div class="flex-blank-1"></div>
                     <div style="display: flex;flex-direction: row;flex-wrap: wrap;margin-bottom: 8px">
                         <el-popover trigger="click" :width="400" @before-enter="newName = user.name"
-                                    v-if="currentUser.qq === user.qq || PermissionInfo.hasPermission('manage user','change user name') && PermissionInfo.hasPermission('role','operate role ' + user.role)">
+                                    v-if="currentUser.qq === user.qq || PermissionInfo.hasPermission('manageUser.changeName') && PermissionInfo.hasPermission('role.operate' + capitalizeWords(user.role))">
                             <template #reference>
                                 <!--suppress JSValidateTypes -->
                                 <el-button :icon="HarmonyOSIcon_Rename" style="margin-right: 0">
@@ -199,7 +200,7 @@ const routeToExamRecords = () => {
                                 </div>
                             </template>
                         </el-popover>
-                        <el-popover :visible="moveGroupVisible" v-if="currentUser.qq !== user.qq && PermissionInfo.hasPermission('role','operate role ' + user.role)"
+                        <el-popover :visible="moveGroupVisible" v-if="currentUser.qq !== user.qq && PermissionInfo.hasPermission('role.operate' + capitalizeWords(user.role))"
                                     :width="400" @before-enter="newUserGroupName = user.role">
                             <template #reference>
                                 <el-button @click="moveGroupVisible = !moveGroupVisible">修改用户组</el-button>
@@ -212,7 +213,7 @@ const routeToExamRecords = () => {
                                             style="flex:1;margin-right: 4px"
                                             placeholder="用户组">
                                         <template v-for="(userGroup,i) in UserDataInterface.roles">
-                                            <el-option :disabled="!PermissionInfo.hasPermission('role','operate role ' + userGroup.type)"
+                                            <el-option :disabled="!PermissionInfo.hasPermission('role.operate' + capitalizeWords(userGroup.type))"
                                                        :value="userGroup.type" :label="userGroup.type"></el-option>
                                         </template>
                                     </el-select>
@@ -225,13 +226,13 @@ const routeToExamRecords = () => {
                                 </div>
                             </template>
                         </el-popover>
-                        <el-button v-if="currentUser.qq !== user.qq && PermissionInfo.hasPermission('manage user','delete user') && PermissionInfo.hasPermission('role','operate role ' + user.role)">
+                        <el-button v-if="currentUser.qq !== user.qq && PermissionInfo.hasPermission('manageUser.delete') && PermissionInfo.hasPermission('role.operate' + capitalizeWords(user.role))">
                             <el-text type="danger" @click="deleteUser">删除</el-text>
                         </el-button>
                         <div style="margin-left: 12px;display: flex;flex-direction: row;align-self: baseline;"
                              v-if="currentUser.qq!==user.qq
-                         && PermissionInfo.hasPermission('manage user','change user state')
-                         && PermissionInfo.hasPermission('role','operate role ' + user.role)">
+                         && PermissionInfo.hasPermission('manageUser.changeState')
+                         && PermissionInfo.hasPermission('role.operate' + capitalizeWords(user.role))">
                             <el-text style="line-height: 20px;margin-right: 8px;align-self: center">启用</el-text>
                             <el-switch v-model="user.enabled" :loading="switching" :before-change="switchEnableUser"/>
                         </div>

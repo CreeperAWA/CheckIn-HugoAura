@@ -932,10 +932,10 @@ const QuestionCache = {
     },
     checkEditPermission(question) {
         if (!question) return true;
-        let ableToEditOwnQuestion = PermissionInfo.hasPermission('question', 'create and edit owns questions')
-        let ableToEditOthersQuestion = PermissionInfo.hasPermission('question', 'edit others questions')
-        let ableToEditOwnQuestionGroup = PermissionInfo.hasPermission('question group', 'create and edit owns question groups')
-        let ableToEditOthersQuestionGroup = PermissionInfo.hasPermission('question group', 'edit others question groups')
+        let ableToEditOwnQuestion = PermissionInfo.hasPermission('question.createEditOwn')
+        let ableToEditOthersQuestion = PermissionInfo.hasPermission('question.editOthers')
+        let ableToEditOwnQuestionGroup = PermissionInfo.hasPermission('questionGroup.createEditOwn')
+        let ableToEditOthersQuestionGroup = PermissionInfo.hasPermission('questionGroup.editOthers')
         let ableToEdit;
         if (question.type === "QuestionGroup") {
             if (question.authorQQ !== undefined && question.authorQQ === currentUser.value.qq) {
@@ -953,10 +953,10 @@ const QuestionCache = {
         return ableToEdit;
     }, checkDeletePermission(question) {
         if (!question) return true;
-        let ableToDeleteOwnQuestion = PermissionInfo.hasPermission('question', 'delete owns questions')
-        let ableToDeleteOthersQuestion = PermissionInfo.hasPermission('question', 'delete others question')
-        let ableToDeleteOwnQuestionGroup = PermissionInfo.hasPermission('question group', 'delete owns question groups')
-        let ableToDeleteOthersQuestionGroup = PermissionInfo.hasPermission('question group', 'delete others question group')
+        let ableToDeleteOwnQuestion = PermissionInfo.hasPermission('question.deleteOwn')
+        let ableToDeleteOthersQuestion = PermissionInfo.hasPermission('question.deleteOthers')
+        let ableToDeleteOwnQuestionGroup = PermissionInfo.hasPermission('questionGroup.deleteOwn')
+        let ableToDeleteOthersQuestionGroup = PermissionInfo.hasPermission('questionGroup.deleteOthers')
         let ableToDelete;
         if (question.type === "QuestionGroup") {
             if (question.authorQQ !== undefined && question.authorQQ === currentUser.value.qq) {

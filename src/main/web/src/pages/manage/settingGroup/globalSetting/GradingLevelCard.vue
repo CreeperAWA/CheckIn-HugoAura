@@ -4,6 +4,7 @@ import UIMeta from "@/utils/UI_Meta.js";
 import Collapse from "@/components/common/Collapse.vue";
 import UserDataInterface from "@/data/UserDataInterface.js";
 import PermissionInfo from "@/auth/PermissionInfo.js";
+import {capitalizeWords} from "@/auth/PermissionInfo.js";
 
 const model = defineModel({
     type: Object,
@@ -121,7 +122,7 @@ onUnmounted(() => {
                            placeholder="选择用户组"
                            filterable style="max-width: 200px;margin-left: 8px">
                     <el-option v-for="[userGroupType,userGroup] of Object.entries(userGroups)"
-                               :disabled="!PermissionInfo.hasPermission('role','operate role ' + userGroup.type)"
+                               :disabled="!PermissionInfo.hasPermission('role.operate' + capitalizeWords(userGroup.type))"
                                :value="userGroup.type" :label="userGroup.type"/>
                 </el-select>
             </div>

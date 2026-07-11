@@ -42,7 +42,7 @@ public class GetExamRecordsAction extends BaseAction<GetExamRecordsAction.Input,
         examDataSet.addAll(examDataService.findAllByGenerateTimeBetween(fromDate, toDate));
         LinkedHashMap<LocalDate, Map<String,ExamData>> map = new LinkedHashMap<>();
         final User currentUser = context.getCurrentUser();
-        final boolean accessibleToAll = jwtTokenProvider.isUserHasPermission(currentUser,"get exam data");
+        final boolean accessibleToAll = jwtTokenProvider.isUserHasPermission(currentUser,"examData.get");
         examDataSet.stream().sorted(Comparator.comparing(ExamData::getGenerateTime).reversed()).forEach((examData) -> {
             final LocalDateTime submitTime = examData.getSubmitTime();
             final LocalDateTime generateTime = examData.getGenerateTime();

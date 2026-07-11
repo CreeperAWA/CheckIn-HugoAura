@@ -28,7 +28,7 @@ public class GetRequestRecordDetailAction extends BaseAction<GetRequestRecordDet
     @Override
     public void execute(ExecuteContext<Input, OutputData> context) {
         final Input input = context.getInput();
-        context.requirePermission("get request records");
+        context.requirePermission("requestRecord.get");
         requestRecordService.findById(input.id).ifPresentOrElse((requestRecord) -> {
             context.resolve(new SuccessOutput(requestRecord.toDataMap()));
         }, () -> {

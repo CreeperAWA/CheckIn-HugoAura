@@ -33,7 +33,7 @@ public class CreateRoleAction extends BaseAction<CreateRoleAction.Input, Message
     @Transactional
     @Override
     public void execute(ExecuteContext<Input, MessageOutput> context) {
-        context.requirePermission("create role");
+        context.requirePermission("role.create");
         final String roleType = context.getInput().roleType;
         if (roleService.existByType(roleType)) {
             context.resolve(MessageOutput.error("Role already exists"));

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import indi.etern.checkIn.entities.rateLimit.RateLimitLog;
 import indi.etern.checkIn.entities.rateLimit.RateLimitRule;
 import indi.etern.checkIn.entities.rateLimit.RateLimitWhitelist;
+import indi.etern.checkIn.entities.user.Permission;
 import indi.etern.checkIn.entities.user.User;
 import jakarta.servlet.*;
 import jakarta.servlet.http.Cookie;
@@ -122,7 +123,7 @@ public class RateLimitFilter implements Filter {
         
         if (auth != null && auth.isAuthenticated()) {
             boolean hasPermission = auth.getAuthorities().stream()
-                .anyMatch(authority -> "BYPASS_RATE_LIMIT".equals(authority.getAuthority()));
+                .anyMatch(authority -> Permission.BYPASS_RATE_LIMIT.equals(authority.getAuthority()));
             logger.debug("hasBypassRateLimitPermission result: {}, authorities: {}", 
                 hasPermission, 
                 auth.getAuthorities().stream().map(Object::toString).toList());

@@ -8,6 +8,7 @@ import getAvatarUrlOf from "@/utils/Avatar.js";
 import WebSocketConnector from "@/api/websocket.js";
 import CustomDialog from "@/components/common/CustomDialog.vue";
 import PermissionInfo from "@/auth/PermissionInfo.js";
+import {capitalizeWords} from "@/auth/PermissionInfo.js";
 
 // const user = UserDataInterface.getCurrentUser();
 const users = UserDataInterface.users;
@@ -169,7 +170,7 @@ const hideCreatingDialog = () => {
                     <el-select filterable v-model="groupOfNewUser" placeholder="选择">
                         <template v-for="(userGroup,i) in userGroups">
                             <el-option
-                                    :disabled="!PermissionInfo.hasPermission('role','operate role ' + userGroup.type)"
+                                    :disabled="!PermissionInfo.hasPermission('role.operate' + capitalizeWords(userGroup.type))"
                                     :value="userGroup.type" :label="userGroup.type"></el-option>
                         </template>
                     </el-select>
@@ -180,7 +181,7 @@ const hideCreatingDialog = () => {
                           style="margin-bottom: 8px;flex: 1"/>
                 <!--suppress JSValidateTypes -->
                 <el-button :icon="HarmonyOSIcon_Plus" style="margin-left: 8px" @click="showCreateUser = true"
-                           v-if="PermissionInfo.hasPermission('manage user', 'create user')">
+                           v-if="PermissionInfo.hasPermission('manageUser.create')">
                     新建用户
                 </el-button>
             </div>

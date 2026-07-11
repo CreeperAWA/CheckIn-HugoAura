@@ -19,7 +19,7 @@ public class GetAnswerCountsAction extends BaseAction<GetAnswerCountsAction.Inpu
     
     @Override
     public void execute(ExecuteContext<Input, SuccessOutput> context) {
-        context.requirePermission("answerLimit.view.count");
+        context.requirePermission("answerLimit.viewCount");
         final Input input = context.getInput();
         
         int count = answerLimitService.getAnswerCount(input.qq);

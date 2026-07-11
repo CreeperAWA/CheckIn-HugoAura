@@ -29,7 +29,7 @@ public class GetRateLimitSetting extends BaseAction<NullInput, GetRateLimitSetti
     
     @Override
     public void execute(ExecuteContext<NullInput, SuccessOutput> context) {
-        context.requirePermission("get advance setting");
+        context.requirePermission("setting.getAdvance");
         
         List<RateLimitRule> rules = rateLimitService.getAllRules();
         List<RateLimitWhitelist> whitelist = rateLimitService.getAllWhitelistItems();

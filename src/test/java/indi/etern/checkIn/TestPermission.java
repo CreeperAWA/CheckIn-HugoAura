@@ -19,7 +19,7 @@ public class TestPermission {
     @Test
     public void testInsert() {
         Permission permission = new Permission("test permission");
-        PermissionGroup permissionGroup = roleService.findPermissionGroupByName("manage user");
+        PermissionGroup permissionGroup = roleService.findPermissionGroupByName("manageUser");
         permission.setGroup(permissionGroup);
         roleService.savePermission(permission);
     }

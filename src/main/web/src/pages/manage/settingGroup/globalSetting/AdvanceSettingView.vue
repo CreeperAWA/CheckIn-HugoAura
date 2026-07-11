@@ -11,7 +11,7 @@ import router from "@/router/index.js";
 import PermissionInfo from "@/auth/PermissionInfo.js";
 
 // 检查修改权限
-const canModify = PermissionInfo.hasPermission('MODIFY_RATE_LIMIT_CONFIG');
+const canModify = PermissionInfo.hasPermission('rateLimit.modifyConfig');
 
 const editing = ref(false);
 const data = ref({

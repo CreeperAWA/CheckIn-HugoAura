@@ -41,7 +41,7 @@ public class DeletePartitionAction extends BaseAction<DeletePartitionAction.Inpu
     @Override
     @Transactional
     public void execute(ExecuteContext<Input, OutputData> context) {
-        context.requirePermission("delete partition");
+        context.requirePermission("partition.delete");
         
         final Input input = context.getInput();
         Optional<Partition> optionalPartition = partitionService.findById(input.partitionId);

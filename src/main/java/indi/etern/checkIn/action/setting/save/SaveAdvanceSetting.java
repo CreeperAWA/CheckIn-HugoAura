@@ -53,7 +53,7 @@ public class SaveAdvanceSetting extends BaseAction<SaveAdvanceSetting.Input, Sav
         List<Map<String,String>> createdRobotTokenList = (List<Map<String, String>>) input.data.get("createdHttpApiTokens");
         //noinspection unchecked
         List<String> deletedRobotTokenList = (List<String>) input.data.get("deletedHttpApiTokenIds");
-        context.requirePermission("save advance setting");
+        context.requirePermission("setting.saveAdvance");
         saveSettingCommon = new SaveSettingCommon(input.data,
                 KEYS, "advance");
         

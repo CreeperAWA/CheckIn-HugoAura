@@ -18,7 +18,7 @@ public class RemoveFromAnswerLimitWhitelistAction extends BaseAction<RemoveFromA
     
     @Override
     public void execute(ExecuteContext<Input, OutputData> context) {
-        context.requirePermission("answerLimit.manage.whitelist");
+        context.requirePermission("answerLimit.manageWhitelist");
         final Input input = context.getInput();
         
         answerLimitService.removeFromWhitelist(input.qq);

@@ -23,7 +23,7 @@ import java.util.Map;
  * 
  * 保存第三方API相关的所有设置项，并处理Token的创建和删除
  * 
- * 权限要求：thirdPartyApi.manage.setting
+ * 权限要求：thirdPartyApi.manageSetting
  * 
  * 输入数据结构：
  * - data: 包含所有设置项的Map
@@ -87,7 +87,7 @@ public class SaveThirdPartyApiSetting extends BaseAction<SaveThirdPartyApiSettin
     @Override
     public void execute(ExecuteContext<Input, ThirdPartyApiTokenOutput> context) {
         final Input input = context.getInput();
-        context.requirePermission("thirdPartyApi.manage.setting");
+        context.requirePermission("thirdPartyApi.manageSetting");
         
         saveSettingCommon = new SaveSettingCommon(input.data, KEYS, "thirdPartyApi");
         

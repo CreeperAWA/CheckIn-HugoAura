@@ -32,7 +32,7 @@ public class GetOAuth2Setting extends BaseAction<NullInput, GetOAuth2Setting.Suc
     }
     @Override
     public void execute(ExecuteContext<NullInput, SuccessOutput> context) {
-        context.requirePermission("get OAuth2 setting");
+        context.requirePermission("setting.getOAuth2");
         String appDomainURI;
         try {
             appDomainURI = settingService.getItem("oauth2","appDomainURI").getValue(String.class);

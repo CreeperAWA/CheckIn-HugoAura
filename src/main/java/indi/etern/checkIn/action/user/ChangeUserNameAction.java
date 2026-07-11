@@ -7,6 +7,7 @@ import indi.etern.checkIn.action.interfaces.ExecuteContext;
 import indi.etern.checkIn.action.interfaces.InputData;
 import indi.etern.checkIn.api.webSocket.Message;
 import indi.etern.checkIn.entities.user.User;
+import indi.etern.checkIn.service.dao.RoleService;
 import indi.etern.checkIn.service.dao.UserService;
 import indi.etern.checkIn.service.web.WebSocketService;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,8 +29,8 @@ public class ChangeUserNameAction extends BaseAction<ChangeUserNameAction.Input,
     public void execute(ExecuteContext<Input, MessageOutput> context) {
         final Input input = context.getInput();
         if (input.qq != context.getCurrentUser().getQQNumber()) {
-            context.requirePermission("change user name");
-            context.requirePermission("operate user " + context.getCurrentUser().getRole().getType());
+            context.requirePermission("manageUser.changeName");
+            context.requirePermission("role.operate" + RoleService.capitalizeWords(context.getCurrentUser().getRole().getType()));
         }
         final Optional<User> optionalUser = userService.findByQQNumber(input.qq);
         User user = optionalUser.orElseThrow();

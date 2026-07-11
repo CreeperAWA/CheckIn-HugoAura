@@ -24,7 +24,7 @@ public class ManualInvalidExamAction extends BaseAction<ManualInvalidExamAction.
     @Override
     @Transactional
     public void execute(ExecuteContext<Input, MessageOutput> context) {
-        context.requirePermission("manual invalid exam");
+        context.requirePermission("examData.manualInvalidExam");
         Optional<ExamData> optionalExamData = examDataService.findById(context.getInput().id);
         optionalExamData.ifPresentOrElse((examData) -> {
             examData.setStatus(ExamData.Status.MANUAL_INVALIDED);

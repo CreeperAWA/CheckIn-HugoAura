@@ -27,7 +27,7 @@ public class GetRelatedRequestRecordsAction extends BaseAction<GetRelatedRequest
     
     @Override
     public void execute(ExecuteContext<Input, SuccessOutput> context) {
-        context.requirePermission("get request records");
+        context.requirePermission("requestRecord.get");
         final String examDataId = context.getInput().examDataId;
         final List<RequestRecord> requestRecords = requestRecordService.findAllByExamDataId(examDataId);
         List<RequestRecord> orderedRequestRecords = requestRecords.stream().sorted(Comparator.comparing(RequestRecord::getTime).reversed()).toList();

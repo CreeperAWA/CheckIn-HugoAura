@@ -45,7 +45,7 @@ public class SaveRateLimitSetting extends BaseAction<SaveRateLimitSetting.Input,
     @Override
     public void execute(ExecuteContext<Input, SuccessOutput> context) {
         final Input input = context.getInput();
-        context.requirePermission("save advance setting");
+        context.requirePermission("setting.saveAdvance");
         
         if (input.rules() != null && !input.rules().isEmpty()) {
             List<RateLimitRule> rules = validateAndConvertRules(input.rules());

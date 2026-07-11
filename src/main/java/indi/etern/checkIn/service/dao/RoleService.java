@@ -34,7 +34,7 @@ public class RoleService {
     }
     
     public Permission save(Role role) {
-        final String name = "operate role " + role.getType();
+        final String name = "role.operate" + capitalizeWords(role.getType());
         if (!permissionRepository.existsByName(name)) {
             final Permission permission = new Permission(name);
             permission.setDescription("操作用户组 " + role.getType());
@@ -87,7 +87,7 @@ public class RoleService {
     
     @Transactional
     public void delete(Role role) {
-        final String permissionName = "operate role " + role.getType();
+        final String permissionName = "role.operate" + capitalizeWords(role.getType());
         final Optional<Permission> byName = permissionRepository.findByName(permissionName);
         if (byName.isPresent()) {
             final Permission permission = byName.get();
@@ -115,5 +115,15 @@ public class RoleService {
     
     public boolean existByType(String type) {
         return roleRepository.existsById(type);
+    }
+    
+    public static String capitalizeWords(String str) {
+        StringBuilder result = new StringBuilder();
+        for (String word : str.split(" ")) {
+            if (!word.isEmpty()) {
+                result.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1));
+            }
+        }
+        return result.toString();
     }
 }

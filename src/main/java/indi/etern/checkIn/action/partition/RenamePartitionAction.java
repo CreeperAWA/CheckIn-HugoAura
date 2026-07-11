@@ -18,7 +18,7 @@ public class RenamePartitionAction extends BaseAction<RenamePartitionAction.Inpu
     @Transactional
     @Override
     public void execute(ExecuteContext<Input, BasicOutput> context) {
-        context.requirePermission("edit partition name");
+        context.requirePermission("partition.editName");
         final Input input = context.getInput();
         Partition partition = PartitionService.singletonInstance.findById(input.partitionId).orElseThrow();
         partition.setName(input.newName);

@@ -27,7 +27,7 @@ public class DeleteRoleAction extends BaseAction<DeleteRoleAction.Input, Message
     @Override
     @Transactional
     public void execute(ExecuteContext<DeleteRoleAction.Input, MessageOutput> context) {
-        context.requirePermission("delete role");
+        context.requirePermission("role.delete");
         Role role = roleService.findByType(context.getInput().roleType).orElseThrow();
         if (!role.getUsers().isEmpty()) {
             context.resolve(MessageOutput.error("Role is not empty"));

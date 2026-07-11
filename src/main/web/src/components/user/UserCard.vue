@@ -7,6 +7,7 @@ import UserDataInterface from "@/data/UserDataInterface.js";
 import {ElMessage, ElMessageBox} from "element-plus";
 import CustomDialog from "@/components/common/CustomDialog.vue";
 import PermissionInfo from "@/auth/PermissionInfo.js";
+import {capitalizeWords} from "@/auth/PermissionInfo.js";
 
 const props = defineProps({
     user: {
@@ -122,9 +123,9 @@ const editUserName = () => {
 const currentUser = UserDataInterface.getCurrentUser();
 
 const showDropdown = (user) => {
-    return (currentUser.value.qq !== user.qq && PermissionInfo.hasPermission('manage user', 'delete user')) ||
-            (currentUser.value.qq !== user.qq && PermissionInfo.hasPermission('role', /^operate role /)) ||
-            (currentUser.value.qq === user.qq || PermissionInfo.hasPermission('manage user', 'change user name'));
+    return (currentUser.value.qq !== user.qq && PermissionInfo.hasPermission('manageUser.delete')) ||
+            (currentUser.value.qq !== user.qq && PermissionInfo.hasPermission('role', /operate[A-Z]/)) ||
+            (currentUser.value.qq === user.qq || PermissionInfo.hasPermission('manageUser.changeName'));
 }
 </script>
 
@@ -148,7 +149,7 @@ const showDropdown = (user) => {
             <el-select filterable v-model="newUserGroupName"
                        style="flex:1;margin-right: 4px" placeholder="用户组">
                 <template v-for="(userGroup,i) in UserDataInterface.roles">
-                    <el-option :disabled="!PermissionInfo.hasPermission('role','operate role ' + userGroup.type)"
+                    <el-option :disabled="!PermissionInfo.hasPermission('role.operate' + capitalizeWords(userGroup.type))"
                                :value="userGroup.type" :label="userGroup.type"></el-option>
                 </template>
             </el-select>
@@ -193,15 +194,15 @@ const showDropdown = (user) => {
             </el-button>
             <template #dropdown>
                 <el-dropdown-item @click="editUserName"
-                                  v-if="currentUser.qq === user.qq || PermissionInfo.hasPermission('manage user','change user name')">
+                                  v-if="currentUser.qq === user.qq || PermissionInfo.hasPermission('manageUser.changeName')">
                     修改用户名
                 </el-dropdown-item>
                 <el-dropdown-item @click="editUserGroup"
-                                  v-if="currentUser.qq !== user.qq && PermissionInfo.hasPermission('role','operate role ' + user.role)">
+                                  v-if="currentUser.qq !== user.qq && PermissionInfo.hasPermission('role.operate' + capitalizeWords(user.role))">
                     修改用户组
                 </el-dropdown-item>
                 <el-dropdown-item
-                        v-if="currentUser.qq !== user.qq && PermissionInfo.hasPermission('manage user','delete user')"
+                        v-if="currentUser.qq !== user.qq && PermissionInfo.hasPermission('manageUser.delete')"
                         @click="deleteUser">
                     <el-text type="danger">删除</el-text>
                 </el-dropdown-item>

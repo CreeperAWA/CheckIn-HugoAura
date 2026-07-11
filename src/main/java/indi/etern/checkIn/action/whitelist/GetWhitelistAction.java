@@ -20,7 +20,7 @@ public class GetWhitelistAction extends BaseAction<NullInput, GetWhitelistAction
     
     @Override
     public void execute(ExecuteContext<NullInput, SuccessOutput> context) {
-        context.requirePermission("thirdPartyApi.view.whitelist");
+        context.requirePermission("thirdPartyApi.viewWhitelist");
         final List<Whitelist> whitelist = whitelistService.findAll();
         context.resolve(new SuccessOutput(whitelist));
     }

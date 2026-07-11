@@ -14,10 +14,10 @@ import org.springframework.security.core.GrantedAuthority;
 @JsonIgnoreProperties("authority")
 public class Permission implements GrantedAuthority {
     // 限流相关权限常量
-    public static final String BYPASS_RATE_LIMIT = "BYPASS_RATE_LIMIT";
-    public static final String VIEW_RATE_LIMIT_MONITOR = "VIEW_RATE_LIMIT_MONITOR";
-    public static final String VIEW_RATE_LIMIT_CONFIG = "VIEW_RATE_LIMIT_CONFIG";
-    public static final String MODIFY_RATE_LIMIT_CONFIG = "MODIFY_RATE_LIMIT_CONFIG";
+    public static final String BYPASS_RATE_LIMIT = "rateLimit.bypass";
+    public static final String VIEW_RATE_LIMIT_MONITOR = "rateLimit.viewMonitor";
+    public static final String VIEW_RATE_LIMIT_CONFIG = "rateLimit.viewConfig";
+    public static final String MODIFY_RATE_LIMIT_CONFIG = "rateLimit.modifyConfig";
     @Setter
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.MERGE})
     @JoinColumn(name = "group_name", referencedColumnName = "name", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))

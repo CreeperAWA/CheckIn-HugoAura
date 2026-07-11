@@ -36,7 +36,7 @@ public class SaveGeneratingSetting extends BaseAction<SaveGeneratingSetting.Inpu
     @Transactional
     @Override
     public void execute(ExecuteContext<SaveGeneratingSetting.Input, MessageOutput> context) {
-        context.requirePermission("save generating setting");
+        context.requirePermission("setting.saveGenerating");
         SaveSettingCommon saveSettingCommon = new SaveSettingCommon(context.getInput().data,
                 KEYS, "generating");
         saveSettingCommon.doSave();

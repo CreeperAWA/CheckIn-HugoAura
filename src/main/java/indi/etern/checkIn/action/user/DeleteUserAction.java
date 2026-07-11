@@ -7,6 +7,7 @@ import indi.etern.checkIn.action.interfaces.ExecuteContext;
 import indi.etern.checkIn.action.interfaces.InputData;
 import indi.etern.checkIn.api.webSocket.Message;
 import indi.etern.checkIn.entities.user.User;
+import indi.etern.checkIn.service.dao.RoleService;
 import indi.etern.checkIn.service.dao.UserService;
 import indi.etern.checkIn.service.web.WebSocketService;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,8 +33,8 @@ public class DeleteUserAction extends BaseAction<DeleteUserAction.Input, Message
         final Optional<User> optionalUser = userService.findByQQNumber(input.qq);
         optionalUser.ifPresentOrElse((user) -> {
             if (!user.equals(context.getCurrentUser())) {
-                context.requirePermission("delete user");
-                context.requirePermission("operate role " + user.getRole().getType());
+                context.requirePermission("manageUser.delete");
+                context.requirePermission("role.operate" + RoleService.capitalizeWords(user.getRole().getType()));
             }
             userService.delete(user);
             context.resolve(MessageOutput.success("User deleted"));

@@ -157,7 +157,7 @@ const showEmptyDates = ref(false);
                         <el-input prefix-icon="Search" v-model="filterText" style="margin-top: 8px;"
                                   placeholder="搜索 (以 &quot;;&quot; 分词)"/>
                         <el-text type="info" style="align-self: baseline;margin-top: 8px"
-                                 v-if="!PermissionInfo.hasPermission('exam data','get exam data')">你只能查看自己的答题记录
+                                 v-if="!PermissionInfo.hasPermission('examData.get')">你只能查看自己的答题记录
                         </el-text>
                     </div>
                     <el-scrollbar v-loading="loading">

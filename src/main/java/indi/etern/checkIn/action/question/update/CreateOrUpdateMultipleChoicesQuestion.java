@@ -75,21 +75,21 @@ public class CreateOrUpdateMultipleChoicesQuestion extends BaseAction<CreateOrUp
         final Map<String, IssueDTO> errors = result.getErrors();
         if (errors.isEmpty()) {
             if (authorChanged) {
-                context.requirePermission("change question author");
+                context.requirePermission("question.changeAuthor");
             }
             if (previousQuestion.isEmpty() ||
                     previousQuestion.get().getAuthor() != null &&
                             context.isCurrentUser(previousQuestion.get().getAuthor())) {
-                context.requirePermission("create and edit owns questions");
+                context.requirePermission("question.createEditOwn");
             } else {
-                context.requirePermission("edit others questions");
+                context.requirePermission("question.editOthers");
             }
             Boolean dtoEnabled = multipleChoicesQuestionDTO.getEnabled();
             if (dtoEnabled != null &&
                     ((previousQuestion.isPresent() && previousQuestion.get().isEnabled() != dtoEnabled) ||
                             (previousQuestion.isEmpty() && dtoEnabled))
             ) {
-                context.requirePermission("enable and disable questions");
+                context.requirePermission("question.enableDisable");
             }
             
             // Version management: detect changes and handle version/recalculation

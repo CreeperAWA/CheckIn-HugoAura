@@ -46,14 +46,14 @@ public class DeleteQuestionAction extends BaseAction<DeleteQuestionAction.Input,
             final User currentUser = context.getCurrentUser();
             if (currentUser.equals(question.getAuthor())) {
                 if (question instanceof QuestionGroup)
-                    context.requirePermission("delete owns question groups");
+                    context.requirePermission("questionGroup.deleteOwn");
                 else
-                    context.requirePermission("delete owns questions");
+                    context.requirePermission("question.deleteOwn");
             } else {
                 if (question instanceof QuestionGroup)
-                    context.requirePermission("delete others question groups");
+                    context.requirePermission("questionGroup.deleteOthers");
                 else
-                    context.requirePermission("delete others questions");
+                    context.requirePermission("question.deleteOthers");
             }
             questionService.delete(question);
             context.resolve(new Output(question));

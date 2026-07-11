@@ -24,7 +24,7 @@ public class ManualInvalidScoreAction extends BaseAction<ManualInvalidScoreActio
     @Override
     @Transactional
     public void execute(ExecuteContext<Input, MessageOutput> context) {
-        context.requirePermission("manual invalid score");
+        context.requirePermission("examData.manualInvalidScore");
         Optional<ExamData> optionalExamData = examDataService.findById(context.getInput().id);
         optionalExamData.ifPresentOrElse((examData) -> {
             if (examData.getStatus() != ExamData.Status.SUBMITTED) {

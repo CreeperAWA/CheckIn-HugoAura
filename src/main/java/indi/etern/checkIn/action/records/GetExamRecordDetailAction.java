@@ -39,9 +39,9 @@ public class GetExamRecordDetailAction extends BaseAction<GetExamRecordDetailAct
                     final User currentUser = context.getCurrentUser();
                     final boolean isCurrentUserAccess = examData.getQqNumber() != currentUser.getQQNumber();
                     if (isCurrentUserAccess) {
-                        context.requirePermission("get exam data");
+                        context.requirePermission("examData.get");
                     }
-                    final boolean accessibleToOthersSubmissions = context.hasPermission("get exam submission data");
+                    final boolean accessibleToOthersSubmissions = context.hasPermission("examData.getSubmission");
                     final LinkedHashMap<String, Object> examDataMap = examData.toDataMap();
                     if (isCurrentUserAccess && !accessibleToOthersSubmissions) {
                         examDataMap.remove("answers");

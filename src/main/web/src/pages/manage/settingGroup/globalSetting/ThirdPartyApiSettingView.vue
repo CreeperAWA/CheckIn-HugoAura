@@ -192,7 +192,7 @@ const finishEditing = () => {
 };
 
 watch(() => PermissionInfo.permissions.value, () => {
-    hasManagePermission.value = PermissionInfo.hasPermission('thirdPartyApi.manage.setting');
+    hasManagePermission.value = PermissionInfo.hasPermission('thirdPartyApi.manageSetting');
 }, {immediate: true, deep: true});
 
 const getSettings = () => {
@@ -217,7 +217,7 @@ const getSettings = () => {
 };
 
 onMounted(async () => {
-    const hasAccess = await PermissionInfo.requirePageAccess('thirdPartyApi.view.setting', '无权限访问第三方 API 设置页面');
+    const hasAccess = await PermissionInfo.requirePageAccess('thirdPartyApi.viewSetting', '无权限访问第三方 API 设置页面');
     if (hasAccess) {
         getSettings();
     }

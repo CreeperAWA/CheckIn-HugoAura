@@ -32,7 +32,7 @@ const getStatistics = () => {
 };
 
 onMounted(async () => {
-    const hasAccess = await PermissionInfo.requirePageAccess('VIEW_RATE_LIMIT_MONITOR', '无权限访问限流监控页面');
+    const hasAccess = await PermissionInfo.requirePageAccess('rateLimit.viewMonitor', '无权限访问限流监控页面');
     if (hasAccess) {
         getStatistics();
         refreshInterval = setInterval(getStatistics, 10000);

@@ -118,7 +118,7 @@ const getSplitsFlexRate = (index) => {
         <div style="display: flex;flex-direction: row;flex-wrap: wrap">
             <el-text style="font-weight: bold;margin-bottom: 16px;display: block;font-size: 24px;margin-right: 32px;">评级设置</el-text>
             <div style="display: flex;"
-                 v-if="PermissionInfo.hasPermission('setting','save grading setting')">
+                 v-if="PermissionInfo.hasPermission('setting.saveGrading')">
                 <transition-group name="blur-scale">
                     <el-button-group key="button-group" style="margin: 2px 24px 2px 0;">
                         <transition-group name="blur-scale">

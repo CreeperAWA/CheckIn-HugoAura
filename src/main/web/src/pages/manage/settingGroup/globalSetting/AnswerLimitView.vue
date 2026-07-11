@@ -31,12 +31,12 @@ UserDataInterface.getUsersAsync().then((users) => {
 });
 
 watch(() => PermissionInfo.permissions.value, () => {
-    hasSettingPermission.value = PermissionInfo.hasPermission('answerLimit.view.setting');
-    hasManageSettingPermission.value = PermissionInfo.hasPermission('answerLimit.manage.setting');
-    hasCountPermission.value = PermissionInfo.hasPermission('answerLimit.view.count');
-    hasWhitelistViewPermission.value = PermissionInfo.hasPermission('answerLimit.view.whitelist');
-    hasWhitelistManagePermission.value = PermissionInfo.hasPermission('answerLimit.manage.whitelist');
-    hasRecordManagePermission.value = PermissionInfo.hasPermission('answerLimit.manage.record');
+    hasSettingPermission.value = PermissionInfo.hasPermission('answerLimit.viewSetting');
+    hasManageSettingPermission.value = PermissionInfo.hasPermission('answerLimit.manageSetting');
+    hasCountPermission.value = PermissionInfo.hasPermission('answerLimit.viewCount');
+    hasWhitelistViewPermission.value = PermissionInfo.hasPermission('answerLimit.viewWhitelist');
+    hasWhitelistManagePermission.value = PermissionInfo.hasPermission('answerLimit.manageWhitelist');
+    hasRecordManagePermission.value = PermissionInfo.hasPermission('answerLimit.manageRecord');
 }, {immediate: true, deep: true});
 
 const getSetting = () => {
@@ -286,7 +286,7 @@ const refresh = () => {
 
 onMounted(async () => {
     const hasAccess = await PermissionInfo.requirePageAccess(
-        ['answerLimit.view.setting', 'answerLimit.view.count', 'answerLimit.view.whitelist'],
+        ['answerLimit.viewSetting', 'answerLimit.viewCount', 'answerLimit.viewWhitelist'],
         '无权限访问答题次数限制管理页面'
     );
     if (hasAccess) {

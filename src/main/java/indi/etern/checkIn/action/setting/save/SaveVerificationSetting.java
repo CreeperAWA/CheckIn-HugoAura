@@ -35,7 +35,7 @@ public class SaveVerificationSetting extends BaseAction<SaveVerificationSetting.
     @Transactional
     @Override
     public void execute(ExecuteContext<Input, MessageOutput> context) {
-        context.requirePermission("save verification setting");
+        context.requirePermission("setting.saveVerification");
         final Input input = context.getInput();
         verificationRuleService.deleteAll();
         final List<Map<String, Object>> dataList = input.data;

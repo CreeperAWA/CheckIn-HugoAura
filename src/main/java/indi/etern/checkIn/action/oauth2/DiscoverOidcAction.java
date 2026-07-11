@@ -27,7 +27,7 @@ public class DiscoverOidcAction extends BaseAction<DiscoverOidcAction.Input, Out
 
     @Override
     public void execute(ExecuteContext<Input, OutputData> context) {
-        context.requirePermission("save OAuth2 setting");
+        context.requirePermission("setting.saveOAuth2");
         Input input = context.getInput();
         String issuerUrl = input.issuerUrl();
         if (isValidUrl(issuerUrl)) {

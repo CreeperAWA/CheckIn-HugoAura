@@ -21,7 +21,7 @@ public class DeleteUsersAction extends BaseAction<DeleteUsersAction.Input, Messa
     
     @Override
     public void execute(ExecuteContext<Input, MessageOutput> context) {
-        context.requirePermission("delete user");
+        context.requirePermission("manageUser.delete");
         userService.deleteAllByQQ(context.getInput().qqList());
         context.resolve(MessageOutput.success("Users deleted"));
     }

@@ -6,6 +6,7 @@ import indi.etern.checkIn.action.interfaces.Action;
 import indi.etern.checkIn.action.interfaces.ExecuteContext;
 import indi.etern.checkIn.action.interfaces.InputData;
 import indi.etern.checkIn.api.webSocket.Message;
+import indi.etern.checkIn.service.dao.RoleService;
 import indi.etern.checkIn.service.dao.UserService;
 import indi.etern.checkIn.service.web.WebSocketService;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,10 +25,10 @@ public class SetEnableUserAction extends BaseAction<SetEnableUserAction.Input, M
     @Transactional
     @Override
     public void execute(ExecuteContext<Input, MessageOutput> context) {
-        context.requirePermission("change user state");
+        context.requirePermission("manageUser.changeState");
         final Input input = context.getInput();
         userService.findByQQNumber(input.qq).ifPresentOrElse((user) -> {
-            context.requirePermission("operate role " + user.getRole().getType());
+            context.requirePermission("role.operate" + RoleService.capitalizeWords(user.getRole().getType()));
             user.setEnabled(input.enable);
             userService.saveAndFlush(user);
             Message<?> message = Message.of("updateUser", user);

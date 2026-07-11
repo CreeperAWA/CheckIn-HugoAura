@@ -22,7 +22,7 @@ public class AddToAnswerLimitWhitelistAction extends BaseAction<AddToAnswerLimit
     
     @Override
     public void execute(ExecuteContext<Input, OutputData> context) {
-        context.requirePermission("answerLimit.manage.whitelist");
+        context.requirePermission("answerLimit.manageWhitelist");
         final Input input = context.getInput();
         
         if (answerLimitService.isInWhitelist(input.qq)) {

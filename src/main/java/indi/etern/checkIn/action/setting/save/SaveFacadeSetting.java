@@ -18,7 +18,7 @@ public class SaveFacadeSetting extends BaseAction<SaveFacadeSetting.Input, Messa
     @Transactional
     @Override
     public void execute(ExecuteContext<Input, MessageOutput> context) {
-        context.requirePermission("save facade setting");
+        context.requirePermission("setting.saveFacade");
         SaveSettingCommon saveSettingCommon = new SaveSettingCommon(context.getInput().data,
                 KEYS,
                 "facade");

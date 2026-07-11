@@ -29,7 +29,7 @@ public class GetExamRecordsByQqAction extends BaseAction<GetExamRecordsByQqActio
     public void execute(ExecuteContext<Input, SuccessOutput> context) {
         long qq = context.getInput().qq;
         if (qq != context.getCurrentUser().getQQNumber()) {
-            context.requirePermission("get exam data");
+            context.requirePermission("examData.get");
         }
         final SuccessOutput output
                 = new SuccessOutput(examDataService.findAllByQQ(qq));

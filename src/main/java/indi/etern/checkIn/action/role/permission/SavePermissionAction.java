@@ -30,7 +30,7 @@ public class SavePermissionAction extends BaseAction<SavePermissionAction.Input,
     @Override
     public void execute(ExecuteContext<Input, MessageOutput> context) {
         synchronized (roleService) {
-            context.requirePermission("edit permission");
+            context.requirePermission("role.editPermission");
             final Input input = context.getInput();
             roleService.findByType(input.roleType).ifPresentOrElse((role) -> {
                 List<Permission> enabled = new ArrayList<>();

@@ -19,7 +19,7 @@ import java.util.List;
  * 
  * 返回第三方API相关的所有设置项和Token列表
  * 
- * 权限要求：thirdPartyApi.view.setting
+ * 权限要求：thirdPartyApi.viewSetting
  * 
  * 返回数据结构：
  * - qqVerify.enabled: 是否启用QQ验证
@@ -49,7 +49,7 @@ public class GetThirdPartyApiSetting extends BaseAction<NullInput, GetThirdParty
 
     @Override
     public void execute(ExecuteContext<NullInput, SuccessOutput> context) {
-        context.requirePermission("thirdPartyApi.view.setting");
+        context.requirePermission("thirdPartyApi.viewSetting");
         
         GetSettingCommon getSettingCommon = new GetSettingCommon(SaveThirdPartyApiSetting.KEYS, "thirdPartyApi");
         final LinkedHashMap<String, Object> settings = getSettingCommon.doGet();

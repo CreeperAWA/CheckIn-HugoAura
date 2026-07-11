@@ -37,7 +37,7 @@ public class GetRequestRecordsAction extends BaseAction<GetRequestRecordsAction.
                 .withZoneSameInstant(ZoneId.systemDefault()).toLocalDate();
         LocalDate to = ZonedDateTime.parse(input.to)
                 .withZoneSameInstant(ZoneId.systemDefault()).toLocalDate();
-        context.requirePermission("get request records");
+        context.requirePermission("requestRecord.get");
         final Set<RequestRecord> requestRecords = new HashSet<>(requestRecordService.findByLocalDateFromTo(from, to));
         LinkedHashMap<LocalDate, Map<String, RequestRecord>> map = new LinkedHashMap<>();
         requestRecords.stream().sorted(Comparator.comparing(RequestRecord::getTime).reversed()).forEach((trafficRecord) -> {

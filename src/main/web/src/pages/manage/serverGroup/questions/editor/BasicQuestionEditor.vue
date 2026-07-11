@@ -120,8 +120,8 @@ const onPreview = (file) => {
 }
 
 const ableToSwitchEnable = () => {
-    let ableToSwitchEnableQuestion = PermissionInfo.hasPermission('question', 'enable and disable questions')
-    let ableToSwitchEnableQuestionGroup = PermissionInfo.hasPermission('question group', 'enable and disable question groups')
+    let ableToSwitchEnableQuestion = PermissionInfo.hasPermission('question.enableDisable')
+    let ableToSwitchEnableQuestionGroup = PermissionInfo.hasPermission('questionGroup.enableDisable')
     let ableToSwitchEnable;
     if (questionInfo.value.question.type === "QuestionGroup") {
         ableToSwitchEnable = ableToSwitchEnableQuestionGroup;
@@ -132,8 +132,8 @@ const ableToSwitchEnable = () => {
 }
 
 const ableToChangeAuthor = () => {
-    let ableToChangeQuestionAuthor = PermissionInfo.hasPermission('question', 'change question author')
-    let ableToChangeQuestionGroupAuthor = PermissionInfo.hasPermission('question group', 'change question group author')
+    let ableToChangeQuestionAuthor = PermissionInfo.hasPermission('question.changeAuthor')
+    let ableToChangeQuestionGroupAuthor = PermissionInfo.hasPermission('questionGroup.changeAuthor')
     let ableToChangeAuthor;
     if (questionInfo.value.question.type === "QuestionGroup") {
         ableToChangeAuthor = ableToChangeQuestionGroupAuthor;
@@ -276,7 +276,7 @@ const newImageLoaded = () => {
             style="flex:4;width:0">
             <el-option v-for="(partition,id) in partitions" :key="partition.id"
                        :label="partition.name" :value="partition.id"></el-option>
-            <template #footer v-if="PermissionInfo.hasPermission('partition', 'create partition')">
+            <template #footer v-if="PermissionInfo.hasPermission('partition.create')">
                 <transition name="creatingPartition" mode="out-in">
                     <el-button v-if="!isAdding" class="disable-init-animate" text bg style="width: 100%"
                                @click="onCreatingPartition">

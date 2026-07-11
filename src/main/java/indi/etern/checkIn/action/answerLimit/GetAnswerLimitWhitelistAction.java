@@ -20,7 +20,7 @@ public class GetAnswerLimitWhitelistAction extends BaseAction<NullInput, GetAnsw
     
     @Override
     public void execute(ExecuteContext<NullInput, SuccessOutput> context) {
-        context.requirePermission("answerLimit.view.whitelist");
+        context.requirePermission("answerLimit.viewWhitelist");
         final List<AnswerLimitWhitelist> whitelist = answerLimitService.getAllWhitelist();
         context.resolve(new SuccessOutput(whitelist));
     }

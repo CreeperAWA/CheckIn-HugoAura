@@ -18,7 +18,7 @@ import java.util.LinkedHashMap;
  * 根据提供的SID（Service ID）生成JWT格式的访问令牌
  * 用于第三方API连接时的身份认证
  * 
- * 权限要求：thirdPartyApi.manage.setting
+ * 权限要求：thirdPartyApi.manageSetting
  * 
  * 输入参数：
  * - sid: 第三方API服务标识符（必填，UUID格式）
@@ -56,7 +56,7 @@ public class GenerateThirdPartyApiSidToken extends BaseAction<GenerateThirdParty
 
     @Override
     public void execute(ExecuteContext<Input, SuccessOutput> context) {
-        context.requirePermission("thirdPartyApi.manage.setting");
+        context.requirePermission("thirdPartyApi.manageSetting");
         
         String sid = context.getInput().sid;
         

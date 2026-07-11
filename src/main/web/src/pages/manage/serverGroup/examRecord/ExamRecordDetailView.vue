@@ -28,8 +28,8 @@ const partitionNames = ref();
 const questionInfos = ref({});
 
 watch(() => PermissionInfo.permissions.value, () => {
-    hasInvalidExamPermission.value = PermissionInfo.hasPermission('exam data', 'manual invalid exam');
-    hasInvalidScorePermission.value = PermissionInfo.hasPermission('exam data', 'manual invalid score');
+    hasInvalidExamPermission.value = PermissionInfo.hasPermission('examData.manualInvalidExam');
+    hasInvalidScorePermission.value = PermissionInfo.hasPermission('examData.manualInvalidScore');
 }, {immediate: true, deep: true});
 
 
@@ -353,7 +353,7 @@ onBeforeUnmount(() => {
                                     </div>
                                     <link-panel style="margin-top: 16px;" name="相关请求"
                                                 description="生成 获取题目 提交"
-                                                v-if="PermissionInfo.hasPermission('request record','get request records')"
+                                                v-if="PermissionInfo.hasPermission('requestRecord.get')"
                                                 icon="Link" @click="router.push({name: 'related-requests'})"/>
                                     <div style="display:flex;flex-direction: column;margin: 32px -4px -4px;"
                                          v-if="Object.keys(questionInfos).length > 0">

@@ -78,21 +78,21 @@ public class CreateOrUpdateQuestionGroup extends BaseAction<CreateOrUpdateQuesti
         final Map<String, IssueDTO> errors = result.getErrors();
         if (errors.isEmpty()) {
             if (authorChanged) {
-                context.requirePermission("change question group author");
+                context.requirePermission("questionGroup.changeAuthor");
             }
             if (previousQuestion.isEmpty() ||
                     previousQuestion.get().getAuthor() != null &&
                             context.isCurrentUser(previousQuestion.get().getAuthor())) {
-                context.requirePermission("create and edit owns question groups");
+                context.requirePermission("questionGroup.createEditOwn");
             } else {
-                context.requirePermission("edit others question groups");
+                context.requirePermission("questionGroup.editOthers");
             }
             Boolean dtoEnabled = questionGroupDTO.getEnabled();
             if (dtoEnabled != null &&
                     ((previousQuestion.isPresent() && previousQuestion.get().isEnabled() != dtoEnabled) ||
                             (previousQuestion.isEmpty() && dtoEnabled))
             ) {
-                context.requirePermission("enable and disable question groups");
+                context.requirePermission("questionGroup.enableDisable");
             }
             int count = 0;
             for (CommonQuestionDTO commonQuestionDTO : questionGroupDTO.getQuestions()) {

@@ -84,7 +84,7 @@ const varietiesData = [
     <div style="display: flex;flex-direction: column">
         <div style="display: flex;flex-direction: row;flex-wrap: wrap">
             <el-text style="align-self:baseline;font-size: 24px;margin-right: 32px">上传校验设置</el-text>
-            <template v-if="PermissionInfo.hasPermission('setting','save verification setting')">
+            <template v-if="PermissionInfo.hasPermission('setting.saveVerification')">
                 <transition-group name="blur-scale">
                     <el-button-group key="button-group" style="margin: 2px 24px 2px 0;">
                         <transition-group name="blur-scale">

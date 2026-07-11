@@ -34,7 +34,7 @@ public class SaveGradingSetting extends BaseAction<SaveGradingSetting.Input, Mes
     @Transactional
     @Override
     public void execute(ExecuteContext<SaveGradingSetting.Input, MessageOutput> context) {
-        context.requirePermission("save grading setting");
+        context.requirePermission("setting.saveGrading");
         final SaveGradingSetting.Input input = context.getInput();
         SaveSettingCommon saveSettingCommon = new SaveSettingCommon(input.data,
                 KEYS, "grading");

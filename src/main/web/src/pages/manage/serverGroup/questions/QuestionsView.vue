@@ -106,7 +106,7 @@ const loadNode = (node, resolve, reject) => {
         };
         PartitionCache.getRefPartitionsAsync().then((partitions) => {
             let data = [];
-            if (PermissionInfo.hasPermission('partition', 'create partition')) {
+            if (PermissionInfo.hasPermission('partition.create')) {
                 data.push(createPartitionButtonData)
             }
             for (const [id, partition] of Object.entries(partitions.value)) {
@@ -279,7 +279,7 @@ const onDragEnd = (node, dropNode, event) => {
 }
 
 const createQuestionGroup = (partitionId) => {
-    if (PermissionInfo.hasPermission('question group', 'create and edit owns question groups')) {
+    if (PermissionInfo.hasPermission('questionGroup.createEditOwn')) {
         const authorQQ = Number(UserDataInterface.currentUser.value.qq);
         const id = uuidv7();
         let question = {
@@ -303,7 +303,7 @@ const createQuestionGroup = (partitionId) => {
 }
 
 const createMultipleChoiceQuestion = (partitionId) => {
-    if (PermissionInfo.hasPermission('question', 'create and edit owns questions')) {
+    if (PermissionInfo.hasPermission('question.createEditOwn')) {
         const id = uuidv7();
         let question = {
             id: id,
@@ -813,12 +813,12 @@ const getTypeName = (obj) => {
                                                     <div class="no-pop-padding create-selection">
                                                         <el-button-group>
                                                             <el-button
-                                                                :disabled="!PermissionInfo.hasPermission('question group','create and edit owns question groups')"
+                                                                :disabled="!PermissionInfo.hasPermission('questionGroup.createEditOwn')"
                                                                 @click="createQuestionGroup(nodeObj.data.partitionId)">
                                                                 题组
                                                             </el-button>
                                                             <el-button
-                                                                :disabled="!PermissionInfo.hasPermission('question','create and edit owns questions')"
+                                                                :disabled="!PermissionInfo.hasPermission('question.createEditOwn')"
                                                                 @click="createMultipleChoiceQuestion(nodeObj.data.partitionId)">
                                                                 选择题
                                                             </el-button>
@@ -876,7 +876,7 @@ const getTypeName = (obj) => {
                                                     <el-button-group class="node-buttons" style="position: initial"
                                                                      v-if="nodeObj.data.type === 'Partition'">
                                                         <el-popover trigger="click"
-                                                                    v-if="PermissionInfo.hasPermission('partition','edit partition name')"
+                                                                    v-if="PermissionInfo.hasPermission('partition.editName')"
                                                                     v-model:visible="nodeObj.data.editing"
                                                                     width="400">
                                                             <template #reference>
@@ -893,7 +893,7 @@ const getTypeName = (obj) => {
                                                             </template>
                                                         </el-popover>
                                                         <el-button class="node-button" size="small"
-                                                                   v-if="PermissionInfo.hasPermission('partition','delete partition')"
+                                                                   v-if="PermissionInfo.hasPermission('partition.delete')"
                                                                    @click.stop="onDeleteNode(nodeObj)">
                                                             <HarmonyOSIcon_Remove/>
                                                         </el-button>

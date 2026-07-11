@@ -105,7 +105,7 @@ const onPermissionCardClick = (permission) => {
                             <template #title>
                                 <div style="display: flex;flex-direction: row;align-items: center;height: 100%;margin-left: 8px">
                                     <el-text>权限</el-text>
-                                    <template v-if="PermissionInfo.hasPermission('role','edit permission')">
+                                    <template v-if="PermissionInfo.hasPermission('role.editPermission')">
                                         <transition name="blur-scale" mode="out-in">
                                             <div style="height: 25px;margin-left: 8px" v-if="!editing" @click.stop>
                                                 <el-button type="info" link @click="startEditing">修改</el-button>
@@ -122,10 +122,10 @@ const onPermissionCardClick = (permission) => {
                                 <waterfall :data="permissionGroups" :min-row-width="300">
                                     <template #item="{item:permissionGroup,index}">
                                         <div style="margin: 4px">
-                                            <div style="display: flex;margin: 0 8px;">
-                                                <el-text size="large">{{ permissionGroup.name }}</el-text>
-                                                <el-text type="info" style="margin-left: 8px">
-                                                    {{ permissionGroup.description }}
+                                            <div style="margin: 0 8px;">
+                                                <el-text size="large">{{ permissionGroup.description }}</el-text>
+                                                <el-text type="info" size="small" style="margin-left: 8px">
+                                                    {{ permissionGroup.name }}
                                                 </el-text>
                                             </div>
                                             <transition-group name="smooth-height">
@@ -136,17 +136,19 @@ const onPermissionCardClick = (permission) => {
                                                         <div class="panel-1 permission-card disable-init-animate"
                                                              @click="onPermissionCardClick(permission)">
                                                             <div class="permission-card-top">
-                                                                <el-text size="large">
-                                                                    {{ permission.name }}
-                                                                </el-text>
+                                                                <div>
+                                                                    <el-text size="large">
+                                                                        {{ permission.description }}
+                                                                    </el-text>
+                                                                    <el-text type="info" size="small" style="margin-left: 8px">
+                                                                        {{ permission.name }}
+                                                                    </el-text>
+                                                                </div>
                                                                 <div class="flex-blank-1"></div>
                                                                 <el-switch :disabled="!editing" style="max-height: 20px;"
                                                                            @click.stop
                                                                            v-model="permission.enabled"/>
                                                             </div>
-                                                            <el-text type="info">
-                                                                {{ permission.description }}
-                                                            </el-text>
                                                         </div>
                                                     </div>
                                                 </div>

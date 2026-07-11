@@ -15,7 +15,7 @@ const data = [{
         "Vue3 Cookies",
         "Element Plus",
         "TOAST UI Editor",
-        "axios",
+        "Axios",
         "Splitpanes",
         "JWT Decode",
         "uuidv7",

@@ -17,7 +17,7 @@ public class GetAnswerLimitSettingAction extends BaseAction<NullInput, GetAnswer
     
     @Override
     public void execute(ExecuteContext<NullInput, SuccessOutput> context) {
-        context.requirePermission("answerLimit.view.setting");
+        context.requirePermission("answerLimit.viewSetting");
         int maxCount = answerLimitService.getMaxAnswerCount();
         context.resolve(new SuccessOutput(maxCount));
     }

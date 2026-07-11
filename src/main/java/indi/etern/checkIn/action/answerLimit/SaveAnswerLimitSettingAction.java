@@ -18,7 +18,7 @@ public class SaveAnswerLimitSettingAction extends BaseAction<SaveAnswerLimitSett
     
     @Override
     public void execute(ExecuteContext<Input, OutputData> context) {
-        context.requirePermission("answerLimit.manage.setting");
+        context.requirePermission("answerLimit.manageSetting");
         final Input input = context.getInput();
         
         if (input.maxCount <= 0) {

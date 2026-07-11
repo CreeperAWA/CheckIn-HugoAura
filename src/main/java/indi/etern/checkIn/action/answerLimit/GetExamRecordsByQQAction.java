@@ -20,7 +20,7 @@ public class GetExamRecordsByQQAction extends BaseAction<GetExamRecordsByQQActio
     
     @Override
     public void execute(ExecuteContext<Input, SuccessOutput> context) {
-        context.requirePermission("answerLimit.view.count");
+        context.requirePermission("answerLimit.viewCount");
         final Input input = context.getInput();
         
         List<ExamData> examRecords = answerLimitService.getExamRecordsByQQ(input.qq);

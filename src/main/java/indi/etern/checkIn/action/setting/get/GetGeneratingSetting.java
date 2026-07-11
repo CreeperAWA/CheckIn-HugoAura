@@ -20,7 +20,7 @@ public class GetGeneratingSetting extends BaseAction<NullInput, GetGeneratingSet
     }
     @Override
     public void execute(ExecuteContext<NullInput, SuccessOutput> context) {
-        context.requirePermission("get generating setting");
+        context.requirePermission("setting.getGenerating");
         GetSettingCommon getSettingCommon = new GetSettingCommon(SaveGeneratingSetting.KEYS,"generating");
         context.resolve(new SuccessOutput(getSettingCommon.doGet()));
     }

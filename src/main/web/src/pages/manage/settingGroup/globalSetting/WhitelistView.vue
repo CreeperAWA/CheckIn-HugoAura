@@ -22,7 +22,7 @@ UserDataInterface.getUsersAsync().then((users) => {
 });
 
 watch(() => PermissionInfo.permissions.value, () => {
-    hasManagePermission.value = PermissionInfo.hasPermission('thirdPartyApi.manage.whitelist');
+    hasManagePermission.value = PermissionInfo.hasPermission('thirdPartyApi.manageWhitelist');
 }, {immediate: true, deep: true});
 
 const getWhitelist = () => {
@@ -147,7 +147,7 @@ const formatTime = (timeStr) => {
 };
 
 onMounted(async () => {
-    const hasAccess = await PermissionInfo.requirePageAccess('thirdPartyApi.view.whitelist', '无权限访问白名单管理页面');
+    const hasAccess = await PermissionInfo.requirePageAccess('thirdPartyApi.viewWhitelist', '无权限访问白名单管理页面');
     if (hasAccess) {
         getWhitelist();
     }

@@ -26,7 +26,7 @@ public class CreatePartitionByNameAction extends BaseAction<CreatePartitionByNam
     @Override
     @Transactional
     public void execute(ExecuteContext<Input, OutputData> context) {
-        context.requirePermission("create partition");
+        context.requirePermission("partition.create");
         final Input input = context.getInput();
         
         if (partitionService.existsByName(input.name)) {
