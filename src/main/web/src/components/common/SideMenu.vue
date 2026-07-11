@@ -28,14 +28,16 @@ const pageGroups = [
                 pathName: 'grade-calculation',
                 name: '成绩核算',
                 icon: "DataAnalysis",
-                show: PermissionInfo.hasPermission('questionVersion.approveRecalculation')
+                show: PermissionInfo.hasPermission('questionVersion.approveRecalculation') || PermissionInfo.hasPermission('questionVersion.viewRecalculationLog')
             }
         ]
     }, {
         groupName: "管理",
         paths: [
             {pathName: 'manage-user', name: '用户管理', icon: "User"},
-            {pathName: 'manage-group', name: '组管理', icon: "Files"},
+            {pathName: 'manage-group', name: '组管理', icon: "Files",
+                show: PermissionInfo.hasPermission('role.create') || PermissionInfo.hasPermission('role.editPermission') || PermissionInfo.hasPermission('role.delete') || PermissionInfo.hasPermission('role.updateLevel')
+            },
         ]
     }, {
             groupName: "设置",

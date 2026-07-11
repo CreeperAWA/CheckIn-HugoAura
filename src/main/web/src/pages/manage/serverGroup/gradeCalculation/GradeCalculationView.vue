@@ -2,7 +2,7 @@
 import WebSocketConnector from "@/api/websocket.js";
 import PermissionInfo from "@/auth/PermissionInfo.js";
 import {ElMessage, ElMessageBox} from "element-plus";
-import {ref, onMounted, onUnmounted} from "vue";
+import {ref, computed, onMounted, onUnmounted} from "vue";
 
 const loading = ref(false);
 const historyLoading = ref(false);
@@ -11,7 +11,10 @@ const historyList = ref([]);
 const historyTotal = ref(0);
 const historyPage = ref(1);
 const historyPageSize = ref(20);
-const activeTab = ref('pending');
+
+const canApprove = computed(() => PermissionInfo.hasPermission('questionVersion.approveRecalculation'));
+const canViewLog = computed(() => PermissionInfo.hasPermission('questionVersion.viewRecalculationLog'));
+const activeTab = ref(canApprove.value ? 'pending' : 'history');
 
 const triggerTypeMap = {
     ANSWER_KEY_CHANGE: {label: '答案变更', type: 'danger'},
@@ -154,12 +157,17 @@ function onTabChange(tab) {
 
 onMounted(async () => {
     const hasAccess = await PermissionInfo.requirePageAccess(
-        'questionVersion.approveRecalculation',
+        ['questionVersion.approveRecalculation', 'questionVersion.viewRecalculationLog'],
         '无权限访问成绩核算页面'
     );
     if (hasAccess) {
-        fetchPendingList();
-        WebSocketConnector.registerAction('recalculationAwaitingApproval', onRecalculationBroadcast);
+        if (canApprove.value) {
+            fetchPendingList();
+            WebSocketConnector.registerAction('recalculationAwaitingApproval', onRecalculationBroadcast);
+        }
+        if (canViewLog.value) {
+            fetchHistoryList();
+        }
     }
 });
 
@@ -176,17 +184,17 @@ onUnmounted(() => {
     <div style="display: flex;flex-direction: column;height: 100%">
         <div style="display: flex;flex-direction: row;margin-bottom: 16px;align-items: center;padding: 0 24px;margin-top: 16px">
             <el-text style="font-size: 24px;font-weight: bold">成绩核算</el-text>
-            <el-tag v-if="pendingList.length > 0" type="danger" style="margin-left: 12px">
+            <el-tag v-if="canApprove && pendingList.length > 0" type="danger" style="margin-left: 12px">
                 {{ pendingList.length }} 个待审批
             </el-tag>
-            <el-button style="margin-left: auto" @click="fetchPendingList" :loading="loading">
+            <el-button style="margin-left: auto" @click="canApprove ? fetchPendingList() : fetchHistoryList()" :loading="loading || historyLoading">
                 刷新
             </el-button>
         </div>
 
         <el-tabs v-model="activeTab" style="padding: 0 24px" @tab-change="onTabChange">
             <!-- 待审批 Tab -->
-            <el-tab-pane label="待审批" name="pending">
+            <el-tab-pane v-if="canApprove" label="待审批" name="pending">
                 <el-table v-loading="loading" :data="pendingList" stripe style="width: 100%"
                           :default-expand-all="false" row-key="logId">
                     <el-table-column type="expand">
@@ -261,7 +269,7 @@ onUnmounted(() => {
             </el-tab-pane>
 
             <!-- 历史记录 Tab -->
-            <el-tab-pane label="历史记录" name="history">
+            <el-tab-pane v-if="canViewLog" label="历史记录" name="history">
                 <el-table v-loading="historyLoading" :data="historyList" stripe style="width: 100%"
                           row-key="id">
                     <el-table-column type="expand">

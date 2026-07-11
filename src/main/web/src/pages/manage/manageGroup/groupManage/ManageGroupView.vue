@@ -117,6 +117,13 @@ const confirmCreating = () => {
 const cancelCreating = () => {
     createdGroupName.value = "";
 }
+
+onMounted(async () => {
+    await PermissionInfo.requirePageAccess(
+        ['role.create', 'role.editPermission', 'role.delete', 'role.updateLevel'],
+        '无权限访问组管理页面'
+    );
+});
 </script>
 
 <template>
