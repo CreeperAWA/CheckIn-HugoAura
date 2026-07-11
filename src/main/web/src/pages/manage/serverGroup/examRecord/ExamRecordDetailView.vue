@@ -112,8 +112,9 @@ const navigateToQuestion = async (questionInfo) => {
 };
 
 const getDisplayAnswerData = (questionInfo, answer) => {
+    if (!answer) return [];
     const answerChoicesMap = {};
-    if (answer && answer.selectedChoices) {
+    if (answer.selectedChoices) {
         for (const answerElement of answer.selectedChoices) {
             answerChoicesMap[answerElement.id] = answerElement;
         }
@@ -134,14 +135,17 @@ const getDisplayAnswerData = (questionInfo, answer) => {
             choiceDisplayData.push(choiceData);
         }
         return choiceDisplayData;
-    } else if (answer && answer.answers) {
+    } else if (answer.answers) {
         const answers = [];
         for (const index in answer.answers) {
             const subQuestionInfo = Object.values(questionInfo.questionInfos)[index];
-            answers.push(getDisplayAnswerData(subQuestionInfo, answer.answers[index]));
+            if (subQuestionInfo) {
+                answers.push(getDisplayAnswerData(subQuestionInfo, answer.answers[index]));
+            }
         }
         return answers;
     }
+    return [];
 }
 
 const getTagType = (checkedResultType) => {

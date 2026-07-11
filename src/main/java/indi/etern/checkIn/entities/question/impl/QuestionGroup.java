@@ -36,7 +36,7 @@ public class QuestionGroup extends Question implements
     @OneToMany(mappedBy = "target", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @Fetch(value = FetchMode.SUBSELECT)
     @OrderBy("orderIndex")
-    protected Set<ToQuestionGroupLink> questionLinks;
+    protected Set<ToQuestionGroupLink> questionLinks = new LinkedHashSet<>();
     
     protected QuestionGroup() {
     }
@@ -45,7 +45,7 @@ public class QuestionGroup extends Question implements
         this.content = questionContent;
         this.explanation = explanation;
         this.author = author;
-        this.questionLinks = new HashSet<>();
+        this.questionLinks = new LinkedHashSet<>();
         int index = 0;
         for (Question question : questionSet) {
             ToQuestionGroupLink questionLinkWrapper = (ToQuestionGroupLink) question.getLinkWrapper();
@@ -60,7 +60,7 @@ public class QuestionGroup extends Question implements
         this.content = questionContent;
         this.explanation = explanation;
         this.author = author;
-        this.questionLinks = new HashSet<>();
+        this.questionLinks = new LinkedHashSet<>();
         this.id = id;
     }
 
