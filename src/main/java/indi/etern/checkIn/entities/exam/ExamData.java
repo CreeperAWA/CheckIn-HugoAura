@@ -174,10 +174,14 @@ public class ExamData implements BaseEntity<String> , Comparable<ExamData>{
             } else if (value instanceof Map<?, ?> subQuestionAnswerMap && question instanceof QuestionGroup questionGroup1) {
                 List<Question> subQuestions = questionGroup1.getQuestionLinks().stream().map(QuestionLinkImpl::getSource).toList();
                 //noinspection unchecked
-                this.answersMap.put(questionGroup1.getId(), handleAnswerItemMap(subQuestions,
+                QuestionGroupAnswer nestedQGAnswer = handleAnswerItemMap(subQuestions,
                         (Map<String, Object>) subQuestionAnswerMap,
                         questionGroup1)
-                        .orElseThrow(IllegalStateException::new));
+                        .orElseThrow(IllegalStateException::new);
+                this.answersMap.put(questionGroup1.getId(), nestedQGAnswer);
+                if (questionGroup != null) {
+                    questionGroupSubQuestionAnswers.add(nestedQGAnswer);
+                }
             }
         }
         if (questionGroup != null) {

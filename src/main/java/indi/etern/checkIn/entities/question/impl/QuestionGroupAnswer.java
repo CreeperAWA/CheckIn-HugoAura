@@ -13,7 +13,7 @@ import lombok.Setter;
 import java.util.List;
 
 @Getter
-public class QuestionGroupAnswer extends Answer<QuestionGroup, List<SingleQuestionAnswer>> {
+public class QuestionGroupAnswer extends Answer<QuestionGroup, List<SingleQuestionAnswer>> implements SingleQuestionAnswer {
     @Setter(AccessLevel.PROTECTED)
     List<SingleQuestionAnswer> answers;
     @Setter(AccessLevel.PROTECTED)
