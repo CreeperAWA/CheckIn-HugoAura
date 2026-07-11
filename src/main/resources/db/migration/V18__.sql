@@ -3,7 +3,7 @@
 -- ============================================
 
 -- 1. questions table add version management columns (one per ALTER for H2 compat)
-ALTER TABLE questions ADD COLUMN version_number INT NOT NULL DEFAULT 1;
+ALTER TABLE questions ADD COLUMN version_number VARCHAR(7) NOT NULL DEFAULT '1';
 ALTER TABLE questions ADD COLUMN version_status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE';
 ALTER TABLE questions ADD COLUMN version_group_id CHAR(36) NULL;
 ALTER TABLE questions ADD COLUMN previous_version_id CHAR(36) NULL;
@@ -35,11 +35,17 @@ CREATE TABLE score_recalculation_log
     id                       CHAR(36)     NOT NULL PRIMARY KEY,
     question_id              CHAR(36)     NOT NULL,
     trigger_type             VARCHAR(20)  NOT NULL,
+    trigger_version_id       CHAR(36)     NULL,
     triggered_at             DATETIME     NOT NULL,
     triggered_by_qq          BIGINT       NULL,
     affected_exam_count      INT          NOT NULL DEFAULT 0,
     score_changed_exam_count INT          NOT NULL DEFAULT 0,
     status                   VARCHAR(20)  NOT NULL,
+    approved_by_qq           BIGINT       NULL,
+    approved_at              DATETIME     NULL,
+    rejected_by_qq           BIGINT       NULL,
+    rejected_at              DATETIME     NULL,
+    question_content_preview VARCHAR(255) NULL,
     completed_at             DATETIME     NULL,
     error_message            TEXT         NULL
 );
@@ -82,12 +88,14 @@ VALUES ('questionVersion', 'Question Version Management');
 INSERT IGNORE INTO permissions (id, description, name, group_name)
 VALUES ('qv-view-001', 'View question version history', 'questionVersion.view', 'questionVersion'),
        ('qv-manage-001', 'Manually trigger score recalculation', 'questionVersion.recalculate', 'questionVersion'),
-       ('qv-view-002', 'View score recalculation logs', 'questionVersion.viewRecalculationLog', 'questionVersion');
+       ('qv-view-002', 'View score recalculation logs', 'questionVersion.viewRecalculationLog', 'questionVersion'),
+       ('qv-manage-002', 'Approve or reject score recalculation', 'questionVersion.approveRecalculation', 'questionVersion');
 
 -- 9. Grant permissions to roles
 INSERT IGNORE INTO role_permission_mapping (role_type, permission_id)
 VALUES ('super admin', 'qv-view-001'),
        ('super admin', 'qv-manage-001'),
        ('super admin', 'qv-view-002'),
+       ('super admin', 'qv-manage-002'),
        ('admin', 'qv-view-001'),
        ('admin', 'qv-view-002');
