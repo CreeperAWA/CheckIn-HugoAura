@@ -73,9 +73,12 @@ function isQuestionsEqual(q1, q2) {
 function isQuestionGroupEqual(q1Info, q2Info) {
     let equal = isQuestionsEqual(q1Info.question, q2Info.question);
     if (equal) {
+        const q1Infos = q1Info.questionInfos || [];
+        const q2Infos = q2Info.questionInfos || [];
+        if (q1Infos.length !== q2Infos.length) return false;
         let index = 0;
-        for (const questionInfo of q1Info.questionInfos) {
-            let q2QuestionInfo = q2Info.questionInfos[index];
+        for (const questionInfo of q1Infos) {
+            let q2QuestionInfo = q2Infos[index];
             if (q2QuestionInfo) {
                 equal = isQuestionsEqual(questionInfo.question, q2QuestionInfo.question);
                 if (equal === false) {
@@ -570,6 +573,12 @@ const QuestionCache = {
                     delete questionInfo.remoteUpdated;
                     delete questionInfo.downloadRemoteUpdated;
                     QuestionCache.originalQuestionInfos[oldId] = JSON.parse(JSON.stringify(questionInfo));
+                    // Update sub-questions' originalQuestionInfos to match current state
+                    if (questionInfo.questionInfos) {
+                        for (const subInfo of questionInfo.questionInfos) {
+                            QuestionCache.originalQuestionInfos[subInfo.question.id] = JSON.parse(JSON.stringify(subInfo));
+                        }
+                    }
                     localUploadedQuestionIds.add(oldId);
                     QuestionCache.update(questionInfo);
                 } else if (archivedQuestionIds && archivedQuestionIds.includes(oldId)) {
@@ -587,11 +596,25 @@ const QuestionCache = {
                         const newQuestion = JSON.parse(JSON.stringify(questionInfo.question));
                         newQuestion.id = newId;
                         delete newQuestion.localDeleted;
+                        // Include sub-questions so initInfoWithoutCaching can create questionInfos
+                        if (questionInfo.questionInfos) {
+                            newQuestion.questions = questionInfo.questionInfos.map(subInfo => {
+                                const subQ = JSON.parse(JSON.stringify(subInfo.question));
+                                delete subQ.localDeleted;
+                                return subQ;
+                            });
+                        }
                         const affectedPartitionIds = Array.isArray(newQuestion.partitionIds)
                             ? [...newQuestion.partitionIds] : [];
 
-                        // Drop the archived old version from all caches and remove its node from
-                        // any currently mounted tree.
+                        // Drop the archived old version and its sub-questions from all caches
+                        if (questionInfo.questionInfos) {
+                            for (const subInfo of questionInfo.questionInfos) {
+                                delete QuestionCache.reactiveQuestionInfos.value[subInfo.question.id];
+                                delete QuestionCache.originalQuestionInfos[subInfo.question.id];
+                                delete QuestionCache.dirtyQuestionInfos[subInfo.question.id];
+                            }
+                        }
                         delete QuestionCache.reactiveQuestionInfos.value[oldId];
                         delete QuestionCache.originalQuestionInfos[oldId];
                         delete QuestionCache.dirtyQuestionInfos[oldId];
