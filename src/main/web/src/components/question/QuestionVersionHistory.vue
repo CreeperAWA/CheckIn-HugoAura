@@ -183,7 +183,7 @@ function getVersionSelectionLabel(version) {
     <el-dialog v-model="dialogVisible"
                :width="mode === 'view' ? 800 : 720"
                @open="onDialogOpen"
-               @close="onDialogClose"
+               @closed="onDialogClose"
                align-center
                draggable
                append-to-body
@@ -279,8 +279,8 @@ function getVersionSelectionLabel(version) {
                                     <template v-if="version.submittedCount > 0">
                                         <el-text type="info" size="small">&nbsp;|&nbsp;</el-text>
                                         <el-text type="info" size="small">
-                                            提交{{ version.submittedCount }}次
-                                            正确率{{ getCorrectRate(version) }}
+                                            提交 {{ version.submittedCount }} 次
+                                            正确率 {{ getCorrectRate(version) }}
                                         </el-text>
                                     </template>
                                 </div>
@@ -458,7 +458,6 @@ function getVersionSelectionLabel(version) {
 
 .version-list-wrapper {
     max-height: 400px;
-    min-height: 400px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -467,6 +466,8 @@ function getVersionSelectionLabel(version) {
 .version-list {
     display: flex;
     flex-direction: column;
+    gap: 6px;
+    padding: 4px;
 }
 
 .version-item {

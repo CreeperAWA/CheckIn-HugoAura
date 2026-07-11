@@ -15,7 +15,7 @@ const data = [{
         "Vue3 Cookies",
         "Element Plus",
         "TOAST UI Editor",
-        "Axios",
+        "axios",
         "Splitpanes",
         "JWT Decode",
         "uuidv7",
@@ -32,7 +32,7 @@ const data = [{
         "Flyway",
         "Jakarta",
         "Json Web Token",
-        "MYSQL (jdbc)",
+        "MySQL (jdbc)",
         "H2 Database (jdbc)",
         "...",
     ]
