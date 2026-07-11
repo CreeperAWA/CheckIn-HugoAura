@@ -56,7 +56,7 @@ const permissionCollapse = ref(null);
 const startEditing = () => {
     editing.value = true;
     copyOfPermissionGroups = JSON.parse(JSON.stringify(permissionGroups.value));
-    permissionCollapse.value?.expand();
+    permissionCollapse.value.expand();
 }
 
 const savePermissions = () => {
