@@ -83,12 +83,28 @@ public class ThirdPartyApiWebSocketService {
     @Getter
     private final Map<String, VerifyRequest> pendingVerifyRequests = new ConcurrentHashMap<>();
     
+    private final PendingRequestMatcher<VerifyCheckRequest> verifyCheckRequestMatcher;
+    private final PendingRequestMatcher<VerifyRequest> verifyRequestMatcher;
+    
     protected ThirdPartyApiWebSocketService(ObjectMapper objectMapper, BlacklistRepository blacklistRepository, SettingService settingService, @Lazy indi.etern.checkIn.service.dao.ExamDataService examDataService) {
         singletonInstance = this;
         this.objectMapper = objectMapper;
         this.blacklistRepository = blacklistRepository;
         this.settingService = settingService;
         this.examDataService = examDataService;
+        
+        this.verifyCheckRequestMatcher = new PendingRequestMatcher<>(
+            pendingVerifyCheckRequests,
+            VerifyCheckRequest::getMessageId,
+            VerifyCheckRequest::getQq,
+            "VerifyCheckRequest"
+        );
+        this.verifyRequestMatcher = new PendingRequestMatcher<>(
+            pendingVerifyRequests,
+            VerifyRequest::getMessageId,
+            VerifyRequest::getQq,
+            "VerifyRequest"
+        );
     }
     
     /**
@@ -308,35 +324,11 @@ public class ThirdPartyApiWebSocketService {
         logger.info("收到第三方API [{}] 的验证询问响应，QQ: {}, need_verify: {}, 消息ID: {}", 
             connector.getSid(), qq, needVerify, messageId);
         
-        // 优先通过MessageID查找（正确实现时应当匹配）
-        VerifyCheckRequest request = pendingVerifyCheckRequests.remove(messageId);
-        
-        // 如果没找到，尝试通过QQ号查找（兼容第三方API未正确使用messageId的情况）
-        // 注意：在多用户场景下，不同用户的QQ号不同，因此通过QQ号查找也能正确隔离
-        // 使用synchronized确保查找和删除的原子性，避免ConcurrentModificationException和并发竞争
-        if (request == null) {
-            synchronized (pendingVerifyCheckRequests) {
-                String matchedKey = null;
-                for (Map.Entry<String, VerifyCheckRequest> entry : pendingVerifyCheckRequests.entrySet()) {
-                    if (entry.getValue().getQq().equals(qq)) {
-                        matchedKey = entry.getKey();
-                        break;
-                    }
-                }
-                if (matchedKey != null) {
-                    request = pendingVerifyCheckRequests.remove(matchedKey);
-                    logger.warn("MessageID mismatch, fallback to QQ lookup. Original messageId: {}, response messageId: {}, QQ: {}", 
-                        matchedKey, messageId, qq);
-                }
-            }
-        }
+        VerifyCheckRequest request = verifyCheckRequestMatcher.matchAndRemove(messageId, qq, null);
         
         if (request != null) {
             logger.info("成功匹配验证询问请求，QQ: {}, need_verify: {}", qq, needVerify);
             request.getCallback().onResponse(needVerify);
-        } else {
-            logger.warn("No pending verify check request found for messageId: {} or QQ: {}. Response may be delayed or duplicate.", 
-                messageId, qq);
         }
     }
     
@@ -409,40 +401,13 @@ public class ThirdPartyApiWebSocketService {
     /**
      * 处理验证响应的通用逻辑
      * 优先通过MessageID匹配，如果失败则通过QQ号查找
-     * 
-     * 使用synchronized确保原子操作，避免并发竞争条件：
-     * - 防止多个线程同时通过QQ号查找到同一个请求
-     * - 确保查找和删除操作的原子性
      */
     private void processVerifyResponse(String messageId, String qq, String status, String responseMessage) {
-        // 优先通过MessageID查找
-        VerifyRequest request = pendingVerifyRequests.remove(messageId);
-        
-        // 如果没找到，尝试通过QQ号查找（兼容第三方API返回不同MessageID的情况）
-        // 使用synchronized确保查找和删除的原子性，避免并发竞争
-        if (request == null) {
-            synchronized (pendingVerifyRequests) {
-                String matchedKey = null;
-                for (Map.Entry<String, VerifyRequest> entry : pendingVerifyRequests.entrySet()) {
-                    if (entry.getValue().getQq().equals(qq)) {
-                        matchedKey = entry.getKey();
-                        break;
-                    }
-                }
-                if (matchedKey != null) {
-                    request = pendingVerifyRequests.remove(matchedKey);
-                    logger.warn("MessageID mismatch in verify response, fallback to QQ lookup. Original messageId: {}, response messageId: {}, QQ: {}, status: {}", 
-                        matchedKey, messageId, qq, status);
-                }
-            }
-        }
+        VerifyRequest request = verifyRequestMatcher.matchAndRemove(messageId, qq, "status: " + status);
         
         if (request != null) {
             logger.info("成功匹配验证请求，QQ: {}, 状态: {}", qq, status);
             request.getCallback().onResponse(status, responseMessage);
-        } else {
-            logger.warn("No pending verify request found for messageId: {} or QQ: {}. Response may be delayed or duplicate. Status: {}", 
-                messageId, qq, status);
         }
     }
     
