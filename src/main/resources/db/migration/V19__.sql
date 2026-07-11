@@ -96,6 +96,6 @@ UPDATE permissions SET name = 'thirdPartyApi.manageWhitelist' WHERE name = 'thir
 -- 14. Fix V18 English descriptions to Chinese
 UPDATE permission_groups SET description = '题目版本管理' WHERE name = 'questionVersion' AND description = 'Question Version Management';
 UPDATE permissions SET description = '查看题目版本历史' WHERE name = 'questionVersion.view' AND description = 'View question version history';
-UPDATE permissions SET description = '手动触发成绩重算' WHERE name = 'questionVersion.recalculate' AND description = 'Manually trigger score recalculation';
-UPDATE permissions SET description = '查看成绩重算日志' WHERE name = 'questionVersion.viewRecalculationLog' AND description = 'View score recalculation logs';
-UPDATE permissions SET description = '审批成绩重算' WHERE name = 'questionVersion.approveRecalculation' AND description = 'Approve or reject score recalculation';
+UPDATE permissions SET description = '手动触发成绩核算' WHERE name = 'questionVersion.recalculate' AND description = 'Manually trigger score recalculation';
+UPDATE permissions SET description = '查看成绩核算日志' WHERE name = 'questionVersion.viewRecalculationLog' AND description = 'View score recalculation logs';
+UPDATE permissions SET description = '审批成绩核算' WHERE name = 'questionVersion.approveRecalculation' AND description = 'Approve or reject score recalculation';

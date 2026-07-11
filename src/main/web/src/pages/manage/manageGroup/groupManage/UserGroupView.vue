@@ -52,9 +52,11 @@ watch(() => router.currentRoute.value.params.type, () => {
     });
 }, {immediate: true});
 
+const permissionCollapse = ref(null);
 const startEditing = () => {
     editing.value = true;
     copyOfPermissionGroups = JSON.parse(JSON.stringify(permissionGroups.value));
+    permissionCollapse.value?.expand();
 }
 
 const savePermissions = () => {
@@ -101,7 +103,7 @@ const onPermissionCardClick = (permission) => {
                                 userGroup.type
                             }}
                         </el-text>
-                        <collapse>
+                        <collapse ref="permissionCollapse">
                             <template #title>
                                 <div style="display: flex;flex-direction: row;align-items: center;height: 100%;margin-left: 8px">
                                     <el-text>权限</el-text>
