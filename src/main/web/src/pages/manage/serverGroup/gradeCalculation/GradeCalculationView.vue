@@ -389,25 +389,25 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-:deep(.el-button--primary) {
+:deep(.el-table .el-button--primary) {
     background-color: #3D5866 !important;
     border-color: #3D5866 !important;
     color: #ffffff !important;
 }
 
-:deep(.el-button--primary:hover) {
+:deep(.el-table .el-button--primary:hover) {
     background-color: #d9e2e8 !important;
     border-color: #d9e2e8 !important;
     color: #3D5866 !important;
 }
 
-:deep(.el-button--danger) {
+:deep(.el-table .el-button--danger) {
     background-color: #f56c6c !important;
     border-color: #f56c6c !important;
     color: #ffffff !important;
 }
 
-:deep(.el-button--danger:hover) {
+:deep(.el-table .el-button--danger:hover) {
     background-color: #fadddd !important;
     border-color: #fadddd !important;
     color: #f56c6c !important;
