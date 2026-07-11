@@ -344,7 +344,7 @@ function getVersionSelectionLabel(version) {
                     </el-text>
                 </div>
 
-                <div v-loading="viewLoading" style="min-height: 200px;">
+                <div v-loading="viewLoading" style="min-height: 200px; max-height: 70vh; overflow-y: auto;">
                     <template v-if="viewingQuestionData">
                         <!-- 题目内容 -->
                         <div class="view-section">

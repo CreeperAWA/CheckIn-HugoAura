@@ -25,4 +25,5 @@ public interface QuestionRepository extends JpaRepository<Question, String> {
     
     List<Question> findByVersionGroupIdAndVersionStatus(String versionGroupId, VersionStatus status);
     List<Question> findByVersionGroupIdOrderByLastModifiedTimeDesc(String versionGroupId);
+    List<Question> findByVersionGroupIdIsNull();
 }
