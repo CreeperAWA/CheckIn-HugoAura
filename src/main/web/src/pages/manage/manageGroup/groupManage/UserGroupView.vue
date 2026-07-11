@@ -101,11 +101,11 @@ const onPermissionCardClick = (permission) => {
                                 userGroup.type
                             }}
                         </el-text>
-                        <collapse v-if="PermissionInfo.hasPermission('role.editPermission')">
+                        <collapse>
                             <template #title>
                                 <div style="display: flex;flex-direction: row;align-items: center;height: 100%;margin-left: 8px">
                                     <el-text>权限</el-text>
-                                    <template>
+                                    <template v-if="PermissionInfo.hasPermission('role.editPermission')">
                                         <transition name="blur-scale" mode="out-in">
                                             <div style="height: 25px;margin-left: 8px" v-if="!editing" @click.stop>
                                                 <el-button type="info" link @click="startEditing">修改</el-button>

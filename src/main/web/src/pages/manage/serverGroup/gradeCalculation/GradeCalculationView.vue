@@ -187,7 +187,7 @@ onUnmounted(() => {
             <el-tag v-if="canApprove && pendingList.length > 0" type="danger" style="margin-left: 12px">
                 {{ pendingList.length }} 个待审批
             </el-tag>
-            <el-button style="margin-left: auto" @click="canApprove ? fetchPendingList() : fetchHistoryList()" :loading="loading || historyLoading">
+            <el-button style="margin-left: auto" @click="activeTab === 'pending' ? fetchPendingList() : fetchHistoryList()" :loading="loading || historyLoading">
                 刷新
             </el-button>
         </div>
