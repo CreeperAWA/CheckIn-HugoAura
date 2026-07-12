@@ -28,12 +28,12 @@ public class QuestionVersionMigrationRunner {
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
     public void migrateQuestionsWithoutVersion() {
-        List<Question> questions = questionRepository.findByVersionGroupIdIsNull();
+        List<Question> questions = questionRepository.findByVersionNumber("1");
         if (questions.isEmpty()) {
             return;
         }
 
-        log.info("Found {} questions without version group, migrating...", questions.size());
+        log.info("Found {} questions with default version number, migrating...", questions.size());
 
         for (Question question : questions) {
             questionVersionService.initializeNewQuestionVersion(question, null);

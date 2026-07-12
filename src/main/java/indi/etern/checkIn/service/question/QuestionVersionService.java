@@ -60,19 +60,28 @@ public class QuestionVersionService {
     public void initializeNewQuestionVersion(Question question, Long creatorQq) {
         String versionNumber = generateSha1Short(question.getId() + "|" + System.nanoTime());
         question.setVersionNumber(versionNumber);
-        question.setVersionGroupId(question.getId());
+        if (question.getVersionGroupId() == null) {
+            question.setVersionGroupId(question.getId());
+        }
         question.setVersionStatus(Question.VersionStatus.ACTIVE);
         
-        QuestionVersionChain chain = QuestionVersionChain.builder()
-                .id(UUIDv7.randomUUID().toString())
-                .versionGroupId(question.getId())
-                .fromVersionId(question.getId())
-                .toVersionId(question.getId())
-                .changeType(QuestionVersionChain.ChangeType.INITIAL)
-                .createdAt(LocalDateTime.now())
-                .createdByQq(creatorQq)
-                .build();
-        versionChainRepository.save(chain);
+        // Only create chain record if one doesn't already exist for this version
+        boolean chainExists = versionChainRepository
+                .findByVersionGroupIdOrderByCreatedAtDesc(question.getVersionGroupId())
+                .stream()
+                .anyMatch(c -> c.getToVersionId().equals(question.getId()));
+        if (!chainExists) {
+            QuestionVersionChain chain = QuestionVersionChain.builder()
+                    .id(UUIDv7.randomUUID().toString())
+                    .versionGroupId(question.getVersionGroupId())
+                    .fromVersionId(question.getId())
+                    .toVersionId(question.getId())
+                    .changeType(QuestionVersionChain.ChangeType.INITIAL)
+                    .createdAt(LocalDateTime.now())
+                    .createdByQq(creatorQq)
+                    .build();
+            versionChainRepository.save(chain);
+        }
     }
     
     @Transactional
