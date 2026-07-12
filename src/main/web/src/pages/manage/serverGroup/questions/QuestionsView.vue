@@ -152,7 +152,14 @@ const unregister3 = QuestionCache.registerOnQuestionUpdateLocal((questionInfo, d
             const partitionNode = tree.value.getNode(partitionId);
             if (partitionNode !== null) {
                 const questionNodeObj = QuestionCache.getQuestionNodeObjOf(questionInfo, partitionId);
-                tree.value.append(questionNodeObj, partitionNode);
+                // Version swap: insert before the old node to preserve position in the tree.
+                if (savedSwapNode && savedSwapPartitionId === partitionId) {
+                    tree.value.insertBefore(questionNodeObj, savedSwapNode);
+                    savedSwapNode = null;
+                    savedSwapPartitionId = null;
+                } else {
+                    tree.value.append(questionNodeObj, partitionNode);
+                }
                 partitionNode.data.data.partition.questionNodes[questionNodeObj.data.question.id] = questionNodeObj;
                 // A version swap replaces the node's key (partitionId/id). If the editor is showing
                 // this question, re-apply the tree's current-node highlight to the new key, which
@@ -182,17 +189,26 @@ const unregister3 = QuestionCache.registerOnQuestionUpdateLocal((questionInfo, d
     }
 });
 
+// Saved node reference for version swaps: old node is still in the tree when onUpdateLocal
+// fires, so we can insert the new node before it to preserve position.
+let savedSwapNode = null;
+let savedSwapPartitionId = null;
+
 const unregister4 = QuestionCache.registerOnQuestionDeleted((id, localDeleted) => {
     let questionInfo = QuestionCache.reactiveQuestionInfos.value[id];
     if ((questionInfo && questionInfo.dirty) || (!localDeleted && router.currentRoute.value.params.id === id)) {
         return;
     }
-    if (router.currentRoute.value.params.id === id) {
+    if (router.currentRoute.value.params.id === id && !localDeleted) {
         router.push({name: "questions"});
     }
     for (const [partitionId, partition] of Object.entries(PartitionCache.refPartitions.value)) {
         let questionNode = tree.value.getNode(partition.id + "/" + id);
         if (questionNode !== null) {
+            if (localDeleted) {
+                savedSwapNode = questionNode;
+                savedSwapPartitionId = partitionId;
+            }
             nextTick(() => {
                 tree.value.remove(questionNode);
             });
