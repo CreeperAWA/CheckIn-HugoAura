@@ -625,6 +625,9 @@ const QuestionCache = {
                         // Register the new version as a clean, non-dirty loaded question using the
                         // same initialization path as server-loaded questions.
                         const newInfo = initInfoWithoutCaching(undefined, JSON.parse(JSON.stringify(newQuestion)));
+                        // New version starts with zero statistics — the old version's stats
+                        // belong to the archived question, not this one.
+                        newInfo.question.statistic = { drewCount: 0, submittedCount: 0, correctCount: 0, wrongCount: 0 };
                         QuestionCache.reactiveQuestionInfos.value[newId] = newInfo;
                         QuestionCache.originalQuestionInfos[newId] = JSON.parse(JSON.stringify(newInfo));
                         // Mark as locally uploaded so the deferred "updateQuestions" broadcast takes

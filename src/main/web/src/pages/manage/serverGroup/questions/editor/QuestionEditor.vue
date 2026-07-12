@@ -211,6 +211,16 @@ onMounted(() => {
         }, 400);
     }, {immediate: true});
 })
+
+function getCorrectRate(stat) {
+    if (!stat || !stat.submittedCount || stat.submittedCount === 0) return 'N/A';
+    return Math.round(stat.correctCount / stat.submittedCount * 100) + '%';
+}
+
+function getCorrectRateValue(stat) {
+    if (!stat || !stat.submittedCount || stat.submittedCount === 0) return undefined;
+    return Math.round(stat.correctCount / stat.submittedCount * 100);
+}
 </script>
 
 <template>
@@ -445,9 +455,10 @@ onMounted(() => {
                                                                 <el-statistic style="margin: 16px 32px;"
                                                                               title="答对次数"
                                                                               :value="questionInfo.question.statistic?questionInfo.question.statistic.correctCount:0"></el-statistic>
-                                                                <el-statistic style="margin: 16px 48px 16px 32px;"
+                                                                <el-statistic style="margin: 16px 32px;"
                                                                               title="答错次数"
                                                                               :value="questionInfo.question.statistic?questionInfo.question.statistic.wrongCount:0"></el-statistic>
+                                                                <el-statistic style="margin: 16px 32px;" title="正确率" :value="getCorrectRateValue(questionInfo.question.statistic)" suffix="%"/>
                                                                 <div class="flex-blank-1"></div>
                                                             </div>
                                                             <link-panel
@@ -484,9 +495,10 @@ onMounted(() => {
                                                                 <el-statistic style="margin: 16px 32px;"
                                                                               title="答对次数"
                                                                               :value="questionInfo.question.statistic?questionInfo.question.statistic.correctCount:0"></el-statistic>
-                                                                <el-statistic style="margin: 16px 48px 16px 32px;"
+                                                                <el-statistic style="margin: 16px 32px;"
                                                                               title="答错次数"
                                                                               :value="questionInfo.question.statistic?questionInfo.question.statistic.wrongCount:0"></el-statistic>
+                                                                <el-statistic style="margin: 16px 32px;" title="正确率" :value="getCorrectRateValue(questionInfo.question.statistic)" suffix="%"/>
                                                                 <div class="flex-blank-1"></div>
                                                             </div>
                                                             <link-panel

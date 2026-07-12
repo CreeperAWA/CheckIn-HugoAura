@@ -411,16 +411,16 @@ function getVersionSelectionLabel(version) {
                             <div class="view-statistics">
                                 <div class="view-statistics-grid">
                                     <el-statistic title="抽取次数"
-                                        :value="viewingQuestionData.statistic ? viewingQuestionData.statistic.drewCount : 0"/>
+                                        :value="viewingVersion.drewCount || 0"/>
                                     <el-statistic title="提交次数"
-                                        :value="viewingQuestionData.statistic ? viewingQuestionData.statistic.submittedCount : 0"/>
+                                        :value="viewingVersion.submittedCount || 0"/>
                                     <el-statistic title="答对次数"
-                                        :value="viewingQuestionData.statistic ? viewingQuestionData.statistic.correctCount : 0"/>
+                                        :value="viewingVersion.correctCount || 0"/>
                                     <el-statistic title="答错次数"
-                                        :value="viewingQuestionData.statistic ? viewingQuestionData.statistic.wrongCount : 0"/>
+                                        :value="viewingVersion.wrongCount || 0"/>
                                     <el-statistic title="正确率">
                                         <template #default>
-                                            {{ getCorrectRate(viewingQuestionData.statistic) }}
+                                            {{ getCorrectRate(viewingVersion) }}
                                         </template>
                                     </el-statistic>
                                 </div>
