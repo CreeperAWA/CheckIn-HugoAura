@@ -424,12 +424,6 @@ function getVersionSelectionLabel(version) {
                                         </template>
                                     </el-statistic>
                                 </div>
-                                <div v-if="viewingVersion && viewingVersion.examCount > 0"
-                                     style="margin-top: 8px; padding: 8px 12px; background: var(--el-fill-color-lighter); border-radius: 6px;">
-                                    <el-text type="info" size="small">
-                                        {{ viewingVersion.examCount }} 个题目使用了此版本
-                                    </el-text>
-                                </div>
                             </div>
                         </div>
                     </template>
