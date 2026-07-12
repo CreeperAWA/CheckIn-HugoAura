@@ -152,6 +152,11 @@ function getCorrectRate(stat) {
     return Math.round(stat.correctCount / stat.submittedCount * 100) + '%';
 }
 
+function getCorrectRateValue(stat) {
+    if (!stat || !stat.submittedCount || stat.submittedCount === 0) return 0;
+    return Math.round(stat.correctCount / stat.submittedCount * 100);
+}
+
 function toggleVersionSelection(version) {
     if (!selectedOldVersion.value) {
         selectedOldVersion.value = version;
@@ -418,11 +423,9 @@ function getVersionSelectionLabel(version) {
                                         :value="viewingVersion.correctCount || 0"/>
                                     <el-statistic title="答错次数"
                                         :value="viewingVersion.wrongCount || 0"/>
-                                    <el-statistic title="正确率">
-                                        <template #default>
-                                            {{ getCorrectRate(viewingVersion) }}
-                                        </template>
-                                    </el-statistic>
+                                    <el-statistic title="正确率"
+                                        :value="getCorrectRateValue(viewingVersion)"
+                                        suffix="%"/>
                                 </div>
                             </div>
                         </div>

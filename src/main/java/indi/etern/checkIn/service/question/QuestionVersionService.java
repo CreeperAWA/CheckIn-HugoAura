@@ -65,7 +65,6 @@ public class QuestionVersionService {
         }
         question.setVersionStatus(Question.VersionStatus.ACTIVE);
         
-        // Only create chain record if one doesn't already exist for this version
         boolean chainExists = versionChainRepository
                 .findByVersionGroupIdOrderByCreatedAtDesc(question.getVersionGroupId())
                 .stream()

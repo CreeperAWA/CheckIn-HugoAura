@@ -1,0 +1,425 @@
+2026-07-12 15:54:38.825 [  restartedMain] INFO  indi.etern.checkIn.CheckInApplication    - Starting CheckInApplication v2.2.12-HugoAura.138 using Java 25.0.2 with PID 21832 (D:\Projects\CheckIn\target\classes started by CreeperAWA in D:\Projects\CheckIn)
+2026-07-12 15:54:38.826 [  restartedMain] INFO  indi.etern.checkIn.CheckInApplication    - No active profile set, falling back to 1 default profile: "default"
+2026-07-12 15:54:38.879 [  restartedMain] INFO  .e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-07-12 15:54:38.879 [  restartedMain] INFO  .e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-07-12 15:54:40.191 [  restartedMain] INFO  .s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-12 15:54:40.399 [  restartedMain] INFO  .s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 197 ms. Found 28 JPA repository interfaces.
+2026-07-12 15:54:41.376 [  restartedMain] INFO  o.s.boot.tomcat.TomcatWebServer          - Tomcat initialized with port 8080 (http)
+2026-07-12 15:54:41.394 [  restartedMain] INFO  o.apache.catalina.core.StandardService   - Starting service [Tomcat]
+2026-07-12 15:54:41.394 [  restartedMain] INFO  o.apache.catalina.core.StandardEngine    - Starting Servlet engine: [Apache Tomcat/11.0.22]
+2026-07-12 15:54:41.493 [  restartedMain] INFO  b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 2613 ms
+2026-07-12 15:54:41.737 [  restartedMain] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-1 - Starting...
+2026-07-12 15:54:42.016 [  restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool        - HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:check_in user=ROOT
+2026-07-12 15:54:42.018 [  restartedMain] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-1 - Start completed.
+2026-07-12 15:54:42.034 [  restartedMain] INFO  org.flywaydb.core.FlywayExecutor         - Database: jdbc:h2:mem:check_in (H2 2.4)
+2026-07-12 15:54:42.106 [  restartedMain] WARN  o.f.c.internal.database.base.Database    - Using H2 2.4.240 which is newer than the version Flyway has been verified with. The latest verified version of H2 is 2.3.232.
+2026-07-12 15:54:42.148 [  restartedMain] INFO  o.f.c.i.s.JdbcTableSchemaHistory         - Schema history table "PUBLIC"."flyway_schema_history" does not exist yet
+2026-07-12 15:54:42.153 [  restartedMain] INFO  o.f.core.internal.command.DbValidate     - Successfully validated 20 migrations (execution time 00:00.028s)
+2026-07-12 15:54:42.160 [  restartedMain] INFO  o.f.c.i.s.JdbcTableSchemaHistory         - Creating Schema History table "PUBLIC"."flyway_schema_history" ...
+2026-07-12 15:54:42.187 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Current version of schema "PUBLIC": << Empty Schema >>
+2026-07-12 15:54:42.196 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "1"
+2026-07-12 15:54:42.225 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "2"
+2026-07-12 15:54:42.230 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "3"
+2026-07-12 15:54:42.245 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "4"
+2026-07-12 15:54:42.255 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "5"
+2026-07-12 15:54:42.264 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "6"
+2026-07-12 15:54:42.274 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "7"
+2026-07-12 15:54:42.285 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "8"
+2026-07-12 15:54:42.293 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "9"
+2026-07-12 15:54:42.297 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "10"
+2026-07-12 15:54:42.305 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "11"
+2026-07-12 15:54:42.312 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "12"
+2026-07-12 15:54:42.322 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "13"
+2026-07-12 15:54:42.330 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "14"
+2026-07-12 15:54:42.338 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "15"
+2026-07-12 15:54:42.343 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "16"
+2026-07-12 15:54:42.353 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "17"
+2026-07-12 15:54:42.361 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "18"
+2026-07-12 15:54:42.374 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "19"
+2026-07-12 15:54:42.381 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "20 - Fix legacy question version numbers with SHA-1"
+2026-07-12 15:54:42.389 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Successfully applied 20 migrations to schema "PUBLIC", now at version v20 (execution time 00:00.090s)
+2026-07-12 15:54:42.529 [  restartedMain] INFO  org.hibernate.orm.jpa                    - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-12 15:54:42.595 [  restartedMain] INFO  org.hibernate.orm.core                   - HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-07-12 15:54:43.084 [  restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo      - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-12 15:54:43.179 [  restartedMain] INFO  org.hibernate.orm.connections.pooling    - HHH10001005: Database info:
+	Database JDBC URL [jdbc:h2:mem:check_in]
+	Database driver: H2 JDBC Driver
+	Database dialect: H2Dialect
+	Database version: 2.4.240
+	Default catalog/schema: CHECK_IN/PUBLIC
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: 100
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-12 15:54:45.194 [  restartedMain] INFO  org.hibernate.orm.core                   - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-12 15:54:45.199 [  restartedMain] INFO  org.hibernate.orm.jdbc.batch             - HHH100501: Automatic JDBC statement batching enabled (maximum batch size 500)
+2026-07-12 15:54:45.203 [  restartedMain] INFO  j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-12 15:54:45.287 [  restartedMain] INFO  o.s.d.j.r.query.QueryEnhancerFactories   - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-12 15:54:46.336 [  restartedMain] WARN  i.e.checkIn.service.web.OAuth2Service    - Failed to load OAuth2 provider info, OAuth2 side login is disabled
+2026-07-12 15:54:46.391 [  restartedMain] WARN  o.s.aop.framework.CglibAopProxy          - Public final method [public final void org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService.setRequestEntityConverter(org.springframework.core.convert.converter.Converter)] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-07-12 15:54:46.391 [  restartedMain] WARN  o.s.aop.framework.CglibAopProxy          - Public final method [public final void org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService.setRestOperations(org.springframework.web.client.RestOperations)] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-07-12 15:54:46.447 [  restartedMain] INFO  i.etern.checkIn.auth.JwtTokenProvider    - 未找到配置项 "other.jwtRawSecret"，正在生成新的密钥并保存
+2026-07-12 15:54:48.293 [  restartedMain] INFO  o.s.boot.tomcat.TomcatWebServer          - Tomcat started on port 8080 (http) with context path '/checkIn'
+2026-07-12 15:54:48.304 [  restartedMain] INFO  indi.etern.checkIn.CheckInApplication    - Started CheckInApplication in 10.025 seconds (process running for 10.644)
+2026-07-12 15:57:40.935 [  restartedMain] INFO  indi.etern.checkIn.CheckInApplication    - Starting CheckInApplication v2.2.12-HugoAura.138 using Java 25.0.2 with PID 35700 (D:\Projects\CheckIn\target\classes started by CreeperAWA in D:\Projects\CheckIn)
+2026-07-12 15:57:40.938 [  restartedMain] INFO  indi.etern.checkIn.CheckInApplication    - No active profile set, falling back to 1 default profile: "default"
+2026-07-12 15:57:40.988 [  restartedMain] INFO  .e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-07-12 15:57:40.988 [  restartedMain] INFO  .e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-07-12 15:57:42.209 [  restartedMain] INFO  .s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-12 15:57:42.423 [  restartedMain] INFO  .s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 205 ms. Found 28 JPA repository interfaces.
+2026-07-12 15:57:43.192 [  restartedMain] INFO  o.s.boot.tomcat.TomcatWebServer          - Tomcat initialized with port 8080 (http)
+2026-07-12 15:57:43.208 [  restartedMain] INFO  o.apache.catalina.core.StandardService   - Starting service [Tomcat]
+2026-07-12 15:57:43.208 [  restartedMain] INFO  o.apache.catalina.core.StandardEngine    - Starting Servlet engine: [Apache Tomcat/11.0.22]
+2026-07-12 15:57:43.343 [  restartedMain] INFO  b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 2355 ms
+2026-07-12 15:57:43.656 [  restartedMain] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-1 - Starting...
+2026-07-12 15:57:43.876 [  restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool        - HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:check_in user=ROOT
+2026-07-12 15:57:43.878 [  restartedMain] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-1 - Start completed.
+2026-07-12 15:57:43.890 [  restartedMain] INFO  org.flywaydb.core.FlywayExecutor         - Database: jdbc:h2:mem:check_in (H2 2.4)
+2026-07-12 15:57:43.952 [  restartedMain] WARN  o.f.c.internal.database.base.Database    - Using H2 2.4.240 which is newer than the version Flyway has been verified with. The latest verified version of H2 is 2.3.232.
+2026-07-12 15:57:44.006 [  restartedMain] INFO  o.f.c.i.s.JdbcTableSchemaHistory         - Schema history table "PUBLIC"."flyway_schema_history" does not exist yet
+2026-07-12 15:57:44.008 [  restartedMain] INFO  o.f.core.internal.command.DbValidate     - Successfully validated 20 migrations (execution time 00:00.033s)
+2026-07-12 15:57:44.013 [  restartedMain] INFO  o.f.c.i.s.JdbcTableSchemaHistory         - Creating Schema History table "PUBLIC"."flyway_schema_history" ...
+2026-07-12 15:57:44.043 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Current version of schema "PUBLIC": << Empty Schema >>
+2026-07-12 15:57:44.056 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "1"
+2026-07-12 15:57:44.084 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "2"
+2026-07-12 15:57:44.094 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "3"
+2026-07-12 15:57:44.112 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "4"
+2026-07-12 15:57:44.126 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "5"
+2026-07-12 15:57:44.136 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "6"
+2026-07-12 15:57:44.146 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "7"
+2026-07-12 15:57:44.154 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "8"
+2026-07-12 15:57:44.164 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "9"
+2026-07-12 15:57:44.171 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "10"
+2026-07-12 15:57:44.179 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "11"
+2026-07-12 15:57:44.186 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "12"
+2026-07-12 15:57:44.192 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "13"
+2026-07-12 15:57:44.208 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "14"
+2026-07-12 15:57:44.217 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "15"
+2026-07-12 15:57:44.224 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "16"
+2026-07-12 15:57:44.236 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "17"
+2026-07-12 15:57:44.249 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "18"
+2026-07-12 15:57:44.266 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "19"
+2026-07-12 15:57:44.277 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "20 - Fix legacy question version numbers with SHA-1"
+2026-07-12 15:57:44.283 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Successfully applied 20 migrations to schema "PUBLIC", now at version v20 (execution time 00:00.114s)
+2026-07-12 15:57:44.487 [  restartedMain] INFO  org.hibernate.orm.jpa                    - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-12 15:57:44.559 [  restartedMain] INFO  org.hibernate.orm.core                   - HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-07-12 15:57:45.174 [  restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo      - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-12 15:57:45.279 [  restartedMain] INFO  org.hibernate.orm.connections.pooling    - HHH10001005: Database info:
+	Database JDBC URL [jdbc:h2:mem:check_in]
+	Database driver: H2 JDBC Driver
+	Database dialect: H2Dialect
+	Database version: 2.4.240
+	Default catalog/schema: CHECK_IN/PUBLIC
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: 100
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-12 15:57:47.746 [  restartedMain] INFO  org.hibernate.orm.core                   - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-12 15:57:47.752 [  restartedMain] INFO  org.hibernate.orm.jdbc.batch             - HHH100501: Automatic JDBC statement batching enabled (maximum batch size 500)
+2026-07-12 15:57:47.757 [  restartedMain] INFO  j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-12 15:57:47.843 [  restartedMain] INFO  o.s.d.j.r.query.QueryEnhancerFactories   - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-12 15:57:48.923 [  restartedMain] WARN  i.e.checkIn.service.web.OAuth2Service    - Failed to load OAuth2 provider info, OAuth2 side login is disabled
+2026-07-12 15:57:48.997 [  restartedMain] WARN  o.s.aop.framework.CglibAopProxy          - Public final method [public final void org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService.setRestOperations(org.springframework.web.client.RestOperations)] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-07-12 15:57:48.997 [  restartedMain] WARN  o.s.aop.framework.CglibAopProxy          - Public final method [public final void org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService.setRequestEntityConverter(org.springframework.core.convert.converter.Converter)] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-07-12 15:57:49.081 [  restartedMain] INFO  i.etern.checkIn.auth.JwtTokenProvider    - 未找到配置项 "other.jwtRawSecret"，正在生成新的密钥并保存
+2026-07-12 15:57:51.516 [  restartedMain] WARN  ConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
+2026-07-12 15:57:51.521 [  restartedMain] INFO  j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-07-12 15:57:51.527 [  restartedMain] WARN  o.s.b.f.support.DisposableBeanAdapter    - Invocation of destroy method failed on bean with name 'inMemoryDatabaseShutdownExecutor': org.h2.jdbc.JdbcSQLNonTransientConnectionException: Database is already closed (to disable automatic closing at VM shutdown, add ";DB_CLOSE_ON_EXIT=FALSE" to the db URL) [90121-240]
+2026-07-12 15:57:51.527 [  restartedMain] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-1 - Shutdown initiated...
+2026-07-12 15:57:51.529 [  restartedMain] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-1 - Shutdown completed.
+2026-07-12 15:57:51.546 [  restartedMain] INFO  .s.b.a.l.ConditionEvaluationReportLogger - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-07-12 15:57:51.566 [  restartedMain] ERROR o.s.b.d.LoggingFailureAnalysisReporter   - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8080 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8080 or configure this application to listen on another port.
+
+2026-07-12 16:03:16.490 [   File Watcher] INFO  rtingClassPathChangeChangedEventListener - Restarting due to 1 class path change (0 additions, 0 deletions, 1 modification)
+2026-07-12 16:03:16.495 [       Thread-1] INFO  o.s.boot.tomcat.GracefulShutdown         - Commencing graceful shutdown. Waiting for active requests to complete
+2026-07-12 16:03:16.505 [tomcat-shutdown] INFO  o.s.boot.tomcat.GracefulShutdown         - Graceful shutdown complete
+2026-07-12 16:03:16.512 [       Thread-1] INFO  j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-07-12 16:03:16.518 [       Thread-1] WARN  o.s.b.f.support.DisposableBeanAdapter    - Invocation of destroy method failed on bean with name 'inMemoryDatabaseShutdownExecutor': org.h2.jdbc.JdbcSQLNonTransientConnectionException: Database is already closed (to disable automatic closing at VM shutdown, add ";DB_CLOSE_ON_EXIT=FALSE" to the db URL) [90121-240]
+2026-07-12 16:03:16.519 [       Thread-1] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-1 - Shutdown initiated...
+2026-07-12 16:03:16.520 [       Thread-1] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-1 - Shutdown completed.
+2026-07-12 16:03:16.644 [  restartedMain] INFO  indi.etern.checkIn.CheckInApplication    - Starting CheckInApplication v2.2.12-HugoAura.138 using Java 25.0.2 with PID 21832 (D:\Projects\CheckIn\target\classes started by CreeperAWA in D:\Projects\CheckIn)
+2026-07-12 16:03:16.644 [  restartedMain] INFO  indi.etern.checkIn.CheckInApplication    - No active profile set, falling back to 1 default profile: "default"
+2026-07-12 16:03:17.521 [  restartedMain] INFO  .s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-12 16:03:17.814 [  restartedMain] INFO  .s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 291 ms. Found 28 JPA repository interfaces.
+2026-07-12 16:03:18.079 [  restartedMain] INFO  o.s.boot.tomcat.TomcatWebServer          - Tomcat initialized with port 8080 (http)
+2026-07-12 16:03:18.082 [  restartedMain] INFO  o.apache.catalina.core.StandardService   - Starting service [Tomcat]
+2026-07-12 16:03:18.082 [  restartedMain] INFO  o.apache.catalina.core.StandardEngine    - Starting Servlet engine: [Apache Tomcat/11.0.22]
+2026-07-12 16:03:18.165 [  restartedMain] INFO  b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 1518 ms
+2026-07-12 16:03:18.210 [  restartedMain] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-2 - Starting...
+2026-07-12 16:03:18.211 [  restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool        - HikariPool-2 - Added connection conn6: url=jdbc:h2:mem:check_in user=ROOT
+2026-07-12 16:03:18.212 [  restartedMain] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-2 - Start completed.
+2026-07-12 16:03:18.212 [  restartedMain] INFO  org.flywaydb.core.FlywayExecutor         - Database: jdbc:h2:mem:check_in (H2 2.4)
+2026-07-12 16:03:18.220 [  restartedMain] WARN  o.f.c.internal.database.base.Database    - Using H2 2.4.240 which is newer than the version Flyway has been verified with. The latest verified version of H2 is 2.3.232.
+2026-07-12 16:03:18.243 [  restartedMain] INFO  o.f.c.i.s.JdbcTableSchemaHistory         - Schema history table "PUBLIC"."flyway_schema_history" does not exist yet
+2026-07-12 16:03:18.243 [  restartedMain] INFO  o.f.core.internal.command.DbValidate     - Successfully validated 20 migrations (execution time 00:00.018s)
+2026-07-12 16:03:18.244 [  restartedMain] INFO  o.f.c.i.s.JdbcTableSchemaHistory         - Creating Schema History table "PUBLIC"."flyway_schema_history" ...
+2026-07-12 16:03:18.253 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Current version of schema "PUBLIC": << Empty Schema >>
+2026-07-12 16:03:18.261 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "1"
+2026-07-12 16:03:18.281 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "2"
+2026-07-12 16:03:18.287 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "3"
+2026-07-12 16:03:18.296 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "4"
+2026-07-12 16:03:18.303 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "5"
+2026-07-12 16:03:18.307 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "6"
+2026-07-12 16:03:18.312 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "7"
+2026-07-12 16:03:18.318 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "8"
+2026-07-12 16:03:18.325 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "9"
+2026-07-12 16:03:18.329 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "10"
+2026-07-12 16:03:18.334 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "11"
+2026-07-12 16:03:18.340 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "12"
+2026-07-12 16:03:18.345 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "13"
+2026-07-12 16:03:18.350 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "14"
+2026-07-12 16:03:18.356 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "15"
+2026-07-12 16:03:18.359 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "16"
+2026-07-12 16:03:18.364 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "17"
+2026-07-12 16:03:18.371 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "18"
+2026-07-12 16:03:18.379 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "19"
+2026-07-12 16:03:18.388 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "20 - Fix legacy question version numbers with SHA-1"
+2026-07-12 16:03:18.391 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Successfully applied 20 migrations to schema "PUBLIC", now at version v20 (execution time 00:00.061s)
+2026-07-12 16:03:18.446 [  restartedMain] INFO  org.hibernate.orm.jpa                    - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-12 16:03:18.493 [  restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo      - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-12 16:03:18.495 [  restartedMain] INFO  org.hibernate.orm.connections.pooling    - HHH10001005: Database info:
+	Database JDBC URL [jdbc:h2:mem:check_in]
+	Database driver: H2 JDBC Driver
+	Database dialect: H2Dialect
+	Database version: 2.4.240
+	Default catalog/schema: CHECK_IN/PUBLIC
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: 100
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-12 16:03:19.225 [  restartedMain] INFO  org.hibernate.orm.core                   - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-12 16:03:19.226 [  restartedMain] INFO  org.hibernate.orm.jdbc.batch             - HHH100501: Automatic JDBC statement batching enabled (maximum batch size 500)
+2026-07-12 16:03:19.227 [  restartedMain] INFO  j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-12 16:03:19.545 [  restartedMain] WARN  i.e.checkIn.service.web.OAuth2Service    - Failed to load OAuth2 provider info, OAuth2 side login is disabled
+2026-07-12 16:03:19.590 [  restartedMain] WARN  o.s.aop.framework.CglibAopProxy          - Public final method [public final void org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService.setRequestEntityConverter(org.springframework.core.convert.converter.Converter)] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-07-12 16:03:19.591 [  restartedMain] WARN  o.s.aop.framework.CglibAopProxy          - Public final method [public final void org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService.setRestOperations(org.springframework.web.client.RestOperations)] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-07-12 16:03:19.645 [  restartedMain] INFO  i.etern.checkIn.auth.JwtTokenProvider    - 未找到配置项 "other.jwtRawSecret"，正在生成新的密钥并保存
+2026-07-12 16:03:20.720 [  restartedMain] INFO  o.s.boot.tomcat.TomcatWebServer          - Tomcat started on port 8080 (http) with context path '/checkIn'
+2026-07-12 16:03:20.726 [  restartedMain] INFO  indi.etern.checkIn.CheckInApplication    - Started CheckInApplication in 4.134 seconds (process running for 523.058)
+2026-07-12 16:03:20.728 [  restartedMain] INFO  .ConditionEvaluationDeltaLoggingListener - Condition evaluation unchanged
+2026-07-12 16:03:23.072 [   File Watcher] INFO  rtingClassPathChangeChangedEventListener - Restarting due to 1 class path change (1 addition, 0 deletions, 0 modifications)
+2026-07-12 16:03:23.075 [       Thread-5] INFO  o.s.boot.tomcat.GracefulShutdown         - Commencing graceful shutdown. Waiting for active requests to complete
+2026-07-12 16:03:23.080 [tomcat-shutdown] INFO  o.s.boot.tomcat.GracefulShutdown         - Graceful shutdown complete
+2026-07-12 16:03:23.082 [       Thread-5] INFO  j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-07-12 16:03:23.085 [       Thread-5] WARN  o.s.b.f.support.DisposableBeanAdapter    - Invocation of destroy method failed on bean with name 'inMemoryDatabaseShutdownExecutor': org.h2.jdbc.JdbcSQLNonTransientConnectionException: Database is already closed (to disable automatic closing at VM shutdown, add ";DB_CLOSE_ON_EXIT=FALSE" to the db URL) [90121-240]
+2026-07-12 16:03:23.086 [       Thread-5] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-2 - Shutdown initiated...
+2026-07-12 16:03:23.087 [       Thread-5] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-2 - Shutdown completed.
+2026-07-12 16:03:23.176 [  restartedMain] INFO  indi.etern.checkIn.CheckInApplication    - Starting CheckInApplication v2.2.12-HugoAura.138 using Java 25.0.2 with PID 21832 (D:\Projects\CheckIn\target\classes started by CreeperAWA in D:\Projects\CheckIn)
+2026-07-12 16:03:23.176 [  restartedMain] INFO  indi.etern.checkIn.CheckInApplication    - No active profile set, falling back to 1 default profile: "default"
+2026-07-12 16:03:23.625 [  restartedMain] INFO  .s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-12 16:03:23.790 [  restartedMain] INFO  .s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 162 ms. Found 28 JPA repository interfaces.
+2026-07-12 16:03:23.913 [  restartedMain] INFO  o.s.boot.tomcat.TomcatWebServer          - Tomcat initialized with port 8080 (http)
+2026-07-12 16:03:23.913 [  restartedMain] INFO  o.apache.catalina.core.StandardService   - Starting service [Tomcat]
+2026-07-12 16:03:23.913 [  restartedMain] INFO  o.apache.catalina.core.StandardEngine    - Starting Servlet engine: [Apache Tomcat/11.0.22]
+2026-07-12 16:03:23.977 [  restartedMain] INFO  b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 799 ms
+2026-07-12 16:03:24.006 [  restartedMain] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-3 - Starting...
+2026-07-12 16:03:24.009 [  restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool        - HikariPool-3 - Added connection conn11: url=jdbc:h2:mem:check_in user=ROOT
+2026-07-12 16:03:24.009 [  restartedMain] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-3 - Start completed.
+2026-07-12 16:03:24.009 [  restartedMain] INFO  org.flywaydb.core.FlywayExecutor         - Database: jdbc:h2:mem:check_in (H2 2.4)
+2026-07-12 16:03:24.015 [  restartedMain] WARN  o.f.c.internal.database.base.Database    - Using H2 2.4.240 which is newer than the version Flyway has been verified with. The latest verified version of H2 is 2.3.232.
+2026-07-12 16:03:24.025 [  restartedMain] INFO  o.f.c.i.s.JdbcTableSchemaHistory         - Schema history table "PUBLIC"."flyway_schema_history" does not exist yet
+2026-07-12 16:03:24.025 [  restartedMain] INFO  o.f.core.internal.command.DbValidate     - Successfully validated 21 migrations (execution time 00:00.009s)
+2026-07-12 16:03:24.026 [  restartedMain] INFO  o.f.c.i.s.JdbcTableSchemaHistory         - Creating Schema History table "PUBLIC"."flyway_schema_history" ...
+2026-07-12 16:03:24.027 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Current version of schema "PUBLIC": << Empty Schema >>
+2026-07-12 16:03:24.032 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "1"
+2026-07-12 16:03:24.036 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "2"
+2026-07-12 16:03:24.039 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "3"
+2026-07-12 16:03:24.042 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "4"
+2026-07-12 16:03:24.046 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "5"
+2026-07-12 16:03:24.048 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "6"
+2026-07-12 16:03:24.052 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "7"
+2026-07-12 16:03:24.055 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "8"
+2026-07-12 16:03:24.057 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "9"
+2026-07-12 16:03:24.060 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "10"
+2026-07-12 16:03:24.063 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "11"
+2026-07-12 16:03:24.064 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "12"
+2026-07-12 16:03:24.068 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "13"
+2026-07-12 16:03:24.073 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "14"
+2026-07-12 16:03:24.076 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "15"
+2026-07-12 16:03:24.079 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "16"
+2026-07-12 16:03:24.083 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "17"
+2026-07-12 16:03:24.090 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "18"
+2026-07-12 16:03:24.096 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "19"
+2026-07-12 16:03:24.098 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "20 - Fix legacy question version numbers with SHA-1"
+2026-07-12 16:03:24.101 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "21"
+2026-07-12 16:03:24.103 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Successfully applied 21 migrations to schema "PUBLIC", now at version v21 (execution time 00:00.017s)
+2026-07-12 16:03:24.160 [  restartedMain] INFO  org.hibernate.orm.jpa                    - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-12 16:03:24.196 [  restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo      - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-12 16:03:24.197 [  restartedMain] INFO  org.hibernate.orm.connections.pooling    - HHH10001005: Database info:
+	Database JDBC URL [jdbc:h2:mem:check_in]
+	Database driver: H2 JDBC Driver
+	Database dialect: H2Dialect
+	Database version: 2.4.240
+	Default catalog/schema: CHECK_IN/PUBLIC
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: 100
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-12 16:03:24.757 [  restartedMain] INFO  org.hibernate.orm.core                   - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-12 16:03:24.759 [  restartedMain] INFO  org.hibernate.orm.jdbc.batch             - HHH100501: Automatic JDBC statement batching enabled (maximum batch size 500)
+2026-07-12 16:03:24.759 [  restartedMain] INFO  j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-12 16:03:24.965 [  restartedMain] WARN  i.e.checkIn.service.web.OAuth2Service    - Failed to load OAuth2 provider info, OAuth2 side login is disabled
+2026-07-12 16:03:24.987 [  restartedMain] WARN  o.s.aop.framework.CglibAopProxy          - Public final method [public final void org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService.setRequestEntityConverter(org.springframework.core.convert.converter.Converter)] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-07-12 16:03:24.987 [  restartedMain] WARN  o.s.aop.framework.CglibAopProxy          - Public final method [public final void org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService.setRestOperations(org.springframework.web.client.RestOperations)] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-07-12 16:03:25.018 [  restartedMain] INFO  i.etern.checkIn.auth.JwtTokenProvider    - 未找到配置项 "other.jwtRawSecret"，正在生成新的密钥并保存
+2026-07-12 16:03:25.983 [  restartedMain] INFO  o.s.boot.tomcat.TomcatWebServer          - Tomcat started on port 8080 (http) with context path '/checkIn'
+2026-07-12 16:03:25.987 [  restartedMain] INFO  indi.etern.checkIn.CheckInApplication    - Started CheckInApplication in 2.848 seconds (process running for 528.32)
+2026-07-12 16:03:25.989 [  restartedMain] INFO  .ConditionEvaluationDeltaLoggingListener - Condition evaluation unchanged
+2026-07-12 16:03:44.568 [   File Watcher] INFO  rtingClassPathChangeChangedEventListener - Restarting due to 1 class path change (0 additions, 0 deletions, 1 modification)
+2026-07-12 16:03:44.572 [      Thread-10] INFO  o.s.boot.tomcat.GracefulShutdown         - Commencing graceful shutdown. Waiting for active requests to complete
+2026-07-12 16:03:44.578 [tomcat-shutdown] INFO  o.s.boot.tomcat.GracefulShutdown         - Graceful shutdown complete
+2026-07-12 16:03:44.581 [      Thread-10] INFO  j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-07-12 16:03:44.582 [      Thread-10] WARN  o.s.b.f.support.DisposableBeanAdapter    - Invocation of destroy method failed on bean with name 'inMemoryDatabaseShutdownExecutor': org.h2.jdbc.JdbcSQLNonTransientConnectionException: Database is already closed (to disable automatic closing at VM shutdown, add ";DB_CLOSE_ON_EXIT=FALSE" to the db URL) [90121-240]
+2026-07-12 16:03:44.583 [      Thread-10] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-3 - Shutdown initiated...
+2026-07-12 16:03:44.583 [      Thread-10] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-3 - Shutdown completed.
+2026-07-12 16:03:44.680 [  restartedMain] INFO  indi.etern.checkIn.CheckInApplication    - Starting CheckInApplication v2.2.12-HugoAura.138 using Java 25.0.2 with PID 21832 (D:\Projects\CheckIn\target\classes started by CreeperAWA in D:\Projects\CheckIn)
+2026-07-12 16:03:44.680 [  restartedMain] INFO  indi.etern.checkIn.CheckInApplication    - No active profile set, falling back to 1 default profile: "default"
+2026-07-12 16:03:45.164 [  restartedMain] INFO  .s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-12 16:03:45.291 [  restartedMain] INFO  .s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 125 ms. Found 28 JPA repository interfaces.
+2026-07-12 16:03:45.512 [  restartedMain] INFO  o.s.boot.tomcat.TomcatWebServer          - Tomcat initialized with port 8080 (http)
+2026-07-12 16:03:45.512 [  restartedMain] INFO  o.apache.catalina.core.StandardService   - Starting service [Tomcat]
+2026-07-12 16:03:45.512 [  restartedMain] INFO  o.apache.catalina.core.StandardEngine    - Starting Servlet engine: [Apache Tomcat/11.0.22]
+2026-07-12 16:03:45.599 [  restartedMain] INFO  b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 918 ms
+2026-07-12 16:03:45.642 [  restartedMain] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-4 - Starting...
+2026-07-12 16:03:45.644 [  restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool        - HikariPool-4 - Added connection conn16: url=jdbc:h2:mem:check_in user=ROOT
+2026-07-12 16:03:45.645 [  restartedMain] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-4 - Start completed.
+2026-07-12 16:03:45.645 [  restartedMain] INFO  org.flywaydb.core.FlywayExecutor         - Database: jdbc:h2:mem:check_in (H2 2.4)
+2026-07-12 16:03:45.656 [  restartedMain] WARN  o.f.c.internal.database.base.Database    - Using H2 2.4.240 which is newer than the version Flyway has been verified with. The latest verified version of H2 is 2.3.232.
+2026-07-12 16:03:45.675 [  restartedMain] INFO  o.f.c.i.s.JdbcTableSchemaHistory         - Schema history table "PUBLIC"."flyway_schema_history" does not exist yet
+2026-07-12 16:03:45.676 [  restartedMain] INFO  o.f.core.internal.command.DbValidate     - Successfully validated 21 migrations (execution time 00:00.018s)
+2026-07-12 16:03:45.677 [  restartedMain] INFO  o.f.c.i.s.JdbcTableSchemaHistory         - Creating Schema History table "PUBLIC"."flyway_schema_history" ...
+2026-07-12 16:03:45.681 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Current version of schema "PUBLIC": << Empty Schema >>
+2026-07-12 16:03:45.688 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "1"
+2026-07-12 16:03:45.695 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "2"
+2026-07-12 16:03:45.697 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "3"
+2026-07-12 16:03:45.703 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "4"
+2026-07-12 16:03:45.707 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "5"
+2026-07-12 16:03:45.710 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "6"
+2026-07-12 16:03:45.713 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "7"
+2026-07-12 16:03:45.718 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "8"
+2026-07-12 16:03:45.724 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "9"
+2026-07-12 16:03:45.727 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "10"
+2026-07-12 16:03:45.733 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "11"
+2026-07-12 16:03:45.737 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "12"
+2026-07-12 16:03:45.745 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "13"
+2026-07-12 16:03:45.753 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "14"
+2026-07-12 16:03:45.759 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "15"
+2026-07-12 16:03:45.765 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "16"
+2026-07-12 16:03:45.774 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "17"
+2026-07-12 16:03:45.786 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "18"
+2026-07-12 16:03:45.802 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "19"
+2026-07-12 16:03:45.812 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "20 - Fix legacy question version numbers with SHA-1"
+2026-07-12 16:03:45.815 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "21"
+2026-07-12 16:03:45.818 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Successfully applied 21 migrations to schema "PUBLIC", now at version v21 (execution time 00:00.043s)
+2026-07-12 16:03:45.936 [  restartedMain] INFO  org.hibernate.orm.jpa                    - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-12 16:03:46.006 [  restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo      - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-12 16:03:46.009 [  restartedMain] INFO  org.hibernate.orm.connections.pooling    - HHH10001005: Database info:
+	Database JDBC URL [jdbc:h2:mem:check_in]
+	Database driver: H2 JDBC Driver
+	Database dialect: H2Dialect
+	Database version: 2.4.240
+	Default catalog/schema: CHECK_IN/PUBLIC
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: 100
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-12 16:03:47.074 [  restartedMain] INFO  org.hibernate.orm.core                   - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-12 16:03:47.074 [  restartedMain] INFO  org.hibernate.orm.jdbc.batch             - HHH100501: Automatic JDBC statement batching enabled (maximum batch size 500)
+2026-07-12 16:03:47.076 [  restartedMain] INFO  j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-12 16:03:47.470 [  restartedMain] WARN  i.e.checkIn.service.web.OAuth2Service    - Failed to load OAuth2 provider info, OAuth2 side login is disabled
+2026-07-12 16:03:47.519 [  restartedMain] WARN  o.s.aop.framework.CglibAopProxy          - Public final method [public final void org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService.setRequestEntityConverter(org.springframework.core.convert.converter.Converter)] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-07-12 16:03:47.520 [  restartedMain] WARN  o.s.aop.framework.CglibAopProxy          - Public final method [public final void org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService.setRestOperations(org.springframework.web.client.RestOperations)] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-07-12 16:03:47.559 [  restartedMain] INFO  i.etern.checkIn.auth.JwtTokenProvider    - 未找到配置项 "other.jwtRawSecret"，正在生成新的密钥并保存
+2026-07-12 16:03:48.764 [  restartedMain] INFO  o.s.boot.tomcat.TomcatWebServer          - Tomcat started on port 8080 (http) with context path '/checkIn'
+2026-07-12 16:03:48.767 [  restartedMain] INFO  indi.etern.checkIn.CheckInApplication    - Started CheckInApplication in 4.129 seconds (process running for 551.099)
+2026-07-12 16:03:48.769 [  restartedMain] INFO  .ConditionEvaluationDeltaLoggingListener - Condition evaluation unchanged
+2026-07-12 16:04:14.675 [  restartedMain] INFO  indi.etern.checkIn.CheckInApplication    - Starting CheckInApplication v2.2.12-HugoAura.138 using Java 25.0.2 with PID 31492 (D:\Projects\CheckIn\target\classes started by CreeperAWA in D:\Projects\CheckIn)
+2026-07-12 16:04:14.680 [  restartedMain] INFO  indi.etern.checkIn.CheckInApplication    - No active profile set, falling back to 1 default profile: "default"
+2026-07-12 16:04:14.772 [  restartedMain] INFO  .e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-07-12 16:04:14.773 [  restartedMain] INFO  .e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-07-12 16:04:16.054 [  restartedMain] INFO  .s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-12 16:04:16.353 [  restartedMain] INFO  .s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 288 ms. Found 28 JPA repository interfaces.
+2026-07-12 16:04:17.523 [  restartedMain] INFO  o.s.boot.tomcat.TomcatWebServer          - Tomcat initialized with port 8099 (http)
+2026-07-12 16:04:17.543 [  restartedMain] INFO  o.apache.catalina.core.StandardService   - Starting service [Tomcat]
+2026-07-12 16:04:17.543 [  restartedMain] INFO  o.apache.catalina.core.StandardEngine    - Starting Servlet engine: [Apache Tomcat/11.0.22]
+2026-07-12 16:04:17.676 [  restartedMain] INFO  b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 2902 ms
+2026-07-12 16:04:18.083 [  restartedMain] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-1 - Starting...
+2026-07-12 16:04:18.573 [  restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool        - HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:check_in user=ROOT
+2026-07-12 16:04:18.577 [  restartedMain] INFO  com.zaxxer.hikari.HikariDataSource       - HikariPool-1 - Start completed.
+2026-07-12 16:04:18.593 [  restartedMain] INFO  org.flywaydb.core.FlywayExecutor         - Database: jdbc:h2:mem:check_in (H2 2.4)
+2026-07-12 16:04:18.671 [  restartedMain] WARN  o.f.c.internal.database.base.Database    - Using H2 2.4.240 which is newer than the version Flyway has been verified with. The latest verified version of H2 is 2.3.232.
+2026-07-12 16:04:18.726 [  restartedMain] INFO  o.f.c.i.s.JdbcTableSchemaHistory         - Schema history table "PUBLIC"."flyway_schema_history" does not exist yet
+2026-07-12 16:04:18.731 [  restartedMain] INFO  o.f.core.internal.command.DbValidate     - Successfully validated 21 migrations (execution time 00:00.034s)
+2026-07-12 16:04:18.741 [  restartedMain] INFO  o.f.c.i.s.JdbcTableSchemaHistory         - Creating Schema History table "PUBLIC"."flyway_schema_history" ...
+2026-07-12 16:04:18.777 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Current version of schema "PUBLIC": << Empty Schema >>
+2026-07-12 16:04:18.799 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "1"
+2026-07-12 16:04:18.840 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "2"
+2026-07-12 16:04:18.848 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "3"
+2026-07-12 16:04:18.869 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "4"
+2026-07-12 16:04:18.886 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "5"
+2026-07-12 16:04:18.895 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "6"
+2026-07-12 16:04:18.906 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "7"
+2026-07-12 16:04:18.918 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "8"
+2026-07-12 16:04:18.930 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "9"
+2026-07-12 16:04:18.939 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "10"
+2026-07-12 16:04:18.948 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "11"
+2026-07-12 16:04:18.957 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "12"
+2026-07-12 16:04:18.968 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "13"
+2026-07-12 16:04:18.980 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "14"
+2026-07-12 16:04:18.992 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "15"
+2026-07-12 16:04:18.998 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "16"
+2026-07-12 16:04:19.011 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "17"
+2026-07-12 16:04:19.030 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "18"
+2026-07-12 16:04:19.048 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "19"
+2026-07-12 16:04:19.059 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "20 - Fix legacy question version numbers with SHA-1"
+2026-07-12 16:04:19.064 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Migrating schema "PUBLIC" to version "21"
+2026-07-12 16:04:19.073 [  restartedMain] INFO  o.f.core.internal.command.DbMigrate      - Successfully applied 21 migrations to schema "PUBLIC", now at version v21 (execution time 00:00.132s)
+2026-07-12 16:04:19.276 [  restartedMain] INFO  org.hibernate.orm.jpa                    - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-12 16:04:19.405 [  restartedMain] INFO  org.hibernate.orm.core                   - HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-07-12 16:04:20.118 [  restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo      - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-12 16:04:20.273 [  restartedMain] INFO  org.hibernate.orm.connections.pooling    - HHH10001005: Database info:
+	Database JDBC URL [jdbc:h2:mem:check_in]
+	Database driver: H2 JDBC Driver
+	Database dialect: H2Dialect
+	Database version: 2.4.240
+	Default catalog/schema: CHECK_IN/PUBLIC
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: 100
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-12 16:04:23.265 [  restartedMain] INFO  org.hibernate.orm.core                   - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-12 16:04:23.273 [  restartedMain] INFO  org.hibernate.orm.jdbc.batch             - HHH100501: Automatic JDBC statement batching enabled (maximum batch size 500)
+2026-07-12 16:04:23.280 [  restartedMain] INFO  j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-12 16:04:23.379 [  restartedMain] INFO  o.s.d.j.r.query.QueryEnhancerFactories   - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-12 16:04:24.734 [  restartedMain] WARN  i.e.checkIn.service.web.OAuth2Service    - Failed to load OAuth2 provider info, OAuth2 side login is disabled
+2026-07-12 16:04:24.807 [  restartedMain] WARN  o.s.aop.framework.CglibAopProxy          - Public final method [public final void org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService.setRequestEntityConverter(org.springframework.core.convert.converter.Converter)] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-07-12 16:04:24.807 [  restartedMain] WARN  o.s.aop.framework.CglibAopProxy          - Public final method [public final void org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService.setRestOperations(org.springframework.web.client.RestOperations)] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-07-12 16:04:24.878 [  restartedMain] INFO  i.etern.checkIn.auth.JwtTokenProvider    - 未找到配置项 "other.jwtRawSecret"，正在生成新的密钥并保存
+2026-07-12 16:04:28.925 [  restartedMain] INFO  o.s.boot.tomcat.TomcatWebServer          - Tomcat started on port 8099 (http) with context path '/checkIn'
+2026-07-12 16:04:28.940 [  restartedMain] INFO  indi.etern.checkIn.CheckInApplication    - Started CheckInApplication in 14.933 seconds (process running for 15.875)
