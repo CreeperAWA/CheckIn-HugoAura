@@ -153,8 +153,10 @@ const unregister3 = QuestionCache.registerOnQuestionUpdateLocal((questionInfo, d
             if (partitionNode !== null) {
                 const questionNodeObj = QuestionCache.getQuestionNodeObjOf(questionInfo, partitionId);
                 // Version swap: insert before the old node to preserve position in the tree.
+                let isVersionSwap = false;
                 if (savedSwapNode && savedSwapPartitionId === partitionId) {
                     tree.value.insertBefore(questionNodeObj, savedSwapNode);
+                    isVersionSwap = true;
                     savedSwapNode = null;
                     savedSwapPartitionId = null;
                 } else {
@@ -164,7 +166,9 @@ const unregister3 = QuestionCache.registerOnQuestionUpdateLocal((questionInfo, d
                 // A version swap replaces the node's key (partitionId/id). If the editor is showing
                 // this question, re-apply the tree's current-node highlight to the new key, which
                 // would otherwise be lost when the old node was removed.
-                if (router.currentRoute.value.params.id === questionInfo.question.id) {
+                // Note: router.replace is async, so at this point the route still shows oldId.
+                // Detect a version swap via the flag instead of checking the route.
+                if (isVersionSwap || router.currentRoute.value.params.id === questionInfo.question.id) {
                     nextTick(() => {
                         tree.value.setCurrentKey(treeId);
                     });
