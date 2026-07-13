@@ -18,7 +18,7 @@
     "dompurify": "^3.4.1",
     "element-plus": "^2.13.7",
     "jwt-decode": "^4.0.0",
-    "katex": "^0.16.45",
+    "katex": "^0.17.0",
     "splitpanes": "^4.0.4",
     "uuidv7": "^1.2.1",
     "vite": "^8.0.10",
