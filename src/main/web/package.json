@@ -30,7 +30,7 @@
     "vue3-cookies": "^1.0.6"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.6",
+    "@vitejs/plugin-vue": "^6.0.7",
     "@vue/language-core": "^3.2.7",
     "@vue/language-server": "^3.2.8",
     "@ygoe/msgpack": "^1.0.3",
